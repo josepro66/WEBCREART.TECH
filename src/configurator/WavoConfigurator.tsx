@@ -108,6 +108,9 @@ const WavoConfigurator: React.FC<WavoConfiguratorProps> = ({ currentUser, onLogo
     keys: []
   });
 
+  // Ref de las mallas seleccionables — siempre actualizado, sin stale closures
+  const selectableRef = useRef<Selectable>({ chasis: [], knobs: [], buttons: [], keys: [] });
+
   // Helper para iluminar mallas seleccionadas
   const setEmissive = useCallback((object: THREE.Mesh | null, color: number = 0x000000) => {
     if (object && (object.material as THREE.MeshStandardMaterial)?.emissive) {
@@ -308,6 +311,9 @@ const WavoConfigurator: React.FC<WavoConfiguratorProps> = ({ currentUser, onLogo
     console.log('[Wavo] selectable.knobs found:', newSelectable.knobs.map(m => m.name));
     console.log('[Wavo] selectable.buttons found:', newSelectable.buttons.map(m => m.name));
     console.log('[Wavo] selectable.chasis found:', newSelectable.chasis.map(m => m.name));
+
+    // Actualiza el ref primero (acceso síncrono, sin stale closures)
+    selectableRef.current = newSelectable;
     setSelectable(newSelectable);
     setChosenColors(initialChosen);
   }, []);
@@ -496,9 +502,9 @@ const WavoConfigurator: React.FC<WavoConfiguratorProps> = ({ currentUser, onLogo
     setSelectedKeys([]);
     setSelectedForColoring(null);
 
-    if (view === 'chasis' && selectable.chasis.length > 0) {
-      setSelectedForColoring(selectable.chasis[0]);
-      setEmissive(selectable.chasis[0], 0x111111);
+    if (view === 'chasis' && selectableRef.current.chasis.length > 0) {
+      setSelectedForColoring(selectableRef.current.chasis[0]);
+      setEmissive(selectableRef.current.chasis[0], 0x111111);
     }
 
     if (!cameraRef.current || !controlsRef.current) return;
@@ -529,34 +535,35 @@ const WavoConfigurator: React.FC<WavoConfiguratorProps> = ({ currentUser, onLogo
         z: 0,
       });
     }
-  }, [selectable, selectedForColoring, selectedKnobs, selectedButtons, selectedKeys, setEmissive]);
+  }, [selectedForColoring, selectedKnobs, selectedButtons, selectedKeys, setEmissive]);
 
   // Manejo de clicks en mallas interactivas en el canvas
   const handleCanvasClick = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
     if (!cameraRef.current || !rendererRef.current || currentView === 'normal') return;
 
     if (currentView === 'chasis') {
-      setSelectedForColoring(selectable.chasis[0]);
+      setSelectedForColoring(selectableRef.current.chasis[0]);
       return;
     }
 
     const raycaster = new THREE.Raycaster();
     const pointer = new THREE.Vector2();
     const bounds = rendererRef.current.domElement.getBoundingClientRect();
-    
+
     pointer.x = ((event.clientX - bounds.left) / bounds.width) * 2 - 1;
     pointer.y = -((event.clientY - bounds.top) / bounds.height) * 2 + 1;
-    
+
     raycaster.setFromCamera(pointer, cameraRef.current);
-    
+
+    // Leer siempre del ref — garantiza referencias frescas sin stale closures
     let candidates: THREE.Mesh[] = [];
-    if (currentView === 'knobs') candidates = selectable.knobs;
-    else if (currentView === 'buttons') candidates = selectable.buttons;
-    else if (currentView === 'keys') candidates = selectable.keys;
-    
+    if (currentView === 'knobs') candidates = selectableRef.current.knobs;
+    else if (currentView === 'buttons') candidates = selectableRef.current.buttons;
+    else if (currentView === 'keys') candidates = selectableRef.current.keys;
+
     if (candidates.length === 0) return;
     const intersects = raycaster.intersectObjects(candidates, false);
-    
+
     if (intersects.length > 0) {
       const hit = intersects[0].object as THREE.Mesh;
 
@@ -565,7 +572,7 @@ const WavoConfigurator: React.FC<WavoConfiguratorProps> = ({ currentUser, onLogo
         setSelectedKnobs(prev => {
           const exists = prev.includes(hit);
           const next = exists ? prev.filter(k => k !== hit) : [...prev, hit];
-          selectable.knobs.forEach(k => setEmissive(k, 0x000000));
+          selectableRef.current.knobs.forEach(k => setEmissive(k, 0x000000));
           next.forEach(k => setEmissive(k, 0x333333));
           return next;
         });
@@ -574,7 +581,7 @@ const WavoConfigurator: React.FC<WavoConfiguratorProps> = ({ currentUser, onLogo
         setSelectedButtons(prev => {
           const exists = prev.includes(hit);
           const next = exists ? prev.filter(b => b !== hit) : [...prev, hit];
-          selectable.buttons.forEach(b => setEmissive(b, 0x000000));
+          selectableRef.current.buttons.forEach(b => setEmissive(b, 0x000000));
           next.forEach(b => setEmissive(b, 0x333333));
           return next;
         });
@@ -583,7 +590,7 @@ const WavoConfigurator: React.FC<WavoConfiguratorProps> = ({ currentUser, onLogo
         setSelectedKeys(prev => {
           const exists = prev.includes(hit);
           const next = exists ? prev.filter(k => k !== hit) : [...prev, hit];
-          selectable.keys.forEach(k => setEmissive(k, 0x000000));
+          selectableRef.current.keys.forEach(k => setEmissive(k, 0x000000));
           next.forEach(k => setEmissive(k, 0x333333));
           return next;
         });
@@ -595,62 +602,67 @@ const WavoConfigurator: React.FC<WavoConfiguratorProps> = ({ currentUser, onLogo
       setSelectedKeys([]);
       candidates.forEach(c => setEmissive(c, 0x000000));
     }
-  }, [currentView, selectable, setEmissive]);
+  }, [currentView, setEmissive]);
 
   // Aplicar color de la paleta seleccionada
+  // Usa selectableRef para evitar stale closures — las mallas Three.js siempre frescas
   const applyColor = useCallback((name: string, colorData: PaletteColor) => {
     const hexVal = parseInt(colorData.hex.replace('#', ''), 16);
-    console.log('[Wavo] applyColor:', name, '| view:', currentView, '| selectable.knobs:', selectable.knobs.length, '| selectedKnobs:', selectedKnobs.length);
+    const cur = selectableRef.current;
+
+    console.log('[Wavo] applyColor:', name, colorData.hex,
+      '| view:', currentView,
+      '| ref.knobs:', cur.knobs.length,
+      '| selectedKnobs:', selectedKnobs.length);
 
     if (currentView === 'chasis') {
       setChosenColors(prev => ({ ...prev, chasis: name }));
-      selectable.chasis.forEach(mesh => {
-        if (mesh.material && 'color' in mesh.material) {
-          (mesh.material as THREE.MeshStandardMaterial).color.setHex(hexVal);
-        }
+      cur.chasis.forEach(mesh => {
+        (mesh.material as THREE.MeshStandardMaterial).color.setHex(hexVal);
       });
     }
     else if (currentView === 'knobs') {
       // Si hay selección individual usa esa; si no, aplica a TODOS los encoders
-      const targets = selectedKnobs.length > 0 ? selectedKnobs : selectable.knobs;
-      const nextKnobs = { ...chosenColors.knobs };
+      const targets = selectedKnobs.length > 0 ? selectedKnobs : cur.knobs;
+      console.log('[Wavo] knob targets:', targets.map(m => m.name));
+      const nextKnobs: Record<string, string> = {};
       targets.forEach(mesh => {
-        if (mesh.material && 'color' in mesh.material) {
-          (mesh.material as THREE.MeshStandardMaterial).color.setHex(hexVal);
-        }
+        const mat = mesh.material as THREE.MeshStandardMaterial;
+        mat.color.setHex(hexVal);
+        mat.needsUpdate = true;
         nextKnobs[mesh.name] = name;
       });
-      setChosenColors(prev => ({ ...prev, knobs: nextKnobs }));
+      setChosenColors(prev => ({ ...prev, knobs: { ...prev.knobs, ...nextKnobs } }));
       targets.forEach(k => setEmissive(k, 0x000000));
       setSelectedKnobs([]);
     }
     else if (currentView === 'buttons') {
-      const targets = selectedButtons.length > 0 ? selectedButtons : selectable.buttons;
-      const nextButtons = { ...chosenColors.buttons };
+      const targets = selectedButtons.length > 0 ? selectedButtons : cur.buttons;
+      const nextButtons: Record<string, string> = {};
       targets.forEach(mesh => {
-        if (mesh.material && 'color' in mesh.material) {
-          (mesh.material as THREE.MeshStandardMaterial).color.setHex(hexVal);
-        }
+        const mat = mesh.material as THREE.MeshStandardMaterial;
+        mat.color.setHex(hexVal);
+        mat.needsUpdate = true;
         nextButtons[mesh.name] = name;
       });
-      setChosenColors(prev => ({ ...prev, buttons: nextButtons }));
+      setChosenColors(prev => ({ ...prev, buttons: { ...prev.buttons, ...nextButtons } }));
       targets.forEach(b => setEmissive(b, 0x000000));
       setSelectedButtons([]);
     }
     else if (currentView === 'keys') {
-      const targets = selectedKeys.length > 0 ? selectedKeys : selectable.keys;
-      const nextKeys = { ...chosenColors.keys };
+      const targets = selectedKeys.length > 0 ? selectedKeys : cur.keys;
+      const nextKeys: Record<string, string> = {};
       targets.forEach(mesh => {
-        if (mesh.material && 'color' in mesh.material) {
-          (mesh.material as THREE.MeshStandardMaterial).color.setHex(hexVal);
-        }
+        const mat = mesh.material as THREE.MeshStandardMaterial;
+        mat.color.setHex(hexVal);
+        mat.needsUpdate = true;
         nextKeys[mesh.name] = name;
       });
-      setChosenColors(prev => ({ ...prev, keys: nextKeys }));
+      setChosenColors(prev => ({ ...prev, keys: { ...prev.keys, ...nextKeys } }));
       targets.forEach(k => setEmissive(k, 0x000000));
       setSelectedKeys([]);
     }
-  }, [currentView, selectable, selectedKnobs, selectedButtons, selectedKeys, chosenColors, setEmissive]);
+  }, [currentView, selectedKnobs, selectedButtons, selectedKeys, setEmissive]);
 
   // Capturar captura de pantalla
   const getScreenshotDefaultView = useCallback(() => {
