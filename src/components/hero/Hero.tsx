@@ -63,7 +63,7 @@ function PlasmaBackground() {
 
 // Componente del logo 3D
 function Logo3D() {
-  const gltf = useGLTF('/models/logo3d.glb')
+  const gltf = useGLTF(`${import.meta.env.BASE_URL}models/logo3d.glb`)
 
   return (
     <Float speed={1.5} rotationIntensity={0} floatIntensity={0.1}>
@@ -73,7 +73,7 @@ function Logo3D() {
 }
 
 // Preload del modelo
-useGLTF.preload('/models/logo3d.glb')
+useGLTF.preload(`${import.meta.env.BASE_URL}models/logo3d.glb`)
 
 const Hero: React.FC = () => {
   const navigate = useNavigate()
@@ -88,7 +88,7 @@ const Hero: React.FC = () => {
           <pointLight position={[-10, -10, -10]} color="#FF47E2" intensity={0.8} />
           <pointLight position={[10, 10, 10]} color="#00F5FF" intensity={0.8} />
           <pointLight position={[0, 10, 0]} color="#D0FF00" intensity={0.6} />
-          <Environment files="/textures/studio_small_03_1k.hdr" />
+          <Environment files={`${import.meta.env.BASE_URL}textures/studio_small_03_1k.hdr`} />
           <PlasmaBackground />
           <ParticleField />
           <Suspense fallback={null}>

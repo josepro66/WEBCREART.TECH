@@ -306,10 +306,10 @@ const WavoConfigurator: React.FC<WavoConfiguratorProps> = ({ currentUser, onLogo
       const loader = new GLTFLoader();
       const textureLoader = new THREE.TextureLoader();
       
-      textureLoader.load('/textures/pantallawavo.png', (texture) => {
+      textureLoader.load(`${import.meta.env.BASE_URL}textures/pantallawavo.png`, (texture) => {
         texture.flipY = false;
         texture.colorSpace = THREE.SRGBColorSpace;
-        loader.load('/models/wavo.glb', (gltf: any) => {
+        loader.load(`${import.meta.env.BASE_URL}models/wavo.glb`, (gltf: any) => {
           console.log('WavoConfigurator: Model loaded successfully');
           const model = gltf.scene as THREE.Group;
           // Rotación compensatoria: el modelo sale torcido del GLB

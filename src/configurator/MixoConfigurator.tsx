@@ -650,7 +650,7 @@ Best regards.`;
       const { GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader.js');
       const loader = new GLTFLoader();
       
-      loader.load('/models/MIXO.glb', (gltf: any) => {
+      loader.load(`${import.meta.env.BASE_URL}models/MIXO.glb`, (gltf: any) => {
         const model = gltf.scene as THREE.Group;
         modelRef.current = model;
         prepareModelParts(model);

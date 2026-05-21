@@ -11,7 +11,7 @@ const products = [
     name: 'BEATO',
     description: 'Controlador MIDI con cuerpo metálico y 8 botones ARCADE para productores',
     image: '/images/products/BEATO.png',
-    model: '/models/BEATO.glb',
+    model: `${import.meta.env.BASE_URL}models/BEATO.glb`,
     features: ['Cuerpo metálico', '8 botones ARCADE', '4 knobs asignables', 'USB-C'],
     price: '$185'
   },
@@ -20,7 +20,7 @@ const products = [
     name: 'BEATO16',
     description: 'Nuestro controlador MIDI más avanzado con tecnología de última generación',
     image: '/images/products/BEATO16.png',
-    model: '/models/BEATO16.glb',
+    model: `${import.meta.env.BASE_URL}models/BEATO16.glb`,
     features: ['16 Botones RGB', '4 Faders', '4 Knobs', 'USB-C'],
     price: '$499'
   },
@@ -29,7 +29,7 @@ const products = [
     name: 'FADO',
     description: 'Controlador MIDI minimalista con enfoque en la creatividad',
     image: '/images/products/FADO.png',
-    model: '/models/FADO.glb',
+    model: `${import.meta.env.BASE_URL}models/FADO.glb`,
     features: ['8 Faders de Precisión', 'USB-C'],
     price: '$199'
   },
@@ -38,7 +38,7 @@ const products = [
     name: 'KNOBO',
     description: '8 perillas asignables para un control preciso y creativo.',
     image: '/images/products/KNOBO.png',
-    model: '/models/KNOBO.glb',
+    model: `${import.meta.env.BASE_URL}models/KNOBO.glb`,
     features: ['8 knobs asignables', 'Cuerpo de metal', 'OLED display', 'USB-C'],
     price: '$130'
   },
@@ -47,7 +47,7 @@ const products = [
     name: 'LOOPO',
     description: 'Pedal looper con 4 footswitches y 4 knobs para directo y estudio.',
     image: '/images/products/LOOPO.png',
-    model: '/models/LOOPO.glb',
+    model: `${import.meta.env.BASE_URL}models/LOOPO.glb`,
     features: ['4 footswitches', '4 knobs asignables', 'Control de loops', 'Fácil de integrar'],
     price: '$175'
   },
@@ -56,7 +56,7 @@ const products = [
     name: 'MIXO',
     description: 'Controlador de mezcla profesional para DJs',
     image: '/images/products/MIXO.png',
-    model: '/models/MIXO.glb',
+    model: `${import.meta.env.BASE_URL}models/MIXO.glb`,
     features: ['4 channels', 'EQ', 'Effects', 'Crossfader'],
     price: '$599'
   },
@@ -64,8 +64,8 @@ const products = [
     id: 'wavo',
     name: 'WAVO',
     description: 'Sintetizador híbrido analógico-digital con secuenciador y teclado',
-    image: '/textures/wavo.png',
-    model: '/models/wavo.glb',
+    image: `${import.meta.env.BASE_URL}textures/wavo.png`,
+    model: `${import.meta.env.BASE_URL}models/wavo.glb`,
     features: ['Teclado personalizable', '7 Botones Arcade', '7 Knobs', 'Secuenciador'],
     price: '$500'
   }

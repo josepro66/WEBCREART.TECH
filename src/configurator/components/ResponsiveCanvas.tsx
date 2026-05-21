@@ -44,7 +44,7 @@ const SceneContent: React.FC<{
       <pointLight position={[-10, -10, -10]} intensity={0.5} />
       
       {/* Ambiente */}
-      {enableEnvironment && <Environment files="/textures/city.hdr" />}
+      {enableEnvironment && <Environment files={`${import.meta.env.BASE_URL}textures/city.hdr`} />}
       
       {/* Contenido de la escena */}
       {children}

@@ -238,8 +238,6 @@ const LoopoConfigurator: React.FC<{ onProductChange?: (product: 'beato' | 'knobo
       }
       else if (meshName.includes('aro')) {
         child.material = new THREE.MeshPhysicalMaterial({ color: 0x000000, metalness: 0.0, roughness: 0.2, clearcoat: 0.8, clearcoatRoughness: 0.1, reflectivity: 0.5, transmission: 0.3, thickness: 0.5, ior: 1.4, attenuationDistance: 1.0, attenuationColor: 0xffffff, transparent: true, opacity: 0.7 });
-        newSelectable.buttons.push(child);
-        newChosenColors.buttons[child.name] = 'Negro';
       }
       else if (meshName.includes('knob')) {
         if ((child.material as THREE.MeshStandardMaterial)?.color) {
@@ -273,7 +271,7 @@ const LoopoConfigurator: React.FC<{ onProductChange?: (product: 'beato' | 'knobo
       const { GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader.js');
       const loader = new GLTFLoader();
       
-      loader.load('/models/LOOPO.glb', (gltf: any) => {
+      loader.load(`${import.meta.env.BASE_URL}models/LOOPO.glb`, (gltf: any) => {
         console.log('LoopoConfigurator: Model loaded successfully');
         const model = gltf.scene as THREE.Group;
         modelRef.current = model;

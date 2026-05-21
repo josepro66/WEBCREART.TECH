@@ -137,7 +137,7 @@ function Scene() {
       />
       
       {/* Ambiente */}
-      <Environment files="/textures/studio_small_03_1k.hdr" />
+      <Environment files={`${import.meta.env.BASE_URL}textures/studio_small_03_1k.hdr`} />
     </>
   )
 }

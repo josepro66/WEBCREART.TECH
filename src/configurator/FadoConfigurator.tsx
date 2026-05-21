@@ -336,7 +336,7 @@ const FadoConfigurator: React.FC<{ onProductChange?: (product: 'beato' | 'knobo'
       const { GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader.js');
       const loader = new GLTFLoader();
       
-      loader.load('/models/FADO.glb', (gltf: any) => {
+      loader.load(`${import.meta.env.BASE_URL}models/FADO.glb`, (gltf: any) => {
         console.log('FadoConfigurator: Model loaded successfully');
         const model = gltf.scene as THREE.Group;
         modelRef.current = model;

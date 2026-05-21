@@ -42,7 +42,7 @@ function prepareModel(scene: THREE.Object3D, targetSize = 2.6, ringColor = 0x1c1
 }
 
 function LoopoPrimitive() {
-  const gltf = useGLTF(new URL('/models/LOOPO.glb', import.meta.url).href)
+  const gltf = useGLTF(`${import.meta.env.BASE_URL}models/LOOPO.glb`)
   useLayoutEffect(() => {
     prepareModel(gltf.scene)
     gltf.scene.rotation.y = Math.PI / 6; // 30 grados en radianes
@@ -53,7 +53,7 @@ function LoopoPrimitive() {
     </Center>
   )
 }
-useGLTF.preload(new URL('/models/LOOPO.glb', import.meta.url).href)
+useGLTF.preload(`${import.meta.env.BASE_URL}models/LOOPO.glb`)
 
 export default function LoopoViewer({ className }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -104,7 +104,7 @@ export default function LoopoViewer({ className }: Props) {
             <AutoRotate />
           </group>
           <ContactShadows position={[0, -0.8, 0]} opacity={0.45} scale={10} blur={2.4} far={2} />
-          <Environment files="/textures/studio_small_03_1k.hdr" />
+          <Environment files={`${import.meta.env.BASE_URL}textures/studio_small_03_1k.hdr`} />
         </React.Suspense>
       </Canvas>
     </div>

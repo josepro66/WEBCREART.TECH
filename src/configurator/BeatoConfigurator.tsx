@@ -437,7 +437,7 @@ const MidiConfigurator: React.FC<MidiConfiguratorProps> = ({ onProductChange, cu
       const { GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader.js');
       const loader = new GLTFLoader();
 
-      const url = '/models/BEATO3.glb';
+      const url = `${import.meta.env.BASE_URL}models/BEATO3.glb`;
       console.log('Cargando modelo BEATO3 desde:', url);
       loader.load(url, (gltf: any) => {
           const model = gltf.scene as THREE.Group;

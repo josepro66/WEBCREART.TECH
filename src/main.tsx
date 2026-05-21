@@ -8,7 +8,7 @@ import './firebaseConfig.ts'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <BrowserRouter>
+    <BrowserRouter basename="/WEB">
       <App />
     </BrowserRouter>
   </React.StrictMode>,

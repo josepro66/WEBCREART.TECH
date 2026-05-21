@@ -298,7 +298,7 @@ const Beato16Configurator: React.FC<Beato16ConfiguratorProps> = ({ currentUser, 
   const [envMap, setEnvMap] = useState<THREE.Texture | null>(null);
   useEffect(() => {
     const loader = new THREE.TextureLoader();
-    loader.load('public/textures/blackhole.jpg.avif', (texture) => {
+    loader.load(`${import.meta.env.BASE_URL}textures/blackhole.jpg.avif`, (texture) => {
       texture.mapping = THREE.EquirectangularReflectionMapping;
       setEnvMap(texture);
     });
@@ -402,7 +402,7 @@ const Beato16Configurator: React.FC<Beato16ConfiguratorProps> = ({ currentUser, 
           opacity: 0.7 
         });
         newSelectable.buttons.push(child);
-        newChosenColors.buttons[child.name] = 'Negro';
+        initialChosen.buttons[child.name] = 'Negro';
       }
       else if (meshName.includes('knob')) {
         if ((child.material as THREE.MeshStandardMaterial)?.color) {
@@ -476,7 +476,7 @@ const Beato16Configurator: React.FC<Beato16ConfiguratorProps> = ({ currentUser, 
       const { GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader.js');
       const loader = new GLTFLoader();
       
-      loader.load('/models/BEATO16.glb', (gltf: any) => {
+      loader.load(`${import.meta.env.BASE_URL}models/BEATO16.glb`, (gltf: any) => {
         const model = gltf.scene as THREE.Group;
         modelRef.current = model;
         prepareModelParts(model);
