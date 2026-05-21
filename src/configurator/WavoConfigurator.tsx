@@ -226,6 +226,10 @@ const WavoConfigurator: React.FC<WavoConfiguratorProps> = ({ currentUser, onLogo
       child.castShadow = true;
       child.receiveShadow = true;
       const meshName = typeof child.name === 'string' ? child.name.toLowerCase() : '';
+      // Los encoders son THREE.Group cuyos hijos son Meshes — revisar también el padre
+      const parentName = child.parent
+        ? (typeof child.parent.name === 'string' ? child.parent.name.toLowerCase() : '')
+        : '';
 
       // Configurar pantalla (placeholder hasta que cargue la textura)
       if (meshName.includes('pantallawavo')) {
@@ -258,12 +262,19 @@ const WavoConfigurator: React.FC<WavoConfiguratorProps> = ({ currentUser, onLogo
         newSelectable.chasis.push(child);
         initialChosen.chasis = colorName;
       }
-      // Knobs / Dials / Encoders (varios nombres posibles según el GLB)
+      // Knobs / Dials / Encoders
+      // IMPORTANTE: en este GLB los encoders son THREE.Group ("encoder1"…"encoder4")
+      // cuyos hijos son Meshes con nombres "Cylinder118", "Cylinder118_1", etc.
+      // Por eso se comprueba también el nombre del padre (parentName).
       else if (
         meshName.includes('encoder') ||
         meshName.includes('knob') ||
         meshName.includes('dial') ||
-        meshName.includes('pot')
+        meshName.includes('pot') ||
+        parentName.includes('encoder') ||
+        parentName.includes('knob') ||
+        parentName.includes('dial') ||
+        parentName.includes('pot')
       ) {
         const savedName = initialChosen.knobs[child.name];
         const defaultColor = savedName && PALETTES.knobs[savedName] ? savedName : 'Negro';
