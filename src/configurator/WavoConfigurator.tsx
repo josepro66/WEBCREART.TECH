@@ -211,9 +211,9 @@ const WavoConfigurator: React.FC<WavoConfiguratorProps> = ({ currentUser, onLogo
   }, []);
 
   // Clasificar y preparar las partes del modelo Wavo
-  const prepareModelParts = useCallback((model: THREE.Group, screenTexture?: THREE.Texture) => {
+  const prepareModelParts = useCallback((model: THREE.Group) => {
     const newSelectable: Selectable = { chasis: [], knobs: [], buttons: [], keys: [] };
-    
+
     let initialChosen = { ...chosenColors };
 
     console.log('[Wavo] prepareModelParts - all nodes:');
@@ -227,16 +227,14 @@ const WavoConfigurator: React.FC<WavoConfiguratorProps> = ({ currentUser, onLogo
       child.receiveShadow = true;
       const meshName = typeof child.name === 'string' ? child.name.toLowerCase() : '';
 
-      // Configurar pantalla brillante
+      // Configurar pantalla (placeholder hasta que cargue la textura)
       if (meshName.includes('pantallawavo')) {
         child.material = new THREE.MeshPhysicalMaterial({
-          map: screenTexture || null,
-          emissiveMap: screenTexture || null,
-          color: screenTexture ? 0xffffff : 0x000000,
+          color: 0x000000,
           roughness: 0.1,
           metalness: 0.9,
-          emissive: screenTexture ? 0xffffff : 0x00ffff,
-          emissiveIntensity: screenTexture ? 0.8 : 0.25
+          emissive: 0x00ffff,
+          emissiveIntensity: 0.25
         });
       }
       // Tornillos/pernos
@@ -319,35 +317,67 @@ const WavoConfigurator: React.FC<WavoConfiguratorProps> = ({ currentUser, onLogo
   }, []);
 
   // Cargar modelo 3D
+  // GLB se carga PRIMERO (independiente de la textura de pantalla)
+  // La textura de pantalla se aplica aparte para no bloquear la carga del modelo
   const loadModel = useCallback(async () => {
     try {
       const { GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader.js');
       const loader = new GLTFLoader();
-      const textureLoader = new THREE.TextureLoader();
-      
-      textureLoader.load(`${import.meta.env.BASE_URL}textures/pantallawavo.png`, (texture) => {
-        texture.flipY = false;
-        texture.colorSpace = THREE.SRGBColorSpace;
-        loader.load(`${import.meta.env.BASE_URL}models/wavo.glb`, (gltf: any) => {
-          console.log('WavoConfigurator: Model loaded successfully');
+
+      loader.load(
+        `${import.meta.env.BASE_URL}models/wavo.glb`,
+        (gltf: any) => {
+          console.log('[Wavo] Modelo GLB cargado OK');
           const model = gltf.scene as THREE.Group;
-          // Rotación compensatoria: el modelo sale torcido del GLB
           model.rotation.set(0, -0.30, 0);
           modelRef.current = model;
-          prepareModelParts(model, texture);
+
+          // Prepara las partes sin textura de pantalla (se aplica abajo si carga)
+          prepareModelParts(model);
           centerAndScaleModel(model);
           sceneRef.current?.add(model);
           if (!modelOriginalPositionRef.current) {
             modelOriginalPositionRef.current = model.position.clone();
           }
-        }, undefined, (error: any) => {
-          console.error('ERROR AL CARGAR EL MODELO WAVO:', error);
-        });
-      }, undefined, (error: any) => {
-        console.error('ERROR AL CARGAR LA TEXTURA DE PANTALLA WAVO:', error);
-      });
+
+          // Intentar cargar la textura de pantalla de forma independiente
+          const textureLoader = new THREE.TextureLoader();
+          textureLoader.load(
+            `${import.meta.env.BASE_URL}textures/pantallawavo.png`,
+            (texture) => {
+              texture.flipY = false;
+              texture.colorSpace = THREE.SRGBColorSpace;
+              // Aplicar solo al mesh de pantalla
+              model.traverse((child: THREE.Object3D) => {
+                if (
+                  child instanceof THREE.Mesh &&
+                  child.name.toLowerCase().includes('pantallawavo')
+                ) {
+                  child.material = new THREE.MeshPhysicalMaterial({
+                    map: texture,
+                    emissiveMap: texture,
+                    color: 0xffffff,
+                    roughness: 0.1,
+                    metalness: 0.9,
+                    emissive: 0xffffff,
+                    emissiveIntensity: 0.8
+                  });
+                }
+              });
+            },
+            undefined,
+            () => {
+              console.warn('[Wavo] Textura de pantalla no disponible — se omite');
+            }
+          );
+        },
+        undefined,
+        (error: any) => {
+          console.error('[Wavo] ERROR AL CARGAR EL MODELO:', error);
+        }
+      );
     } catch (error) {
-      console.error('Error importing GLTFLoader:', error);
+      console.error('[Wavo] Error importando GLTFLoader:', error);
     }
   }, [prepareModelParts, centerAndScaleModel]);
 
