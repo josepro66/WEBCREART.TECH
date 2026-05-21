@@ -10,7 +10,7 @@ const products = [
     id: 'beato',
     name: 'BEATO',
     description: 'Controlador MIDI con cuerpo metálico y 8 botones ARCADE para productores',
-    image: '/images/products/BEATO.png',
+    image: `${import.meta.env.BASE_URL}images/products/BEATO.png`,
     model: `${import.meta.env.BASE_URL}models/BEATO.glb`,
     features: ['Cuerpo metálico', '8 botones ARCADE', '4 knobs asignables', 'USB-C'],
     price: '$185'
@@ -19,7 +19,7 @@ const products = [
     id: 'beato16',
     name: 'BEATO16',
     description: 'Nuestro controlador MIDI más avanzado con tecnología de última generación',
-    image: '/images/products/BEATO16.png',
+    image: `${import.meta.env.BASE_URL}images/products/BEATO16.png`,
     model: `${import.meta.env.BASE_URL}models/BEATO16.glb`,
     features: ['16 Botones RGB', '4 Faders', '4 Knobs', 'USB-C'],
     price: '$499'
@@ -28,7 +28,7 @@ const products = [
     id: 'fado',
     name: 'FADO',
     description: 'Controlador MIDI minimalista con enfoque en la creatividad',
-    image: '/images/products/FADO.png',
+    image: `${import.meta.env.BASE_URL}images/products/FADO.png`,
     model: `${import.meta.env.BASE_URL}models/FADO.glb`,
     features: ['8 Faders de Precisión', 'USB-C'],
     price: '$199'
@@ -37,7 +37,7 @@ const products = [
     id: 'knobo',
     name: 'KNOBO',
     description: '8 perillas asignables para un control preciso y creativo.',
-    image: '/images/products/KNOBO.png',
+    image: `${import.meta.env.BASE_URL}images/products/KNOBO.png`,
     model: `${import.meta.env.BASE_URL}models/KNOBO.glb`,
     features: ['8 knobs asignables', 'Cuerpo de metal', 'OLED display', 'USB-C'],
     price: '$130'
@@ -46,7 +46,7 @@ const products = [
     id: 'loopo',
     name: 'LOOPO',
     description: 'Pedal looper con 4 footswitches y 4 knobs para directo y estudio.',
-    image: '/images/products/LOOPO.png',
+    image: `${import.meta.env.BASE_URL}images/products/LOOPO.png`,
     model: `${import.meta.env.BASE_URL}models/LOOPO.glb`,
     features: ['4 footswitches', '4 knobs asignables', 'Control de loops', 'Fácil de integrar'],
     price: '$175'
@@ -55,7 +55,7 @@ const products = [
     id: 'mixo',
     name: 'MIXO',
     description: 'Controlador de mezcla profesional para DJs',
-    image: '/images/products/MIXO.png',
+    image: `${import.meta.env.BASE_URL}images/products/MIXO.png`,
     model: `${import.meta.env.BASE_URL}models/MIXO.glb`,
     features: ['4 channels', 'EQ', 'Effects', 'Crossfader'],
     price: '$599'

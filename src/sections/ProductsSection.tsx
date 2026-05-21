@@ -2,34 +2,35 @@ import React from 'react'
 import ProductCard from '../components/ui/ProductCard'
 import ProductRail from '../components/showroom/ProductRail'
 
+const BASE = import.meta.env.BASE_URL
 const products = [
   {
-    image: '/images/products/KNOBO.png',
+    image: `${BASE}images/products/KNOBO.png`,
     title: 'Knobo',
     description: '$130 — 8 perillas asignables para un control preciso y creativo.',
   },
   {
-    image: '/images/products/LOOPO.png',
+    image: `${BASE}images/products/LOOPO.png`,
     title: 'LOOPO',
     description: '£130 — Compacto, dinámico y listo para la acción.',
   },
   {
-    image: '/images/products/FADO.png',
+    image: `${BASE}images/products/FADO.png`,
     title: 'FADO',
     description: '$150 — Movimiento fluido y expresivo.',
   },
   {
-    image: '/images/products/BEATO.png',
+    image: `${BASE}images/products/BEATO.png`,
     title: 'Beato 8',
     description: '$185 — Compacto y potente.',
   },
   {
-    image: '/images/products/MIXO.png',
+    image: `${BASE}images/products/MIXO.png`,
     title: 'Mixo',
     description: '$200 — Flujo total, mezcla a tu manera.',
   },
   {
-    image: '/images/products/BEATO16.png',
+    image: `${BASE}images/products/BEATO16.png`,
     title: 'Beato 16 (Nuevo)',
     description: '$250 — Más control que nunca.',
   },
@@ -42,7 +43,7 @@ export default function ProductsSection() {
       <div 
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{ 
-          backgroundImage: `url('/images/fondonuestrosproductos.png')`,
+          backgroundImage: `url('${BASE}images/fondonuestrosproductos.png')`,
           zIndex: 1000000
         }}
       />
@@ -56,7 +57,7 @@ export default function ProductsSection() {
         {/* Debug: Imagen de prueba */}
         <div className="absolute top-16 left-4 w-32 h-20 border-2 border-white z-10">
           <img 
-            src="images/fondonuestrosproductos.png" 
+            src={`${BASE}images/fondonuestrosproductos.png`}
             alt="Debug background" 
             className="w-full h-full object-cover"
             onLoad={() => console.log('Imagen cargada correctamente')}
