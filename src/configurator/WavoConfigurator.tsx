@@ -140,7 +140,6 @@ const WavoConfigurator: React.FC<WavoConfiguratorProps> = ({ currentUser, onLogo
       'Naranja':   { hex: '#F47119' },
       'Morado':    { hex: '#7B217E' },
       'Rojo':      { hex: '#E52421' },
-      'Negro':     { hex: '#1C1C1C' },
       'Rosa':      { hex: '#FF007F' },
       'Gris':      { hex: '#808080' },
     },
@@ -152,7 +151,6 @@ const WavoConfigurator: React.FC<WavoConfiguratorProps> = ({ currentUser, onLogo
       'Naranja':   { hex: '#F47119' },
       'Morado':    { hex: '#7B217E' },
       'Rojo':      { hex: '#E52421' },
-      'Negro':     { hex: '#1C1C1C' },
       'Rosa':      { hex: '#FF007F' },
       'Gris':      { hex: '#808080' },
     },
@@ -164,7 +162,6 @@ const WavoConfigurator: React.FC<WavoConfiguratorProps> = ({ currentUser, onLogo
       'Naranja':   { hex: '#F47119' },
       'Morado':    { hex: '#7B217E' },
       'Rojo':      { hex: '#E52421' },
-      'Negro':     { hex: '#1C1C1C' },
       'Rosa':      { hex: '#FF007F' },
       'Gris':      { hex: '#808080' },
     }
@@ -277,7 +274,7 @@ const WavoConfigurator: React.FC<WavoConfiguratorProps> = ({ currentUser, onLogo
         parentName.includes('pot')
       ) {
         const savedName = initialChosen.knobs[child.name];
-        const defaultColor = savedName && PALETTES.knobs[savedName] ? savedName : 'Negro';
+        const defaultColor = savedName && PALETTES.knobs[savedName] ? savedName : 'Gris';
         child.material = new THREE.MeshStandardMaterial({
           color: PALETTES.knobs[defaultColor].hex,
           metalness: 0.3,
@@ -335,9 +332,12 @@ const WavoConfigurator: React.FC<WavoConfiguratorProps> = ({ currentUser, onLogo
       const { GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader.js');
       const loader = new GLTFLoader();
 
+      const loadScene = sceneRef.current;
       loader.load(
         `${import.meta.env.BASE_URL}models/wavo.glb`,
         (gltf: any) => {
+          // Bail out if the scene was torn down (e.g. StrictMode double-invoke or unmount)
+          if (!sceneRef.current || sceneRef.current !== loadScene) return;
           console.log('[Wavo] Modelo GLB cargado OK');
           const model = gltf.scene as THREE.Group;
           model.rotation.set(0, -0.30, 0);
@@ -346,7 +346,7 @@ const WavoConfigurator: React.FC<WavoConfiguratorProps> = ({ currentUser, onLogo
           // Prepara las partes sin textura de pantalla (se aplica abajo si carga)
           prepareModelParts(model);
           centerAndScaleModel(model);
-          sceneRef.current?.add(model);
+          sceneRef.current.add(model);
           if (!modelOriginalPositionRef.current) {
             modelOriginalPositionRef.current = model.position.clone();
           }
@@ -454,6 +454,9 @@ const WavoConfigurator: React.FC<WavoConfiguratorProps> = ({ currentUser, onLogo
         mountRef.current.removeChild(renderer.domElement);
       }
       renderer.dispose();
+      // Reset refs so stale async callbacks don't re-add the model to a new scene
+      sceneRef.current = null;
+      modelRef.current = null;
     };
   }, [setupProfessionalLighting, loadModel]);
 
