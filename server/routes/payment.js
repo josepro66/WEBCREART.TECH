@@ -35,8 +35,7 @@ router.post('/payu/create-order',
       console.error('Error en endpoint PayU create-order:', error);
       res.status(500).json({
         success: false,
-        error: 'Error interno del servidor',
-        message: error.message
+        error: 'Error interno del servidor'
       });
     }
   }
@@ -64,8 +63,7 @@ router.post('/paypal/create-order',
       console.error('Error en endpoint PayPal create-order:', error);
       res.status(500).json({
         success: false,
-        error: 'Error interno del servidor',
-        message: error.message
+        error: 'Error interno del servidor'
       });
     }
   }
@@ -98,8 +96,7 @@ router.post('/paypal/capture-payment',
       console.error('Error en endpoint PayPal capture-payment:', error);
       res.status(500).json({
         success: false,
-        error: 'Error interno del servidor',
-        message: error.message
+        error: 'Error interno del servidor'
       });
     }
   }
@@ -127,8 +124,7 @@ router.post('/webhook/payu',
       console.error('Error procesando webhook PayU:', error);
       res.status(400).json({
         success: false,
-        error: 'Error procesando webhook',
-        message: error.message
+        error: 'Error procesando webhook'
       });
     }
   }
@@ -156,8 +152,7 @@ router.post('/webhook/paypal',
       console.error('Error procesando webhook PayPal:', error);
       res.status(400).json({
         success: false,
-        error: 'Error procesando webhook',
-        message: error.message
+        error: 'Error procesando webhook'
       });
     }
   }
@@ -203,8 +198,7 @@ router.get('/order/:orderId/status',
       console.error('Error obteniendo estado de orden:', error);
       res.status(500).json({
         success: false,
-        error: 'Error interno del servidor',
-        message: error.message
+        error: 'Error interno del servidor'
       });
     }
   }
@@ -247,8 +241,7 @@ router.get('/products/config',
       console.error('Error obteniendo configuración de productos:', error);
       res.status(500).json({
         success: false,
-        error: 'Error interno del servidor',
-        message: error.message
+        error: 'Error interno del servidor'
       });
     }
   }

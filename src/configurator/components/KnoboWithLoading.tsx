@@ -1,53 +1,19 @@
-import React, { useState, useEffect } from 'react';
-import KnoboLoadingScreen from './KnoboLoadingScreen';
+import React from 'react';
 import KnoboConfigurator from '../KnoboConfigurator';
+import ConfiguratorWithLoading from './ConfiguratorWithLoading';
 
-interface User {
-  name: string;
-  email: string;
-}
+interface User { name: string; email: string; }
+interface Props { className?: string; style?: React.CSSProperties; currentUser: User; onLogout: () => void; }
 
-interface KnoboWithLoadingProps {
-  className?: string;
-  style?: React.CSSProperties;
-  currentUser: User;
-  onLogout: () => void;
-}
-
-const KnoboWithLoading: React.FC<KnoboWithLoadingProps> = ({
-  className = '',
-  style = {},
-  currentUser,
-  onLogout
-}) => {
-  const [ready, setReady] = useState(false);
-  const [startTime] = useState(Date.now());
-
-  // Forzar exactamente 4.1 segundos de loading
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      console.log('Tiempo mínimo de 4.1 segundos completado para KNOBO');
-      setReady(true);
-    }, 4100);
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  return (
-    <div className={className} style={style}>
-      <KnoboLoadingScreen isVisible={!ready} />
-
-      <div
-        style={{
-          width: '100%',
-          height: '100%',
-          opacity: ready ? 1 : 0
-        }}
-      >
-        <KnoboConfigurator currentUser={currentUser} onLogout={onLogout} />
-      </div>
-    </div>
-  );
-};
+const KnoboWithLoading: React.FC<Props> = ({ className, style, currentUser, onLogout }) => (
+  <ConfiguratorWithLoading
+    name="KNOBO"
+    subtitle="Features: Professional knob controller with 4 assignable knobs and LED feedback."
+    className={className}
+    style={style}
+  >
+    <KnoboConfigurator currentUser={currentUser} onLogout={onLogout} />
+  </ConfiguratorWithLoading>
+);
 
 export default KnoboWithLoading;

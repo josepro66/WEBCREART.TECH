@@ -36,8 +36,17 @@ app.use(bodyParser.json({ limit: '10mb' }));
 app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
 
 // Configuración de sesión para CSRF
+if (!process.env.SESSION_SECRET) {
+  if (process.env.NODE_ENV === 'production') {
+    console.error('❌ SESSION_SECRET no está definida. El servidor no puede iniciarse en producción sin ella.');
+    process.exit(1);
+  }
+  console.warn('⚠️  SESSION_SECRET no definida. Usando clave temporal para desarrollo — NO usar en producción.');
+}
+const sessionSecret = process.env.SESSION_SECRET || require('crypto').randomBytes(32).toString('hex');
+
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'default-secret-key',
+  secret: sessionSecret,
   resave: false,
   saveUninitialized: false,
   cookie: {
@@ -72,35 +81,6 @@ app.get('/health', (req, res) => {
     version: '1.0.0'
   });
 });
-
-// Ruta para verificar configuración (solo en desarrollo)
-if (process.env.NODE_ENV === 'development') {
-  app.get('/api/config/check', (req, res) => {
-    const config = {
-      payu: {
-        hasApiKey: !!process.env.PAYU_API_KEY,
-        hasMerchantId: !!process.env.PAYU_MERCHANT_ID,
-        hasAccountId: !!process.env.PAYU_ACCOUNT_ID,
-        hasSignatureKey: !!process.env.PAYU_SIGNATURE_KEY,
-        baseUrl: process.env.PAYU_BASE_URL
-      },
-      paypal: {
-        hasClientId: !!process.env.PAYPAL_CLIENT_ID,
-        hasClientSecret: !!process.env.PAYPAL_CLIENT_SECRET,
-        mode: process.env.PAYPAL_MODE
-      },
-      database: {
-        type: 'sqlite',
-        path: path.join(__dirname, 'data/orders.db')
-      }
-    };
-
-    res.json({
-      success: true,
-      data: config
-    });
-  });
-}
 
 // Middleware para manejar rutas no encontradas
 app.use('*', (req, res) => {

@@ -1,4 +1,5 @@
 require('dotenv').config();
+const crypto = require('crypto');
 
 // Configuración de productos y precios
 const PRODUCTS = {
@@ -117,7 +118,7 @@ const validatePrice = (productType, amount, currency) => {
 // Función para generar ID único de orden
 const generateOrderId = (productType) => {
   const timestamp = Date.now();
-  const random = Math.random().toString(36).substring(2, 8);
+  const random = crypto.randomBytes(4).toString('hex');
   return `${productType}-${timestamp}-${random}`;
 };
 
