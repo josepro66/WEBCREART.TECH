@@ -100,10 +100,11 @@ const LoopoConfigurator: React.FC<{ onProductChange?: (product: 'beato' | 'knobo
       'Verde':     { hex: '#7CBA40' },
       'Amarillo':  { hex: '#F3E600' },
       'Azul':      { hex: '#325EB7' },
-      'Blanco': { hex: '#FFFFFF' },
+      'Blanco':    { hex: '#F5F5F5' },
       'Naranja':   { hex: '#F47119' },
       'Morado':    { hex: '#7B217E' },
       'Rojo':      { hex: '#E52421' },
+      'Negro':     { hex: '#1C1C1C' },
       'Rosa':      { hex: '#FF007F' },
       'Gris':      { hex: '#808080' },
     },
@@ -111,10 +112,11 @@ const LoopoConfigurator: React.FC<{ onProductChange?: (product: 'beato' | 'knobo
       'Verde':     { hex: '#7CBA40' },
       'Amarillo':  { hex: '#F3E600' },
       'Azul':      { hex: '#325EB7' },
-      'Blanco': { hex: '#FFFFFF' },
+      'Blanco':    { hex: '#F5F5F5' },
       'Naranja':   { hex: '#F47119' },
       'Morado':    { hex: '#7B217E' },
       'Rojo':      { hex: '#E52421' },
+      'Negro':     { hex: '#1C1C1C' },
       'Rosa':      { hex: '#FF007F' },
       'Gris':      { hex: '#808080' },
     }
@@ -243,7 +245,7 @@ const LoopoConfigurator: React.FC<{ onProductChange?: (product: 'beato' | 'knobo
           const lightness = (mat.color.r + mat.color.g + mat.color.b) / 3;
           if (lightness < 0.5) {
             const savedName = initialChosen.knobs[child.name];
-            const defaultColor = savedName && PALETTES.knobs[savedName] ? savedName : 'Gris';
+            const defaultColor = savedName && PALETTES.knobs[savedName] ? savedName : 'Negro';
             child.material = new THREE.MeshStandardMaterial({ 
               color: PALETTES.knobs[defaultColor].hex, 
               metalness: 0, 
