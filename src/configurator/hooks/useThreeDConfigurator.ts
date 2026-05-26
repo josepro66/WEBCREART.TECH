@@ -160,9 +160,9 @@ export const useThreeDConfigurator = ({
         newSelectable.chasis.push(child);
         newChosenColors.chasis = initialChasisColor;
       } else if (meshName.includes('boton') && !isKnobo) { // Solo para Beato
-        const defaultColor = 'Negro';
-        child.material = new THREE.MeshPhysicalMaterial({ 
-          color: palettes.buttons[defaultColor]?.hex || '#1C1C1C', 
+        const defaultColor = 'Gris';
+        child.material = new THREE.MeshPhysicalMaterial({
+          color: palettes.buttons[defaultColor]?.hex || '#808080',
           metalness: 0.4,
           roughness: 0.68,
           clearcoat: 0.85,

@@ -300,7 +300,7 @@ const FadoConfigurator: React.FC<{ onProductChange?: (product: 'beato' | 'knobo'
         console.log('Fader detectado en Fado:', child.name);
         if (meshName === 'fader1_1' || meshName === 'fader2_1' || meshName === 'fader3_1' || meshName === 'fader4_1' || meshName === 'fader5_1' || meshName === 'fader6_1' || meshName === 'fader7_1' || meshName === 'fader8_1') {
           const saved = initialChosen.faders[child.name];
-          const defaultColor = saved && PALETTES.faders[saved] ? saved : 'Black';
+          const defaultColor = saved && PALETTES.faders[saved] ? saved : 'Gray';
           child.material = new THREE.MeshStandardMaterial({ color: PALETTES.faders[defaultColor].hex, metalness: 0, roughness: 1 });
           newSelectable.faders.push(child);
           initialChosen.faders[child.name] = defaultColor;
@@ -311,7 +311,7 @@ const FadoConfigurator: React.FC<{ onProductChange?: (product: 'beato' | 'knobo'
               const lightness = (mat.color.r + mat.color.g + mat.color.b) / 3;
               if (lightness < 0.8) {
                 const saved = initialChosen.faders[child.name];
-                const defaultColor = saved && PALETTES.faders[saved] ? saved : 'Black';
+                const defaultColor = saved && PALETTES.faders[saved] ? saved : 'Gray';
                 mat.color.setHex(parseInt(PALETTES.faders[defaultColor].hex.replace('#', ''), 16));
                 newSelectable.faders.push(child);
                 initialChosen.faders[child.name] = defaultColor;
