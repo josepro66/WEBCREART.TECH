@@ -124,6 +124,7 @@ const MidiConfigurator: React.FC<MidiConfiguratorProps> = ({ onProductChange, cu
       'Naranja':   { hex: '#F47119' },
       'Morado':    { hex: '#7B217E' },
       'Rojo':      { hex: '#E52421' },
+      'Negro':     { hex: '#1C1C1C' },
       'Rosa':      { hex: '#FF007F' },
       'Gris':      { hex: '#808080' },
     },

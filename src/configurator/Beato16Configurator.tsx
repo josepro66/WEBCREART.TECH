@@ -101,10 +101,10 @@ const Beato16Configurator: React.FC<Beato16ConfiguratorProps> = ({ currentUser, 
   // Configuración de paletas
   const PALETTES: Palettes = {
     chasis: { 'Verde': { hex: '#7CBA40' }, 'Amarillo': { hex: '#F3E600' }, 'Azul': { hex: '#325EB7' }, 'Blanco': { hex: '#FFFFFF' }, 'Naranja': { hex: '#F47119' }, 'Morado': { hex: '#7B217E' }, 'Rojo': { hex: '#E52421' }, 'Negro': { hex: '#1C1C1C' }, 'Rosa': { hex: '#FF007F' }, 'Gris': { hex: '#808080' }, },
-    buttons: { 'Verde': { hex: '#7CBA40' }, 'Amarillo': { hex: '#F3E600' }, 'Azul': { hex: '#325EB7' }, 'Blanco': { hex: '#FFFFFF' }, 'Naranja': { hex: '#F47119' }, 'Morado': { hex: '#7B217E' }, 'Rojo': { hex: '#E52421' }, 'Rosa': { hex: '#FF007F' }, 'Gris': { hex: '#808080' }, },
+    buttons: { 'Verde': { hex: '#7CBA40' }, 'Amarillo': { hex: '#F3E600' }, 'Azul': { hex: '#325EB7' }, 'Blanco': { hex: '#FFFFFF' }, 'Naranja': { hex: '#F47119' }, 'Morado': { hex: '#7B217E' }, 'Rojo': { hex: '#E52421' }, 'Negro': { hex: '#1C1C1C' }, 'Rosa': { hex: '#FF007F' }, 'Gris': { hex: '#808080' }, },
     knobs: { 'Verde': { hex: '#7CBA40' }, 'Amarillo': { hex: '#F3E600' }, 'Azul': { hex: '#325EB7' }, 'Blanco': { hex: '#FFFFFF' }, 'Naranja': { hex: '#F47119' }, 'Morado': { hex: '#7B217E' }, 'Rojo': { hex: '#E52421' }, 'Rosa': { hex: '#FF007F' }, 'Gris': { hex: '#808080' }, },
-    teclas: { 'Verde': { hex: '#7CBA40' }, 'Amarillo': { hex: '#F3E600' }, 'Azul': { hex: '#325EB7' }, 'Blanco': { hex: '#FFFFFF' }, 'Naranja': { hex: '#F47119' }, 'Morado': { hex: '#7B217E' }, 'Rojo': { hex: '#E52421' }, 'Rosa': { hex: '#FF007F' }, 'Gris': { hex: '#808080' }, },
-    faders: { 'Verde': { hex: '#7CBA40' }, 'Amarillo': { hex: '#F3E600' }, 'Azul': { hex: '#325EB7' }, 'Blanco': { hex: '#FFFFFF' }, 'Naranja': { hex: '#F47119' }, 'Morado': { hex: '#7B217E' }, 'Rojo': { hex: '#E52421' }, 'Rosa': { hex: '#FF007F' }, 'Gris': { hex: '#808080' }, }
+    teclas: { 'Verde': { hex: '#7CBA40' }, 'Amarillo': { hex: '#F3E600' }, 'Azul': { hex: '#325EB7' }, 'Blanco': { hex: '#FFFFFF' }, 'Naranja': { hex: '#F47119' }, 'Morado': { hex: '#7B217E' }, 'Rojo': { hex: '#E52421' }, 'Negro': { hex: '#1C1C1C' }, 'Rosa': { hex: '#FF007F' }, 'Gris': { hex: '#808080' }, },
+    faders: { 'Verde': { hex: '#7CBA40' }, 'Amarillo': { hex: '#F3E600' }, 'Azul': { hex: '#325EB7' }, 'Blanco': { hex: '#FFFFFF' }, 'Naranja': { hex: '#F47119' }, 'Morado': { hex: '#7B217E' }, 'Rojo': { hex: '#E52421' }, 'Negro': { hex: '#1C1C1C' }, 'Rosa': { hex: '#FF007F' }, 'Gris': { hex: '#808080' }, }
   };
 
   const CAMERA_VIEWS = {
