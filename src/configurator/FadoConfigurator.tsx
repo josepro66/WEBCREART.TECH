@@ -303,7 +303,7 @@ const FadoConfigurator: React.FC<{ onProductChange?: (product: 'beato' | 'knobo'
         console.log('Fader detectado en Fado:', child.name);
         if (meshName === 'fader1_1' || meshName === 'fader2_1' || meshName === 'fader3_1' || meshName === 'fader4_1' || meshName === 'fader5_1' || meshName === 'fader6_1' || meshName === 'fader7_1' || meshName === 'fader8_1') {
           const saved = initialChosen.faders[child.name];
-          const defaultColor = saved && PALETTES.faders[saved] ? saved : 'Gray';
+          const defaultColor = saved && PALETTES.faders[saved] ? saved : 'Black';
           child.material = new THREE.MeshStandardMaterial({ color: PALETTES.faders[defaultColor].hex, metalness: 0, roughness: 1 });
           newSelectable.faders.push(child);
           initialChosen.faders[child.name] = defaultColor;
@@ -314,7 +314,7 @@ const FadoConfigurator: React.FC<{ onProductChange?: (product: 'beato' | 'knobo'
               const lightness = (mat.color.r + mat.color.g + mat.color.b) / 3;
               if (lightness < 0.8) {
                 const saved = initialChosen.faders[child.name];
-                const defaultColor = saved && PALETTES.faders[saved] ? saved : 'Gray';
+                const defaultColor = saved && PALETTES.faders[saved] ? saved : 'Black';
                 mat.color.setHex(parseInt(PALETTES.faders[defaultColor].hex.replace('#', ''), 16));
                 newSelectable.faders.push(child);
                 initialChosen.faders[child.name] = defaultColor;
@@ -496,16 +496,19 @@ const FadoConfigurator: React.FC<{ onProductChange?: (product: 'beato' | 'knobo'
     }
   }, [selectable, chosenColors]);
 
-     // Forzar color gris en faders cuando se cargan
+     // Forzar color rosa en faders cuando se cargan
    useEffect(() => {
      if (selectable.faders.length > 0) {
-       selectable.faders.forEach((fader) => {
-         const defaultColor = PALETTES.faders['Gray'].hex;
-         fader.material = new THREE.MeshStandardMaterial({
-           color: defaultColor,
-           metalness: 0,
-           roughness: 1
+       console.log('🎨 Applying black color by default to all faders...');
+       selectable.faders.forEach((fader, index) => {
+         const negroColor = PALETTES.faders['Black'].hex;
+         // Aplicar el mismo material que MixoConfigurator para faders
+         fader.material = new THREE.MeshStandardMaterial({ 
+           color: negroColor, 
+           metalness: 0, 
+           roughness: 1 
          });
+         console.log(`✅ Color negro aplicado a fader ${index + 1}:`, fader.name);
        });
      }
    }, [selectable.faders.length]);

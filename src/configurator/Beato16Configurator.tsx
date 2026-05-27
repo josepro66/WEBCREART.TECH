@@ -379,7 +379,7 @@ const Beato16Configurator: React.FC<Beato16ConfiguratorProps> = ({ currentUser, 
       }
       else if (meshName.includes('boton')) {
         const savedName = initialChosen.buttons[child.name];
-        const defaultColor = savedName && PALETTES.buttons[savedName] ? savedName : 'Gris';
+        const defaultColor = savedName && PALETTES.buttons[savedName] ? savedName : 'Negro';
         child.material = new THREE.MeshPhysicalMaterial({ color: PALETTES.buttons[defaultColor].hex, metalness: 0.4, roughness: 0.68, clearcoat: 0.85, clearcoatRoughness: 0.08, reflectivity: 0.3, sheen: 0.5, sheenColor: 0x1C1C1C });
         newSelectable.buttons.push(child);
         initialChosen.buttons[child.name] = defaultColor;
@@ -410,7 +410,7 @@ const Beato16Configurator: React.FC<Beato16ConfiguratorProps> = ({ currentUser, 
           const lightness = (mat.color.r + mat.color.g + mat.color.b) / 3;
           if (lightness < 0.5) {
             const savedName = initialChosen.knobs[child.name];
-            const defaultColor = savedName && PALETTES.knobs[savedName] ? savedName : 'Gris';
+            const defaultColor = savedName && PALETTES.knobs[savedName] ? savedName : 'Negro';
             child.material = new THREE.MeshStandardMaterial({ color: PALETTES.knobs[defaultColor].hex, metalness: 0, roughness: 1 });
             newSelectable.knobs.push(child);
             initialChosen.knobs[child.name] = defaultColor;
@@ -421,7 +421,7 @@ const Beato16Configurator: React.FC<Beato16ConfiguratorProps> = ({ currentUser, 
       }
       else if (meshName.includes('tecla')) {
         const savedName = initialChosen.teclas[child.name];
-        const defaultColor = savedName && PALETTES.teclas[savedName] ? savedName : 'Gris';
+        const defaultColor = savedName && PALETTES.teclas[savedName] ? savedName : 'Negro';
         child.material = new THREE.MeshPhysicalMaterial({ color: PALETTES.teclas[defaultColor].hex, metalness: 0.4, roughness: 0.68, clearcoat: 0.85, clearcoatRoughness: 0.08, reflectivity: 0.3, sheen: 0.5, sheenColor: 0x1C1C1C });
         newSelectable.teclas.push(child);
         initialChosen.teclas[child.name] = defaultColor;
@@ -430,7 +430,7 @@ const Beato16Configurator: React.FC<Beato16ConfiguratorProps> = ({ currentUser, 
         console.log('Fader configurado en prepareModelParts Beato16:', child.name);
         if (meshName === 'fader1_1' || meshName === 'fader2_1' || meshName === 'fader3_1' || meshName === 'fader4_1') {
           const savedName = initialChosen.faders[child.name];
-          const defaultColor = savedName && PALETTES.knobs[savedName] ? savedName : 'Gris';
+          const defaultColor = savedName && PALETTES.knobs[savedName] ? savedName : 'Negro';
           child.material = new THREE.MeshStandardMaterial({ color: PALETTES.knobs[defaultColor].hex, metalness: 0, roughness: 1 });
           newSelectable.faders.push(child);
           initialChosen.faders[child.name] = defaultColor;
@@ -441,7 +441,7 @@ const Beato16Configurator: React.FC<Beato16ConfiguratorProps> = ({ currentUser, 
               const lightness = (mat.color.r + mat.color.g + mat.color.b) / 3;
               if (lightness < 0.8) {
                 const savedName = initialChosen.faders[child.name];
-                const defaultColor = savedName && PALETTES.knobs[savedName] ? savedName : 'Gris';
+                const defaultColor = savedName && PALETTES.knobs[savedName] ? savedName : 'Negro';
                 mat.color.setHex(parseInt(PALETTES.knobs[defaultColor].hex.replace('#', ''), 16));
                 newSelectable.faders.push(child);
                 initialChosen.faders[child.name] = defaultColor;

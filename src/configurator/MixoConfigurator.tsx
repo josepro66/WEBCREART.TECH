@@ -594,7 +594,7 @@ Best regards.`;
           const lightness = (mat.color.r + mat.color.g + mat.color.b) / 3;
           if (lightness < 0.5) {
             const savedName = initialChosen.knobs[child.name];
-            const defaultColor = savedName && PALETTES.knobs[savedName] ? savedName : 'Gris';
+            const defaultColor = savedName && PALETTES.knobs[savedName] ? savedName : 'Negro';
             child.material = new THREE.MeshStandardMaterial({ color: PALETTES.knobs[defaultColor].hex, metalness: 0, roughness: 1 });
             newSelectable.knobs.push(child);
             initialChosen.knobs[child.name] = defaultColor;
@@ -606,7 +606,7 @@ Best regards.`;
       else if (meshName.includes('fader')) {
         if (meshName === 'fader1_1' || meshName === 'fader2_1' || meshName === 'fader3_1' || meshName === 'fader4_1') {
           const savedName = initialChosen.faders[child.name];
-          const defaultColor = savedName && PALETTES.knobs[savedName] ? savedName : 'Gris';
+          const defaultColor = savedName && PALETTES.knobs[savedName] ? savedName : 'Negro';
           child.material = new THREE.MeshStandardMaterial({ color: PALETTES.knobs[defaultColor].hex, metalness: 0, roughness: 1 });
           newSelectable.faders.push(child);
           initialChosen.faders[child.name] = defaultColor;
@@ -617,7 +617,7 @@ Best regards.`;
               const lightness = (mat.color.r + mat.color.g + mat.color.b) / 3;
               if (lightness < 0.8) {
                 const savedName = initialChosen.faders[child.name];
-                const defaultColor = savedName && PALETTES.knobs[savedName] ? savedName : 'Gris';
+                const defaultColor = savedName && PALETTES.knobs[savedName] ? savedName : 'Negro';
                 mat.color.setHex(parseInt(PALETTES.knobs[defaultColor].hex.replace('#', ''), 16));
                 newSelectable.faders.push(child);
                 initialChosen.faders[child.name] = defaultColor;

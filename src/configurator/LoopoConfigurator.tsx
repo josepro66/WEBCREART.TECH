@@ -245,7 +245,7 @@ const LoopoConfigurator: React.FC<{ onProductChange?: (product: 'beato' | 'knobo
           const lightness = (mat.color.r + mat.color.g + mat.color.b) / 3;
           if (lightness < 0.5) {
             const savedName = initialChosen.knobs[child.name];
-            const defaultColor = savedName && PALETTES.knobs[savedName] ? savedName : 'Gris';
+            const defaultColor = savedName && PALETTES.knobs[savedName] ? savedName : 'Negro';
             child.material = new THREE.MeshStandardMaterial({ 
               color: PALETTES.knobs[defaultColor].hex, 
               metalness: 0, 
