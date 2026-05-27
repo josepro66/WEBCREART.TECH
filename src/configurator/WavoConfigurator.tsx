@@ -1038,12 +1038,13 @@ Saludos cordiales.`;
                     e.currentTarget.style.border = '1px solid rgba(255,255,255,0.05)';
                   }}
                 >
-                  <div 
+                  <div
                     style={{
                       width: '32px',
                       height: '32px',
                       borderRadius: '50%',
-                      backgroundColor: colorData.hex,
+                      background: colorData.hex,
+                      border: colorData.hex === '#F5F5F5' || colorData.hex === '#FFFFFF' ? '2px solid #888' : 'none',
                       boxShadow: '0 2px 6px rgba(0,0,0,0.4)'
                     }}
                   />

@@ -1564,11 +1564,10 @@ Best regards.`;
                       height: 'clamp(30px, 7vw, 44px)',
                       borderRadius: '50%',
                       cursor: 'pointer',
-                      border: '1px solid #a259ff',
+                      border: (colorData as any).hex === '#F5F5F5' || (colorData as any).hex === '#FFFFFF' ? '2px solid #888' : '1px solid #a259ff',
                       boxShadow: '0 0 6px 1px rgba(162, 89, 255, 0.33)',
-                      transition: 'transform 0.15s ease, margin-left 0.15s ease',
-                      backgroundColor: (colorData as any).hex,
-                      animationDelay: `${index * 40}ms`,
+                      transition: 'transform 0.15s ease',
+                      background: (colorData as any).hex,
                       marginLeft: '0px'
                     }}
                     title={name}
@@ -1579,7 +1578,6 @@ Best regards.`;
                     onMouseLeave={(e) => {
                       e.currentTarget.style.transform = 'scale(1)';
                     }}
-                    className="animate-fadeInUp"
                   />
                 ))}
               </div>
