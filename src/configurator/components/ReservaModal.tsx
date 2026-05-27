@@ -19,7 +19,7 @@ const COLOR_HEX: Record<string, string> = {
   'Verde':    '#7CBA40',
   'Amarillo': '#F3E600',
   'Azul':     '#325EB7',
-  'Blanco':   '#FFFFFF',
+  'Blanco':   '#F5F5F5',
   'Naranja':  '#F47119',
   'Morado':   '#7B217E',
   'Rojo':     '#E52421',
