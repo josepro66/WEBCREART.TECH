@@ -493,19 +493,16 @@ const FadoConfigurator: React.FC<{ onProductChange?: (product: 'beato' | 'knobo'
     }
   }, [selectable, chosenColors]);
 
-     // Forzar color rosa en faders cuando se cargan
+     // Forzar color gris en faders cuando se cargan
    useEffect(() => {
      if (selectable.faders.length > 0) {
-       console.log('🎨 Applying black color by default to all faders...');
-       selectable.faders.forEach((fader, index) => {
-         const negroColor = PALETTES.faders['Black'].hex;
-         // Aplicar el mismo material que MixoConfigurator para faders
-         fader.material = new THREE.MeshStandardMaterial({ 
-           color: negroColor, 
-           metalness: 0, 
-           roughness: 1 
+       selectable.faders.forEach((fader) => {
+         const defaultColor = PALETTES.faders['Gray'].hex;
+         fader.material = new THREE.MeshStandardMaterial({
+           color: defaultColor,
+           metalness: 0,
+           roughness: 1
          });
-         console.log(`✅ Color negro aplicado a fader ${index + 1}:`, fader.name);
        });
      }
    }, [selectable.faders.length]);
