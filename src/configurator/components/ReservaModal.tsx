@@ -23,6 +23,7 @@ const COLOR_HEX: Record<string, string> = {
   'Naranja':  '#F47119',
   'Morado':   '#7B217E',
   'Rojo':     '#E52421',
+  'Negro':    '#1C1C1C',
   'Rosa':     '#FF007F',
   'Gris':     '#808080',
 };

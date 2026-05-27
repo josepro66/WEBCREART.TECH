@@ -100,6 +100,7 @@ const FadoConfigurator: React.FC<{ onProductChange?: (product: 'beato' | 'knobo'
       'Orange':    { hex: '#F47119' },
       'Purple':    { hex: '#7B217E' },
       'Red':       { hex: '#E52421' },
+      'Black':     { hex: '#1C1C1C' },
       'Pink':      { hex: '#FF007F' },
       'Gray':      { hex: '#808080' },
     },
