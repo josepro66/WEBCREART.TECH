@@ -13,7 +13,7 @@ interface ConfiguratorWithLoadingProps {
 const ConfiguratorWithLoading: React.FC<ConfiguratorWithLoadingProps> = ({
   name,
   subtitle,
-  duration = 4100,
+  duration = 400,
   className = '',
   style = {},
   children,

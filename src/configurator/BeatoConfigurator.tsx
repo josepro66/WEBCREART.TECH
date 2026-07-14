@@ -1,10 +1,13 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
+import StarfieldBackground from './components/StarfieldBackground';
+import PalettePanel, { paletteSubtitle } from './components/PalettePanel';
 import * as THREE from 'three';
 import gsap from 'gsap';
 import Swal from 'sweetalert2';
 import html2canvas from 'html2canvas';
 import { PayPalButtons, PayPalScriptProvider } from '@paypal/react-paypal-js';
 import ReservaModal from './components/ReservaModal';
+import ReserveCtaBar from './components/ReserveCtaBar';
 
 // Tipos para los objetos seleccionables
 interface Selectable {
@@ -435,12 +438,15 @@ const MidiConfigurator: React.FC<MidiConfiguratorProps> = ({ onProductChange, cu
     try {
       // Importar GLTFLoader dinámicamente
       const { GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader.js');
+      const { MeshoptDecoder } = await import('three/examples/jsm/libs/meshopt_decoder.module.js');
       const loader = new GLTFLoader();
+      loader.setMeshoptDecoder(MeshoptDecoder);
 
       const url = `${import.meta.env.BASE_URL}models/BEATO3.glb`;
       console.log('Cargando modelo BEATO3 desde:', url);
       loader.load(url, (gltf: any) => {
           const model = gltf.scene as THREE.Group;
+          if (modelRef.current && sceneRef.current) sceneRef.current.remove(modelRef.current);
           modelRef.current = model;
           prepareModelParts(model);
           centerAndScaleModel(model);
@@ -1308,8 +1314,7 @@ Best regards.`;
         }}
       >
         {/* Imagen de fondo */}
-        <div className="fixed inset-0 bg-cover bg-center bg-no-repeat bg-fixed -z-10"
-             style={{ backgroundImage: `url(${import.meta.env.BASE_URL}textures/fondo.jpg)` }} />
+        <StarfieldBackground />
         
         {/* Contenedor principal - estructura optimizada para configurador */}
         <div 
@@ -1362,7 +1367,7 @@ Best regards.`;
           style={{ left: '70px' }}
         >
           <button
-            onClick={() => window.location.href = 'https://www.crearttech.com/'}
+            onClick={() => window.location.href = import.meta.env.BASE_URL}
             className="relative px-3 md:px-5 py-1 md:py-2 rounded-full font-bold text-xs md:text-sm uppercase tracking-wider text-white transition-all duration-300 hover:-translate-y-0.5 bg-gradient-to-r from-cyan-500/20 via-purple-500/20 to-pink-500/20 border border-cyan-500/55"
           >
             <span className="relative z-10 flex items-center gap-2">
@@ -1592,9 +1597,9 @@ Best regards.`;
               padding: currentView === 'normal' ? 'clamp(4px, 1vw, 8px)' : 'clamp(12px, 2vw, 16px)',
               display: 'flex',
               flexDirection: 'column',
-              background: currentView === 'normal' ? 'transparent' : 'rgba(17, 24, 39, 0.65)',
-              borderLeft: currentView === 'normal' ? 'none' : '1px solid #4b5563',
-              backdropFilter: currentView === 'normal' ? undefined : 'blur(6px)',
+              background: currentView === 'normal' ? 'transparent' : 'rgba(11, 18, 32, 0.85)',
+              borderLeft: currentView === 'normal' ? 'none' : '1px solid rgba(0, 255, 255, 0.3)',
+              backdropFilter: currentView === 'normal' ? undefined : 'blur(10px)',
               overflowY: currentView === 'normal' ? 'visible' : 'auto'
             }}
           >
@@ -1624,60 +1629,17 @@ Best regards.`;
 
             {/* Sección de colores - solo visible cuando no está en vista normal */}
             {currentView !== 'normal' && (
-              <div style={{ marginTop: 'clamp(12px, 2.5vw, 20px)' }} className="animate-fadeIn">
-                <p 
-                  style={{
-                    fontWeight: 900,
-                    fontSize: 'clamp(12px, 3vw, 16px)',
-                    letterSpacing: '0.05em',
-                    textTransform: 'uppercase',
-                    margin: '0 0 clamp(10px, 2vw, 14px) 0',
-                    color: '#e5e7eb',
-                    textAlign: 'left'
-                  }}
-                  className="animate-fadeIn"
-                >
-                  {getTitle()}
-                </p>
-                <div 
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-                    rowGap: '5px',
-                    columnGap: '0px',
-                    padding: 0,
-                    justifyItems: 'start',
-                    marginLeft: isMobile ? '-24px' : '35px',
-                    transform: isMobile ? 'translateX(-36px)' : 'none',
-                    transition: 'transform 150ms ease'
-                  }}
-                  className="animate-scaleIn"
-                >
-                  {Object.entries(getCurrentColors()).map(([name, colorData], index) => (
-                    <div
-                      key={name}
-                      style={{
-                        width: 'clamp(30px, 7vw, 44px)',
-                        height: 'clamp(30px, 7vw, 44px)',
-                        borderRadius: '50%',
-                        cursor: 'pointer',
-                        border: (colorData as any).hex === '#F5F5F5' || (colorData as any).hex === '#FFFFFF' ? '2px solid #888' : '1px solid #a259ff',
-                        boxShadow: '0 0 6px 1px rgba(162, 89, 255, 0.33)',
-                        transition: 'transform 0.15s ease',
-                        background: (colorData as any).hex,
-                        marginLeft: '0px'
-                      }}
-                      title={name}
-                      onClick={() => applyColor(name, colorData as any)}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = 'scale(1.07)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = 'scale(1)';
-                      }}
-                    />
-                  ))}
-                </div>
+              <div style={{ marginTop: 'clamp(12px, 2.5vw, 20px)', display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }} className="animate-fadeIn">
+                <PalettePanel
+                  title={getTitle()}
+                  subtitle={paletteSubtitle(currentView)}
+                  colors={getCurrentColors() as Record<string, { hex: string }>}
+                  onSelect={(name, colorData) => applyColor(name, colorData as any)}
+                  selectedCount={
+                    currentView === 'buttons' ? selectedButtons.length :
+                    currentView === 'knobs' ? selectedKnobs.length : 0
+                  }
+                />
               </div>
             )}
           </div>
@@ -1685,26 +1647,11 @@ Best regards.`;
 
         {/* Botones de acción (solo visibles en vista normal) */}
         {currentView === 'normal' && (
-          <div className="fixed bottom-4 md:bottom-10 left-1/2 transform -translate-x-1/2 z-50 flex gap-3 items-center">
-            <button
-              onClick={handleFinalizeOpenModal}
-              className="px-3 md:px-6 py-2 md:py-3 text-sm md:text-lg font-bold uppercase tracking-wide text-black bg-purple-400 border-none rounded cursor-pointer transition-all duration-200 shadow-lg hover:bg-yellow-200 hover:scale-105 hover:shadow-xl shadow-[0_0_8px_2px_#a259ff80,0_0_16px_4px_#0ff5]"
-            >
-              Finish and Send Configuration
-            </button>
-            <button
-              onClick={() => setShowReservaModal(true)}
-              className="px-3 md:px-6 py-2 md:py-3 text-sm md:text-lg font-bold uppercase tracking-wide text-white border-none rounded cursor-pointer transition-all duration-200"
-              style={{
-                background: 'linear-gradient(90deg, #a259ff, #00c8ff)',
-                boxShadow: '0 0 16px rgba(162,89,255,0.6), 0 0 32px rgba(0,200,255,0.2)',
-              }}
-              onMouseEnter={e => (e.currentTarget.style.transform = 'scale(1.05)')}
-              onMouseLeave={e => (e.currentTarget.style.transform = 'scale(1)')}
-            >
-              ⚡ Separar Cupo
-            </button>
-          </div>
+          <ReserveCtaBar
+            product="beato8"
+            onSendConfig={handleFinalizeOpenModal}
+            onReserve={() => setShowReservaModal(true)}
+          />
         )}
 
         {/* Modal de Reserva + Pago PayPal integrado */}

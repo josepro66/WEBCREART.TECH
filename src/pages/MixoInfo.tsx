@@ -1,12 +1,12 @@
 import React from 'react';
-import MixoControllerViewer from '../components/3d/MixoControllerViewer';
+import ProductModelViewer from '../components/3d/ProductModelViewer';
 import ProductInfoPage from './ProductInfoPage';
 
 const MixoInfo: React.FC = () => (
   <ProductInfoPage
     name="MIXO"
     subtitle="Controlador MIDI Compacto y Multipropósito"
-    viewer={<MixoControllerViewer className="h-[500px] w-full" transparent={true} />}
+    viewer={<ProductModelViewer modelUrl={`${import.meta.env.BASE_URL}models/MIXO.glb`} className="h-[500px] w-full" preserveMaterials />}
     glowGradient="from-cyan-500/20 to-fuchsia-500/20"
     description="El MIXO es un controlador MIDI compacto y versátil diseñado para productores, DJs y creadores digitales. Equipado con 4 knobs asignables, 4 botones arcade LED y 4 faders de precisión, ofrece un control táctil completo sobre cualquier software compatible con MIDI. Su cuerpo metálico personalizable lo convierte en la herramienta perfecta para producción musical, presentaciones en vivo y uso como macro pad en aplicaciones como Ableton Live, Resolume o cualquier DAW."
     secondDescription="Su diseño compacto y robusto lo hace ideal tanto para el estudio como para el escenario, proporcionando un control físico preciso que los flujos de trabajo basados en mouse no pueden igualar."

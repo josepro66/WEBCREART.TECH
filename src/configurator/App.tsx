@@ -1,12 +1,11 @@
 import React, { useState, useEffect, Suspense, useRef } from 'react';
-import { Canvas } from '@react-three/fiber';
-import { useProgress } from '@react-three/drei';
-import BeatoLoadingScreen from './components/BeatoLoadingScreen';
 import SkeletonLoader from './components/SkeletonLoader';
 import ErrorBoundary from './components/ErrorBoundary';
 import LoginPage from './LoginPage';
-import { useModelReady } from './hooks/useModelReady';
 import { usePrefetch } from './hooks/usePrefetch';
+import { useAuth } from '../auth/AuthContext';
+import UserConfigSync from '../auth/UserConfigSync';
+import SaveConfigButton from '../auth/SaveConfigButton';
 
 // Imports lazy para componentes pesados
 import {
@@ -22,6 +21,7 @@ import MixoWithLoading from './components/MixoWithLoading';
 import LoopoWithLoading from './components/LoopoWithLoading';
 import FadoWithLoading from './components/FadoWithLoading';
 import WavoWithLoading from './components/WavoWithLoading';
+import { PRODUCT_IDENTITY, type ProductId } from './productIdentity';
 
 
 interface User {
@@ -33,14 +33,16 @@ function App() {
   const [currentProduct, setCurrentProduct] = useState<'beato8' | 'knobo' | 'mixo' | 'beato16' | 'loopo' | 'fado' | 'wavo'>('beato8');
   const [displayedProduct, setDisplayedProduct] = useState<'beato8' | 'knobo' | 'mixo' | 'beato16' | 'loopo' | 'fado' | 'wavo'>('beato8');
   const [isTransitioning, setIsTransitioning] = useState(false);
-  console.log('Current product state:', currentProduct);
   const [showPaymentResult, setShowPaymentResult] = useState(false);
   const [paymentData, setPaymentData] = useState<any>(null);
   const [isMobile, setIsMobile] = useState(false);
   const [isLandscape, setIsLandscape] = useState(false);
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const { user: fbUser, loading: authLoading, signOut, resendVerification } = useAuth();
+  const currentUser: User | null = fbUser
+    ? { name: fbUser.displayName || fbUser.email?.split('@')[0] || 'Usuario', email: fbUser.email || '' }
+    : null;
   const [isLoading, setIsLoading] = useState(true);
-  const { isLoading: modelLoading } = useModelReady();
+  const [verificationSent, setVerificationSent] = useState(false);
   const { prefetchOnHover, prefetchOnIntersection } = usePrefetch();
   
   // Ref para el botón de configurar (para prefetch en viewport)
@@ -48,47 +50,33 @@ function App() {
 
   // Verificar si hay un usuario logueado al cargar la app y leer parámetros URL
   useEffect(() => {
-    const bg = `url('${import.meta.env.BASE_URL}textures/fondo.jpg')`;
-    document.documentElement.style.backgroundImage = bg;
-    document.body.style.backgroundImage = bg;
+    // Base oscura coherente con el StarfieldBackground (antes: imagen fondo.jpg)
+    const bg = '#020308';
+    document.documentElement.style.backgroundColor = bg;
+    document.body.style.backgroundColor = bg;
     return () => {
-      document.documentElement.style.backgroundImage = '';
-      document.body.style.backgroundImage = '';
+      document.documentElement.style.backgroundColor = '';
+      document.body.style.backgroundColor = '';
     };
   }, []);
 
   useEffect(() => {
-    const savedUser = localStorage.getItem('beato_currentUser');
-    if (savedUser) {
-      try {
-        const user = JSON.parse(savedUser);
-        setCurrentUser(user);
-      } catch (e) {
-        console.error('Error parsing saved user:', e);
-        localStorage.removeItem('beato_currentUser');
-      }
-    }
-    
     // Verificar parámetros de URL al cargar
     const urlParams = new URLSearchParams(window.location.search);
     const productParam = urlParams.get('product');
-    console.log('URL params:', window.location.search);
-    console.log('Product param:', productParam);
     if (productParam && ['beato8', 'knobo', 'mixo', 'beato16', 'loopo', 'fado', 'wavo'].includes(productParam)) {
-      console.log('Setting product to:', productParam);
       setCurrentProduct(productParam as any);
+      setDisplayedProduct(productParam as any);
     }
-    
     setIsLoading(false);
   }, []);
 
-  const handleLogin = (user: User) => {
-    setCurrentUser(user);
+  const handleLogin = (_user: User) => {
+    // Firebase Auth maneja el estado vía onAuthStateChanged
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('beato_currentUser');
-    setCurrentUser(null);
+  const handleLogout = async () => {
+    try { await signOut(); } catch { /* ignore */ }
   };
 
   // Verificar si estamos en la página de pago finalizado
@@ -163,10 +151,8 @@ function App() {
     setCurrentProduct(product);
     setTimeout(() => {
       setDisplayedProduct(product);
-      setTimeout(() => {
-        setIsTransitioning(false);
-      }, 400);
-    }, 900);
+      setIsTransitioning(false);
+    }, 320);
   };
 
   // Función para prefetch específico según el producto
@@ -185,17 +171,17 @@ function App() {
   };
 
   const menuItems = [
-    { id: 'beato8', name: 'BEATO8', icon: 'textures/beato.png', isImage: true },
-    { id: 'beato16', name: 'BEATO16', icon: 'textures/beato16.png', isImage: true },
-    { id: 'knobo', name: 'KNOBO', icon: 'textures/knobo.png', isImage: true },
-    { id: 'mixo', name: 'MIXO', icon: 'textures/mixo.png', isImage: true },
-    { id: 'loopo', name: 'LOOPO', icon: 'textures/loopo.png', isImage: true },
-    { id: 'fado', name: 'FADO', icon: 'textures/fado.png', isImage: true },
-    { id: 'wavo', name: 'WAVO', icon: 'textures/wavo.png', isImage: true }
-  ] as const;
+    { id: 'beato8' as ProductId, icon: 'textures/beato.png' },
+    { id: 'beato16' as ProductId, icon: 'textures/beato16.png' },
+    { id: 'knobo' as ProductId, icon: 'textures/knobo.png' },
+    { id: 'mixo' as ProductId, icon: 'textures/mixo.png' },
+    { id: 'loopo' as ProductId, icon: 'textures/loopo.png' },
+    { id: 'fado' as ProductId, icon: 'textures/fado.png' },
+    { id: 'wavo' as ProductId, icon: 'textures/wavo.png' },
+  ];
 
   // Mostrar loading mientras se verifica el usuario
-  if (isLoading) {
+  if (isLoading || authLoading) {
     return (
       <div 
         style={{
@@ -254,8 +240,53 @@ function App() {
     );
   }
 
+  const showVerifyBanner = !!fbUser && !fbUser.emailVerified && fbUser.providerData[0]?.providerId === 'password';
+
   return (
     <div className={`App ${isMobile ? 'mobile-device' : ''}`}>
+      <UserConfigSync />
+      <SaveConfigButton product={displayedProduct} />
+      {showVerifyBanner && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            zIndex: 9999,
+            background: 'linear-gradient(90deg, #f59e0b, #ef4444)',
+            color: 'white',
+            padding: '8px 16px',
+            fontSize: 13,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 12,
+            fontFamily: 'Inter, sans-serif',
+          }}
+        >
+          <span>📧 Verifica tu email para guardar tus configuraciones — revisa <b>{fbUser?.email}</b></span>
+          <button
+            onClick={async () => {
+              try { await resendVerification(); setVerificationSent(true); } catch { /* ignore */ }
+            }}
+            disabled={verificationSent}
+            style={{
+              background: 'rgba(0,0,0,0.25)',
+              border: '1px solid rgba(255,255,255,0.4)',
+              borderRadius: 8,
+              padding: '4px 10px',
+              color: 'white',
+              cursor: verificationSent ? 'default' : 'pointer',
+              fontSize: 12,
+              fontWeight: 600,
+            }}
+          >
+            {verificationSent ? '✓ Email reenviado' : 'Reenviar email'}
+          </button>
+        </div>
+      )}
+
       {/* Pantalla de rotación para móviles */}
       {isMobile && !isLandscape && (
         <div className="rotate-screen-overlay">
@@ -268,84 +299,133 @@ function App() {
         </div>
       )}
 
-      {/* Pantalla de carga global - también sirve como transición entre productos */}
-      <BeatoLoadingScreen isVisible={modelLoading || isTransitioning} />
-
-      {/* Navigation Menu */}
+      {/* Navigation Menu — cards con identidad por producto */}
       <div className="product-menu">
-        {menuItems.map((item) => (
-          <button 
-            className="product-menu-item"
-            key={item.id}
-            onClick={() => handleProductChange(item.id)}
-            ref={item.id === 'beato8' ? configButtonRef : undefined}
-            style={{
-              backgroundColor: currentProduct === item.id ? 'rgba(4, 19, 19, 0.3)' : 'transparent',
-              background: currentProduct === item.id ? 'linear-gradient(135deg, rgba(0, 255, 255, 0.3) 0%, rgba(0, 128, 255, 0.2) 100%)' : 'transparent',
-              border: currentProduct === item.id ? '1px solid #00FFFF' : '1px solid rgba(0, 255, 255, 0.3)',
-              color: currentProduct === item.id ? '#00FFFF' : '#ffffff',
-              boxShadow: currentProduct === item.id ? '0 0 8px 2px rgba(0, 255, 255, 0.4)' : 'none'
-            }}
-            onMouseEnter={(e) => {
-              // Prefetch del configurador cuando el usuario hace hover
-              handleProductHover(item.id);
-              
-              if (currentProduct !== item.id) {
-                e.currentTarget.style.backgroundColor = 'rgba(0, 255, 255, 0.2)';
-                e.currentTarget.style.transform = 'translateX(3px) scale(1.02)';
-                e.currentTarget.style.boxShadow = '0 8px 25px rgba(0, 255, 255, 0.4)';
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (currentProduct !== item.id) {
-                e.currentTarget.style.backgroundColor = 'transparent';
-                e.currentTarget.style.transform = 'translateX(0) scale(1)';
-                e.currentTarget.style.boxShadow = 'none';
-              }
-            }}
-          >
-            {item.isImage ? (
-              <img 
-                src={item.icon} 
-                alt={item.name}
-                style={{ 
-                  width: '30px', 
-                  height: '30px', 
+        {menuItems.map((item) => {
+          const id = PRODUCT_IDENTITY[item.id];
+          const isActive = currentProduct === item.id;
+          return (
+            <button
+              className="product-menu-item"
+              key={item.id}
+              onClick={() => handleProductChange(item.id)}
+              ref={item.id === 'beato8' ? configButtonRef : undefined}
+              data-active={isActive ? 'true' : 'false'}
+              style={{
+                background: isActive
+                  ? `linear-gradient(135deg, ${id.accent}26 0%, ${id.accent}10 100%)`
+                  : 'rgba(14, 14, 16, 0.55)',
+                border: `1px solid ${isActive ? id.accent : 'rgba(255, 255, 255, 0.08)'}`,
+                color: isActive ? id.accent : '#F2F1ED',
+                boxShadow: isActive
+                  ? `0 0 0 1px ${id.accent}40, 0 8px 24px -8px ${id.glow}, inset 0 1px 0 ${id.accent}30`
+                  : '0 4px 12px -4px rgba(0,0,0,0.5)',
+              }}
+              onMouseEnter={(e) => {
+                handleProductHover(item.id);
+                if (!isActive) {
+                  e.currentTarget.style.borderColor = `${id.accent}80`;
+                  e.currentTarget.style.background = `linear-gradient(135deg, ${id.accent}15 0%, rgba(14,14,16,0.7) 100%)`;
+                  e.currentTarget.style.transform = 'translateX(4px)';
+                  e.currentTarget.style.boxShadow = `0 8px 20px -6px ${id.glow}, 0 0 0 1px ${id.accent}30`;
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isActive) {
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)';
+                  e.currentTarget.style.background = 'rgba(14, 14, 16, 0.55)';
+                  e.currentTarget.style.transform = 'translateX(0)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px -4px rgba(0,0,0,0.5)';
+                }
+              }}
+            >
+              {/* Indicador vertical de activo */}
+              {isActive && (
+                <span
+                  aria-hidden
+                  style={{
+                    position: 'absolute',
+                    left: 0,
+                    top: '20%',
+                    bottom: '20%',
+                    width: 3,
+                    background: id.gradient,
+                    borderRadius: '0 2px 2px 0',
+                    boxShadow: `0 0 8px ${id.glow}`,
+                  }}
+                />
+              )}
+
+              <img
+                src={item.icon}
+                alt={id.name}
+                style={{
+                  width: 36,
+                  height: 36,
                   objectFit: 'contain',
-                  filter: currentProduct === item.id ? 'drop-shadow(0 1px 2px rgba(0,0,0,0.3))' : 'none'
+                  filter: isActive
+                    ? `drop-shadow(0 0 6px ${id.glow})`
+                    : 'grayscale(0.25) opacity(0.85)',
+                  transition: 'filter 0.25s ease',
                 }}
-                onError={(e) => {
-                  console.error('Error loading image:', item.icon);
-                  console.log('Attempted to load:', item.icon);
-                  // Mostrar un icono por defecto si la imagen falla
-                  e.currentTarget.style.display = 'none';
-                }}
+                onError={(e) => { e.currentTarget.style.display = 'none'; }}
               />
-            ) : (
-              <span style={{ fontSize: '14px', filter: currentProduct === item.id ? 'drop-shadow(0 1px 2px rgba(0,0,0,0.3))' : 'none' }}>
-                {item.icon}
-              </span>
-            )}
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '8px', fontWeight: 'bold', marginBottom: '1px' }}>
-                {item.name}
+
+              <div style={{ textAlign: 'left', flex: 1, minWidth: 0 }}>
+                <div
+                  style={{
+                    fontSize: 12,
+                    fontWeight: 800,
+                    letterSpacing: '0.12em',
+                    fontFamily: "'Orbitron', 'Space Grotesk', sans-serif",
+                    color: isActive ? id.accent : '#F2F1ED',
+                    textShadow: isActive ? `0 0 12px ${id.glow}` : 'none',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                  }}
+                >
+                  {id.name}
+                </div>
+                <div
+                  style={{
+                    fontSize: 9,
+                    fontFamily: "'JetBrains Mono', monospace",
+                    color: isActive ? '#F2F1ED' : 'rgba(242, 241, 237, 0.55)',
+                    letterSpacing: '0.02em',
+                    marginTop: 2,
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                  }}
+                >
+                  {id.tagline}
+                </div>
               </div>
-            </div>
-            {currentProduct === item.id && (
-              <div style={{
-                position: 'absolute',
-                right: 0,
-                top: '50%',
-                transform: 'translateY(-50%)',
-                width: '2px',
-                height: '50%',
-                backgroundColor: '#00FFFF',
-                borderRadius: '1px',
-                boxShadow: '0 0 4px 1px rgba(6, 27, 27, 0.6)'
-              }} />
-            )}
-          </button>
-        ))}
+
+              {id.badge && (
+                <span
+                  style={{
+                    position: 'absolute',
+                    top: 6,
+                    right: 6,
+                    fontSize: 7,
+                    fontFamily: "'JetBrains Mono', monospace",
+                    fontWeight: 800,
+                    letterSpacing: '0.1em',
+                    background: id.gradient,
+                    color: '#0E0E10',
+                    padding: '2px 5px',
+                    borderRadius: 3,
+                    boxShadow: `0 2px 6px -1px ${id.glow}`,
+                  }}
+                >
+                  {id.badge}
+                </span>
+              )}
+            </button>
+          );
+        })}
       </div>
 
       {/* Main Content con lazy loading */}

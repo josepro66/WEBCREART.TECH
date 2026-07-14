@@ -1,11 +1,11 @@
 import React from 'react';
-import KnoboViewer from '../components/3d/KnoboViewer';
+import ProductModelViewer from '../components/3d/ProductModelViewer';
 import ProductInfoPage from './ProductInfoPage';
 
 const KnoboInfo: React.FC = () => (
   <ProductInfoPage
     name="KNOBO"
-    viewer={<KnoboViewer className="h-[500px] w-full" />}
+    viewer={<ProductModelViewer modelUrl={`${import.meta.env.BASE_URL}models/KNOBO.glb`} className="h-[500px] w-full" preserveMaterials />}
     glowGradient="from-yellow-500/20 to-orange-500/20"
     description="Knobo es un controlador MIDI diseñado para ofrecer un control preciso y creativo sobre tus mezclas y automatizaciones en tiempo real. Equipado con ocho perillas asignables, te permite controlar libremente volúmenes, efectos y parámetros, ya sea para producción musical, actuaciones en vivo u otras aplicaciones. Su robusto cuerpo de metal, totalmente personalizable en color de cuerpo y perillas, lo convierte en la herramienta perfecta para productores, DJs y creadores digitales que buscan un control intuitivo. Compatible con Ableton Live, Resolume, cualquier DAW o software que acepte MIDI, Knobo se adapta a cualquier entorno de creación."
     carouselTitle="Precisión Táctil y Visual"

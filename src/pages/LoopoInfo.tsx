@@ -1,11 +1,11 @@
 import React from 'react';
-import LoopoViewer from '../components/3d/LoopoViewer';
+import ProductModelViewer from '../components/3d/ProductModelViewer';
 import ProductInfoPage from './ProductInfoPage';
 
 const LoopoInfo: React.FC = () => (
   <ProductInfoPage
     name="LOOPO"
-    viewer={<LoopoViewer className="h-[500px] w-full" />}
+    viewer={<ProductModelViewer modelUrl={`${import.meta.env.BASE_URL}models/LOOPO.glb`} className="h-[500px] w-full" preserveMaterials />}
     glowGradient="from-green-500/20 to-teal-500/20"
     description="Loopo es un controlador MIDI de pedal diseñado para artistas en vivo que necesitan controlar efectos, loops y parámetros sin usar las manos. Equipado con 4 footswitches de alta resistencia y 4 knobs asignables, permite manipular cualquier software o hardware MIDI de forma completamente hands-free, manteniendo plena libertad para tocar instrumentos o cantar."
     secondDescription="Ideal para guitarristas, vocalistas, loopers y performers en vivo que necesitan un control físico sobre sus efectos y parámetros sin interrumpir su interpretación."

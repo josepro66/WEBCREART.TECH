@@ -1,18 +1,22 @@
 import { initializeApp, getApps } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
+import { getAuth, GoogleAuthProvider } from "firebase/auth";
+import { getFunctions } from "firebase/functions";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBYj5YoP4TMHfJZosVpmvAjpIgTaWPt9Fg",
-  authDomain: "creart-tech.firebaseapp.com",
-  projectId: "creart-tech",
-  storageBucket: "creart-tech.firebasestorage.app",
-  messagingSenderId: "207111471489",
-  appId: "1:207111471489:web:11c5b14de017c599fb6880",
-  measurementId: "G-YLVGS89EGT"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
-// Evita inicializar múltiples veces en hot-reload (desarrollo)
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 
 export const db = getFirestore(app);
+export const auth = getAuth(app);
+export const googleProvider = new GoogleAuthProvider();
+export const functions = getFunctions(app, "us-central1");
 export default app;

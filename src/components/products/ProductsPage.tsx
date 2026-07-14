@@ -4,179 +4,159 @@ import { useNavigate } from 'react-router-dom';
 import { Splide, SplideSlide } from '@splidejs/react-splide';
 import '@splidejs/splide/dist/css/splide.min.css';
 
-// Datos de productos
+// Datos de productos — precios reales del sitio en vivo (COP) + equivalente USD
 const products = [
-  {
-    id: 'beato',
-    name: 'BEATO',
-    description: 'Controlador MIDI con cuerpo metálico y 8 botones ARCADE para productores',
-    image: `${import.meta.env.BASE_URL}images/products/BEATO.png`,
-    model: `${import.meta.env.BASE_URL}models/BEATO.glb`,
-    features: ['Cuerpo metálico', '8 botones ARCADE', '4 knobs asignables', 'USB-C'],
-    price: '$185'
-  },
-  {
-    id: 'beato16',
-    name: 'BEATO16',
-    description: 'Nuestro controlador MIDI más avanzado con tecnología de última generación',
-    image: `${import.meta.env.BASE_URL}images/products/BEATO16.png`,
-    model: `${import.meta.env.BASE_URL}models/BEATO16.glb`,
-    features: ['16 Botones RGB', '4 Faders', '4 Knobs', 'USB-C'],
-    price: '$499'
-  },
-  {
-    id: 'fado',
-    name: 'FADO',
-    description: 'Controlador MIDI minimalista con enfoque en la creatividad',
-    image: `${import.meta.env.BASE_URL}images/products/FADO.png`,
-    model: `${import.meta.env.BASE_URL}models/FADO.glb`,
-    features: ['8 Faders de Precisión', 'USB-C'],
-    price: '$199'
-  },
   {
     id: 'knobo',
     name: 'KNOBO',
+    category: 'controlador',
     description: '8 perillas asignables para un control preciso y creativo.',
     image: `${import.meta.env.BASE_URL}images/products/KNOBO.png`,
     model: `${import.meta.env.BASE_URL}models/KNOBO.glb`,
     features: ['8 knobs asignables', 'Cuerpo de metal', 'OLED display', 'USB-C'],
-    price: '$130'
+    priceCop: 'COP 450.000',
+    priceUsd: '~$113'
   },
   {
     id: 'loopo',
     name: 'LOOPO',
+    category: 'controlador',
     description: 'Pedal looper con 4 footswitches y 4 knobs para directo y estudio.',
     image: `${import.meta.env.BASE_URL}images/products/LOOPO.png`,
     model: `${import.meta.env.BASE_URL}models/LOOPO.glb`,
     features: ['4 footswitches', '4 knobs asignables', 'Control de loops', 'Fácil de integrar'],
-    price: '$175'
+    priceCop: 'COP 500.000',
+    priceUsd: '~$125'
+  },
+  {
+    id: 'fado',
+    name: 'FADO',
+    category: 'controlador',
+    description: 'Controlador MIDI minimalista con enfoque en la creatividad',
+    image: `${import.meta.env.BASE_URL}images/products/FADO.png`,
+    model: `${import.meta.env.BASE_URL}models/FADO.glb`,
+    features: ['8 Faders de Precisión', 'USB-C'],
+    priceCop: 'COP 650.000',
+    priceUsd: '~$163'
+  },
+  {
+    id: 'beato',
+    name: 'BEATO 8',
+    category: 'controlador',
+    description: 'Controlador MIDI con cuerpo metálico y 8 botones ARCADE para productores',
+    image: `${import.meta.env.BASE_URL}images/products/BEATO.png`,
+    model: `${import.meta.env.BASE_URL}models/BEATO.glb`,
+    features: ['Cuerpo metálico', '8 botones ARCADE', '4 knobs asignables', 'USB-C'],
+    priceCop: 'COP 750.000',
+    priceUsd: '~$188'
   },
   {
     id: 'mixo',
     name: 'MIXO',
+    category: 'controlador',
     description: 'Controlador de mezcla profesional para DJs',
     image: `${import.meta.env.BASE_URL}images/products/MIXO.png`,
     model: `${import.meta.env.BASE_URL}models/MIXO.glb`,
-    features: ['4 channels', 'EQ', 'Effects', 'Crossfader'],
-    price: '$599'
+    features: ['4 LED arcade', '4 knobs asignables', '4 faders', 'Cuerpo de metal'],
+    priceCop: 'COP 850.000',
+    priceUsd: '~$213'
+  },
+  {
+    id: 'beato16',
+    name: 'BEATO 16',
+    category: 'controlador',
+    description: 'Nuestro controlador MIDI más avanzado con tecnología de última generación',
+    image: `${import.meta.env.BASE_URL}images/products/BEATO16.png`,
+    model: `${import.meta.env.BASE_URL}models/BEATO16.glb`,
+    features: ['16 Botones RGB', '4 Faders', '4 Knobs', 'USB-C'],
+    priceCop: 'COP 1.000.000',
+    priceUsd: '~$250'
   },
   {
     id: 'wavo',
     name: 'WAVO',
+    category: 'sintetizador',
     description: 'Sintetizador híbrido analógico-digital con secuenciador y teclado',
     image: `${import.meta.env.BASE_URL}textures/wavo.png`,
     model: `${import.meta.env.BASE_URL}models/wavo.glb`,
     features: ['Teclado personalizable', '7 Botones Arcade', '7 Knobs', 'Secuenciador'],
-    price: '$500'
+    priceCop: 'COP 2.000.000',
+    priceUsd: '~$500'
   }
 ];
 
-
-// Componente de tarjeta de producto
-function ProductCard({ product, onDetails }: { product: typeof products[0]; onDetails: (id: string) => void }) {
-  const [isHovered, setIsHovered] = React.useState(false);
+// Tarjeta de producto — estilo 21st.dev: shine sweep, top accent, category badge
+function ProductCard({ product, onDetails, onBuy }: { product: typeof products[0]; onDetails: (id: string) => void; onBuy: (id: string) => void }) {
+  const categoryLabel = product.category === 'sintetizador' ? 'SINTE' : 'MIDI';
 
   return (
     <motion.div
-      className="relative bg-gradient-to-br from-gray-900/80 via-gray-800/60 to-gray-900/80 backdrop-blur-md rounded-2xl p-4 border border-cyan-500/30 hover:border-cyan-400/60 transition-all duration-500 product-card overflow-hidden w-80 max-w-sm"
-      whileHover={{ y: -8, scale: 1.02 }}
-      onHoverStart={() => setIsHovered(true)}
-      onHoverEnd={() => setIsHovered(false)}
+      className="group relative flex flex-col w-80 max-w-sm rounded-2xl border border-white/[0.07] bg-white/[0.025] p-5 transition-all duration-300 hover:border-cyan-500/25 hover:shadow-[0_0_35px_-8px_rgba(0,229,255,0.15)] product-card overflow-hidden"
+      initial={{ opacity: 0, rotateX: 18, y: 30 }}
+      whileInView={{ opacity: 1, rotateX: 0, y: 0 }}
+      whileHover={{ y: -5, scale: 1.01 }}
+      viewport={{ once: true, margin: '-30px' }}
+      transition={{ duration: 0.65, ease: 'easeOut' }}
+      style={{ transformPerspective: 900 }}
     >
-      {/* Efecto de neón animado */}
-      <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 via-purple-500/10 to-cyan-500/10 opacity-0 hover:opacity-100 transition-opacity duration-500 rounded-2xl"></div>
-      
-      {/* Borde de neón */}
-      <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-cyan-500/20 via-purple-500/20 to-cyan-500/20 blur-sm opacity-0 hover:opacity-100 transition-opacity duration-500"></div>
-      
-      {/* Efecto Venom - Circuito que se apodera de la tarjeta */}
-      <div className="absolute inset-0 opacity-0 hover:opacity-100 transition-opacity duration-300 rounded-2xl overflow-hidden">
-        {/* Líneas de circuito que aparecen progresivamente */}
-        <div className="absolute top-4 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-0 hover:opacity-100 transition-all duration-500 animate-pulse" style={{ transitionDelay: '0s' }}></div>
-        <div className="absolute top-8 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-purple-400 to-transparent opacity-0 hover:opacity-100 transition-all duration-500 animate-pulse" style={{ transitionDelay: '0.2s' }}></div>
-        <div className="absolute top-12 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-0 hover:opacity-100 transition-all duration-500 animate-pulse" style={{ transitionDelay: '0.4s' }}></div>
-        
-        <div className="absolute left-4 top-0 bottom-0 w-1 bg-gradient-to-b from-transparent via-purple-400 to-transparent opacity-0 hover:opacity-100 transition-all duration-500 animate-pulse" style={{ transitionDelay: '0.1s' }}></div>
-        <div className="absolute left-8 top-0 bottom-0 w-1 bg-gradient-to-b from-transparent via-cyan-400 to-transparent opacity-0 hover:opacity-100 transition-all duration-500 animate-pulse" style={{ transitionDelay: '0.3s' }}></div>
-        <div className="absolute right-4 top-0 bottom-0 w-1 bg-gradient-to-b from-transparent via-purple-400 to-transparent opacity-0 hover:opacity-100 transition-all duration-500 animate-pulse" style={{ transitionDelay: '0.5s' }}></div>
-        <div className="absolute right-8 top-0 bottom-0 w-1 bg-gradient-to-b from-transparent via-cyan-400 to-transparent opacity-0 hover:opacity-100 transition-all duration-500 animate-pulse" style={{ transitionDelay: '0.7s' }}></div>
-        
-        <div className="absolute bottom-4 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-0 hover:opacity-100 transition-all duration-500 animate-pulse" style={{ transitionDelay: '0.6s' }}></div>
-        <div className="absolute bottom-8 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-purple-400 to-transparent opacity-0 hover:opacity-100 transition-all duration-500 animate-pulse" style={{ transitionDelay: '0.8s' }}></div>
-        
-        {/* Nodos de conexión */}
-        <div className="absolute top-4 left-4 w-3 h-3 bg-cyan-400 rounded-full opacity-0 hover:opacity-100 transition-all duration-500 animate-ping" style={{ transitionDelay: '0.9s' }}></div>
-        <div className="absolute top-4 right-4 w-3 h-3 bg-purple-400 rounded-full opacity-0 hover:opacity-100 transition-all duration-500 animate-ping" style={{ transitionDelay: '1s' }}></div>
-        <div className="absolute bottom-4 left-4 w-3 h-3 bg-cyan-400 rounded-full opacity-0 hover:opacity-100 transition-all duration-500 animate-ping" style={{ transitionDelay: '1.1s' }}></div>
-        <div className="absolute bottom-4 right-4 w-3 h-3 bg-purple-400 rounded-full opacity-0 hover:opacity-100 transition-all duration-500 animate-ping" style={{ transitionDelay: '1.2s' }}></div>
-        
-        {/* Líneas diagonales */}
-        <div className="absolute top-1/4 left-1/4 w-1/2 h-1 bg-gradient-to-r from-cyan-400/80 to-purple-400/80 transform rotate-45 opacity-0 hover:opacity-100 transition-all duration-500 animate-pulse" style={{ transitionDelay: '1.3s' }}></div>
-        <div className="absolute top-3/4 left-1/4 w-1/2 h-1 bg-gradient-to-r from-purple-400/80 to-cyan-400/80 transform -rotate-45 opacity-0 hover:opacity-100 transition-all duration-500 animate-pulse" style={{ transitionDelay: '1.4s' }}></div>
-        
-        {/* Efecto de escaneo */}
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-500/30 to-transparent transform -skew-x-12 opacity-0 hover:opacity-100 transition-all duration-500 animate-pulse" style={{ transitionDelay: '1.5s' }}></div>
+      {/* Top accent line — aparece al hover */}
+      <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-cyan-400/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+
+      {/* Category badge — top right */}
+      <div className="absolute top-4 right-4 z-10">
+        <span className="px-2 py-0.5 rounded text-[9px] font-mono tracking-widest uppercase border border-white/[0.08] bg-white/[0.04] text-gray-600">
+          {categoryLabel}
+        </span>
       </div>
+
       {/* Imagen del producto */}
-      <div className="relative h-40 mb-3 rounded-xl overflow-hidden bg-gradient-to-br from-gray-800/40 to-gray-900/60 flex items-center justify-center border border-cyan-500/20">
-        {/* Efecto de escaneo */}
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-500/20 to-transparent transform -skew-x-12 opacity-0 hover:opacity-100 transition-opacity duration-700 animate-pulse"></div>
-        
-        <motion.img
+      <div className="relative h-44 mb-4 rounded-xl overflow-hidden bg-black/40 flex items-center justify-center">
+        <img
           src={product.image}
           alt={product.name}
-          className="relative z-10 max-h-full max-w-full object-contain filter drop-shadow-lg"
-          whileHover={{ scale: 1.1, filter: "drop-shadow(0 0 20px rgba(6, 182, 212, 0.5))" }}
-          transition={{ duration: 0.4 }}
+          className="relative z-10 max-h-full max-w-full object-contain transition-transform duration-500 group-hover:scale-105"
         />
+        {/* Gradient fade at bottom */}
+        <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-black/50 to-transparent pointer-events-none z-20" />
       </div>
 
       {/* Información del producto */}
-      <div className="relative z-10 space-y-2">
-        <div>
-          <h3 className="text-base font-bold bg-gradient-to-r from-cyan-400 via-white to-purple-400 bg-clip-text text-transparent mb-1 drop-shadow-lg">
-            {product.name}
-          </h3>
-          <p className="text-gray-300 text-xs leading-relaxed drop-shadow-md">{product.description}</p>
+      <div className="flex flex-col flex-1">
+        <div className="flex items-start justify-between gap-2 mb-1.5">
+          <h3 className="text-lg font-grotesk font-bold tracking-[-0.01em] text-white">{product.name}</h3>
+          <div className="text-right whitespace-nowrap">
+            <div className="text-sm font-mono font-bold text-neon-cyan leading-none">{product.priceCop}</div>
+            <div className="text-[10px] text-gray-600 font-mono mt-0.5">{product.priceUsd} USD</div>
+          </div>
         </div>
+        <p className="text-gray-500 text-xs leading-relaxed mb-4 font-inter">{product.description}</p>
 
-        {/* Características */}
-        <div className="flex flex-wrap gap-1">
+        {/* Características — chips mono estilo 21st.dev */}
+        <div className="flex flex-wrap gap-1.5 mb-5">
           {product.features.map((feature, index) => (
-            <motion.span
+            <span
               key={index}
-              className="px-2 py-0.5 bg-gradient-to-r from-cyan-500/20 to-purple-500/20 text-cyan-300 text-xs rounded-full border border-cyan-400/40 backdrop-blur-sm shadow-lg"
-              whileHover={{ 
-                scale: 1.05, 
-                boxShadow: "0 0 15px rgba(6, 182, 212, 0.4)",
-                borderColor: "rgba(6, 182, 212, 0.8)"
-              }}
-              transition={{ duration: 0.3 }}
+              className="px-2 py-0.5 bg-white/[0.03] text-gray-500 text-[10px] rounded font-mono border border-white/[0.06] tracking-wide"
             >
               {feature}
-            </motion.span>
+            </span>
           ))}
         </div>
 
-        {/* Precio y botón */}
-        <div className="flex items-center justify-between pt-2">
-          <span className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent drop-shadow-lg">
-            {product.price}
-          </span>
-          <motion.button
-            className="relative px-4 py-2 bg-gradient-to-r from-purple-600 via-cyan-500 to-purple-600 text-white font-semibold rounded-full overflow-hidden shadow-lg border border-cyan-400/30 text-sm"
-            whileHover={{ 
-              scale: 1.05,
-              boxShadow: "0 0 25px rgba(6, 182, 212, 0.6)"
-            }}
-            whileTap={{ scale: 0.95 }}
-            transition={{ duration: 0.3 }}
+        {/* Botones */}
+        <div className="flex gap-2 mt-auto">
+          <button
+            className="flex-1 px-4 py-2.5 bg-transparent text-gray-300 font-plexmono rounded-md border border-white/[0.14] text-[11px] tracking-[0.04em] hover:border-white/40 hover:text-white transition-colors duration-200"
             onClick={() => onDetails(product.id)}
           >
-            {/* Efecto de brillo animado */}
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-12 opacity-0 hover:opacity-100 transition-opacity duration-500"></div>
-            <span className="relative z-10">Ver detalles</span>
-          </motion.button>
+            Más info
+          </button>
+          <button
+            className="flex-1 px-4 py-2.5 bg-neon-cyan text-black font-semibold rounded-md text-[11px] tracking-[0.04em] hover:bg-cyan-300 transition-colors duration-200 font-plexmono"
+            onClick={() => onBuy(product.id)}
+          >
+            Personalizar →
+          </button>
         </div>
       </div>
     </motion.div>
@@ -194,12 +174,29 @@ const productRoutes: Record<string, string> = {
 };
 
 // Componente principal de la página de productos
+type Filter = 'todos' | 'controlador' | 'sintetizador';
+
 function ProductsPage() {
   const navigate = useNavigate();
   const [isFullscreen, setIsFullscreen] = React.useState(false);
+  const [filter, setFilter] = React.useState<Filter>('todos');
+
+  const visibleProducts = filter === 'todos'
+    ? products
+    : products.filter((p) => p.category === filter);
+
+  const filterTabs: { id: Filter; label: string; count: number }[] = [
+    { id: 'todos', label: 'Todos', count: products.length },
+    { id: 'controlador', label: 'Controladores MIDI', count: products.filter(p => p.category === 'controlador').length },
+    { id: 'sintetizador', label: 'Sintetizadores', count: products.filter(p => p.category === 'sintetizador').length },
+  ];
 
   const handleDetails = (id: string) => {
     navigate(productRoutes[id] ?? `/configurator?product=${id}`);
+  };
+
+  const handleBuy = (id: string) => {
+    navigate(`/configurator?product=${id}`);
   };
 
   // Detectar cambios de pantalla completa
@@ -218,457 +215,178 @@ function ProductsPage() {
   }, []);
 
   return (
-    <section 
-      className="section-snap relative w-full overflow-hidden" 
-      style={{ 
-        height: isFullscreen ? '100vh' : '100vh',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: isFullscreen ? 'center' : 'flex-start',
-        alignItems: 'center'
-      }}
+    <section
+      className="section-snap relative w-full overflow-hidden flex flex-col items-center"
+      style={{ height: '100vh', justifyContent: isFullscreen ? 'center' : 'flex-start' }}
     >
-      {/* Background Image - Fondo nuestros productos */}
-      <div 
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-        style={{ 
-          backgroundImage: `url('images/fondonuestrosproductos_Mesa de trabajo 1.png')`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center center',
-          zIndex: 1
-        }}
-      />
-      
-      {/* Overlay para tapar partículas */}
-      <div className="absolute inset-0 bg-black/30" style={{ zIndex: 2 }} />
-      
-      {/* Background Effects locales */}
-      <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 3 }}>
-        <div className="absolute inset-0 bg-grid opacity-20" />
-        <div className="absolute inset-0 plasma-bg" />
-      </div>
+      {/* Sin fondo local — el fondo global de 21st.dev (App.tsx) se ve a través */}
 
       {/* Contenido principal */}
-      <div 
-        className="relative flex flex-col container mx-auto px-6 overflow-visible" 
-        style={{ 
+      <div
+        className="relative flex flex-col container mx-auto px-6 overflow-visible w-full items-center"
+        style={{
           zIndex: 10,
-          width: '100%',
           maxWidth: '100%',
-          padding: isFullscreen ? '4rem 6rem' : '2rem 1.5rem',
-          height: isFullscreen ? '100vh' : '100%',
+          paddingTop: isFullscreen ? '0' : '6rem',
+          height: '100%',
           justifyContent: isFullscreen ? 'center' : 'flex-start',
-          alignItems: 'center'
         }}
       >
-        {/* Header - Posicionado en la parte superior */}
+        {/* Header limpio */}
         <motion.div
-          className="text-center products-title relative"
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          style={{ 
-            zIndex: 20,
-            marginBottom: isFullscreen ? '3rem' : '0.25rem',
-            paddingTop: isFullscreen ? '2rem' : '0'
-          }}
+          className="text-center products-title mb-8"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.7 }}
         >
-          {/* Efecto de fondo futurista */}
-          <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 via-purple-500/10 to-pink-500/10 blur-3xl rounded-full scale-150"></div>
-          
-          {/* Líneas de energía que se extienden */}
-          <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 w-32 h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent animate-pulse"></div>
-          <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 w-32 h-1 bg-gradient-to-r from-transparent via-purple-400 to-transparent animate-pulse" style={{ animationDelay: '0.5s' }}></div>
-          
-          {/* Nodos de energía en los lados */}
-          <div className="absolute top-1/2 -left-8 w-4 h-4 bg-cyan-400 rounded-full animate-ping shadow-lg shadow-cyan-400/50"></div>
-          <div className="absolute top-1/2 -right-8 w-4 h-4 bg-purple-400 rounded-full animate-ping shadow-lg shadow-purple-400/50" style={{ animationDelay: '0.3s' }}></div>
-          
-          {/* Título principal con múltiples efectos */}
-          <h1 
-            className="relative font-black mb-1"
-            style={{
-              fontSize: isFullscreen ? '3rem' : '2rem',
-              marginBottom: isFullscreen ? '1rem' : '0.25rem'
-            }}
+          <div className="inline-flex items-center gap-2.5 mb-3">
+            <span className="w-2 h-2 rounded-[2px] bg-neon-cyan" />
+            <span className="text-[10px] font-plexmono tracking-[0.28em] text-gray-500 uppercase">
+              02 · Catálogo
+            </span>
+          </div>
+          <h2
+            className="font-grotesk font-bold tracking-[-0.02em] text-white mb-2"
+            style={{ fontSize: isFullscreen ? '2.75rem' : '2rem' }}
           >
-            {/* Texto principal con gradiente animado */}
-            <span className="bg-gradient-to-r from-cyan-400 via-purple-500 via-pink-500 to-cyan-400 bg-clip-text text-transparent bg-[length:200%_100%] animate-[gradientShift_3s_ease-in-out_infinite] drop-shadow-2xl">
-              NUESTROS PRODUCTOS
-            </span>
-            <br />
-            <span className="bg-gradient-to-r from-purple-500 via-pink-500 via-cyan-400 to-purple-500 bg-clip-text text-transparent bg-[length:200%_100%] animate-[gradientShift_3s_ease-in-out_infinite] drop-shadow-2xl" style={{ animationDelay: '1.5s' }}>
-              
-            </span>
-            
-            {/* Efecto de neón detrás del texto */}
-            <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 bg-clip-text text-transparent blur-sm opacity-50 animate-pulse">
-              NUESTROS<br />PRODUCTOS
-            </div>
-            
-            {/* Efecto de escaneo horizontal */}
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-400/30 to-transparent transform -skew-x-12 animate-[scan_2s_ease-in-out_infinite]"></div>
-          </h1>
-          
-          {/* Subtítulo futurista */}
-          <motion.p 
-            className="text-sm md:text-base text-gray-300 font-light tracking-wider relative z-10"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5, duration: 1 }}
-          >
-            <span className="bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
-              TECNOLOGÍA MUSICAL
-            </span>
-            <span className="mx-4 text-cyan-400 animate-pulse">◆</span>
-            <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-              INNOVACIÓN DIGITAL
-            </span>
-          </motion.p>
-          
-          {/* Líneas de conexión animadas */}
-          <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-px h-8 bg-gradient-to-b from-cyan-400 to-transparent animate-pulse"></div>
-          <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-px h-8 bg-gradient-to-t from-purple-400 to-transparent animate-pulse" style={{ animationDelay: '0.7s' }}></div>
+            Nuestros <span className="text-neon-cyan">productos</span>
+          </h2>
+          <p className="text-sm md:text-base text-gray-400 font-inter">
+            Diseña, construye y usa tu controlador MIDI o sintetizador a tu manera
+          </p>
+
+          {/* Filtros de categoría con conteos — estilo 21st.dev */}
+          <div className="flex flex-wrap justify-center gap-2 mt-5">
+            {filterTabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setFilter(tab.id)}
+                className={`px-4 py-1.5 rounded-full text-xs font-mono tracking-wide transition-all duration-300 flex items-center gap-1.5 ${
+                  filter === tab.id
+                    ? 'bg-neon-cyan text-black font-bold'
+                    : 'bg-white/[0.04] text-gray-500 border border-white/[0.08] hover:text-white hover:border-white/20'
+                }`}
+              >
+                {tab.label}
+                <span className={`text-[10px] ${filter === tab.id ? 'text-black/60' : 'text-gray-700'}`}>
+                  {tab.count}
+                </span>
+              </button>
+            ))}
+          </div>
         </motion.div>
 
-        {/* Sin espacio entre título y carrusel */}
-
-        {/* Carrusel Splide - Versión simplificada */}
-        <div 
-          className="flex items-center justify-center splide-container"
-          style={{
-            width: '100%',
-            maxWidth: '100%',
-            padding: isFullscreen ? '2rem 0' : '1rem 0',
-            flex: isFullscreen ? '1' : '0 1 auto'
-          }}
+        {/* Carrusel */}
+        <div
+          className="flex items-center justify-center splide-container w-full"
+          style={{ maxWidth: '100%', flex: isFullscreen ? '1' : '0 1 auto' }}
         >
-          <div 
-            className="w-full"
-            style={{
-              maxWidth: isFullscreen ? '100%' : '80rem'
-            }}
-          >
-            <Splide 
+          <div className="w-full" style={{ maxWidth: isFullscreen ? '100%' : '80rem' }}>
+            <Splide
+              key={filter}
               options={{
                 type: 'slide',
                 perPage: 3,
-                gap: '2rem',
+                gap: '1.5rem',
                 padding: '1rem',
-                arrows: true,
+                arrows: visibleProducts.length > 3,
                 pagination: true,
                 autoplay: false,
                 drag: true,
                 keyboard: true,
                 breakpoints: {
-                  1024: { 
-                    perPage: 2,
-                    gap: '1.5rem'
-                  },
-                  768: { 
-                    perPage: 1,
-                    gap: '1rem'
-                  }
+                  1024: { perPage: 2, gap: '1.5rem' },
+                  768: { perPage: 1, gap: '1rem' }
                 }
-              }} 
+              }}
               className="splide"
             >
-              {products.map((product, index) => (
+              {visibleProducts.map((product) => (
                 <SplideSlide key={product.id}>
-                  <motion.div
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, delay: index * 0.1 }}
-                    className="flex justify-center h-full"
-                  >
-                    <ProductCard product={product} onDetails={handleDetails} />
-                  </motion.div>
+                  <div className="flex justify-center h-full py-2">
+                    <ProductCard product={product} onDetails={handleDetails} onBuy={handleBuy} />
+                  </div>
                 </SplideSlide>
               ))}
             </Splide>
           </div>
         </div>
 
-        {/* Estilos para el carrusel y tarjetas */}
+        {/* Estilos del carrusel */}
         <style>{`
-          /* Estilos para pantalla completa */
-          :fullscreen,
-          :-webkit-full-screen,
-          :-moz-full-screen,
-          :-ms-fullscreen {
-            background: linear-gradient(135deg, #0B0F14 0%, #05060A 100%) !important;
+          /* Shine sweep — 21st.dev card hover effect */
+          .product-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 1rem;
+            background: linear-gradient(
+              105deg,
+              transparent 35%,
+              rgba(255,255,255,0.04) 50%,
+              transparent 65%
+            );
+            transform: translateX(-100%) skewX(-12deg);
+            pointer-events: none;
+            z-index: 1;
           }
-          
-          :fullscreen .splide-container,
-          :-webkit-full-screen .splide-container,
-          :-moz-full-screen .splide-container,
-          :-ms-fullscreen .splide-container {
-            padding: 2rem 6rem 4rem 6rem !important;
-            max-width: 100vw !important;
-            height: 100vh !important;
-            display: flex !important;
-            flex-direction: column !important;
-            justify-content: center !important;
+          .product-card:hover::before {
+            transform: translateX(200%) skewX(-12deg);
+            transition: transform 0.75s ease;
           }
-          
-          :fullscreen .products-title,
-          :-webkit-full-screen .products-title,
-          :-moz-full-screen .products-title,
-          :-ms-fullscreen .products-title {
-            margin-bottom: 3rem !important;
-            padding-top: 2rem !important;
-            position: relative !important;
-            top: 0 !important;
-          }
-          
-          :fullscreen .products-title h1,
-          :-webkit-full-screen .products-title h1,
-          :-moz-full-screen .products-title h1,
-          :-ms-fullscreen .products-title h1 {
-            font-size: 3rem !important;
-            margin-bottom: 1rem !important;
-          }
-          
-          :fullscreen .splide,
-          :-webkit-full-screen .splide,
-          :-moz-full-screen .splide,
-          :-ms-fullscreen .splide {
-            max-width: 100% !important;
-            flex: 1 !important;
-            display: flex !important;
-            align-items: center !important;
-          }
-          
-          :fullscreen .product-card,
-          :-webkit-full-screen .product-card,
-          :-moz-full-screen .product-card,
-          :-ms-fullscreen .product-card {
-            max-width: 400px !important;
-            margin: 0 auto !important;
-            height: auto !important;
-          }
-          
-          :fullscreen .splide__arrow,
-          :-webkit-full-screen .splide__arrow,
-          :-moz-full-screen .splide__arrow,
-          :-ms-fullscreen .splide__arrow {
-            width: 5rem !important;
-            height: 5rem !important;
-            font-size: 2rem !important;
-            top: 50% !important;
-            transform: translateY(-50%) !important;
-          }
-          
-          :fullscreen .splide__arrow--prev,
-          :-webkit-full-screen .splide__arrow--prev,
-          :-moz-full-screen .splide__arrow--prev,
-          :-ms-fullscreen .splide__arrow--prev {
-            left: 1rem !important;
-          }
-          
-          :fullscreen .splide__arrow--next,
-          :-webkit-full-screen .splide__arrow--next,
-          :-moz-full-screen .splide__arrow--next,
-          :-ms-fullscreen .splide__arrow--next {
-            right: 1rem !important;
-          }
-          
-          :fullscreen .splide__pagination,
-          :-webkit-full-screen .splide__pagination,
-          :-moz-full-screen .splide__pagination,
-          :-ms-fullscreen .splide__pagination {
-            bottom: 1rem !important;
-            gap: 1rem !important;
-          }
-          
-          :fullscreen .splide__pagination__page,
-          :-webkit-full-screen .splide__pagination__page,
-          :-moz-full-screen .splide__pagination__page,
-          :-ms-fullscreen .splide__pagination__page {
-            width: 1rem !important;
-            height: 1rem !important;
-          }
-          
-          /* Clases condicionales para pantalla completa */
-          .fullscreen-mode {
-            height: 100vh !important;
-            justify-content: center !important;
-            padding: 2rem 6rem 4rem 6rem !important;
-          }
-          
-          .fullscreen-title {
-            margin-bottom: 3rem !important;
-            padding-top: 2rem !important;
-          }
-          
-          .fullscreen-title h1 {
-            font-size: 3rem !important;
-            margin-bottom: 1rem !important;
-          }
-          
-          .splide {
-            padding: 0;
-          }
-          
-          .splide__track {
-            padding: 1rem 0;
-          }
-          
+          .splide { padding: 0; }
+          .splide__track { padding: 0.5rem 0; }
           .splide__slide {
             height: auto;
             display: flex;
-            align-items: center;
+            align-items: stretch;
             justify-content: center;
           }
-          
           .splide__arrow {
-            background: rgba(0, 0, 0, 0.7);
+            background: rgba(255, 255, 255, 0.05);
             backdrop-filter: blur(10px);
-            border: 2px solid rgba(6, 182, 212, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.15);
             color: white;
-            width: 3rem;
-            height: 3rem;
+            width: 2.75rem;
+            height: 2.75rem;
             border-radius: 50%;
             transition: all 0.3s ease;
-            box-shadow: 0 0 20px rgba(6, 182, 212, 0.4);
             position: absolute;
             z-index: 10;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             top: 50%;
             transform: translateY(-50%);
           }
-          
           .splide__arrow:hover {
-            background: rgba(0, 0, 0, 0.9);
-            border-color: rgba(6, 182, 212, 0.9);
-            transform: translateY(-50%) scale(1.1);
-            box-shadow: 0 0 30px rgba(6, 182, 212, 0.6);
+            border-color: rgba(0, 229, 255, 0.6);
+            background: rgba(0, 229, 255, 0.1);
+            transform: translateY(-50%) scale(1.05);
           }
-          
-          .splide__arrow:disabled {
-            opacity: 0.3;
-            cursor: not-allowed;
-            transform: translateY(-50%);
-          }
-          
-          .splide__arrow--prev {
-            left: -1.5rem;
-          }
-          
-          .splide__arrow--next {
-            right: -1.5rem;
-          }
-          
-          .splide__pagination {
-            bottom: -2rem;
-            gap: 0.5rem;
-          }
-          
+          .splide__arrow:disabled { opacity: 0.25; }
+          .splide__arrow svg { fill: white; }
+          .splide__arrow--prev { left: -1.25rem; }
+          .splide__arrow--next { right: -1.25rem; }
+          .splide__pagination { bottom: -2rem; gap: 0.5rem; }
           .splide__pagination__page {
-            background: rgba(107, 114, 128, 0.6);
-            border-radius: 50%;
-            width: 0.75rem;
-            height: 0.75rem;
+            background: rgba(255, 255, 255, 0.25);
+            border-radius: 9999px;
+            width: 0.5rem;
+            height: 0.5rem;
             transition: all 0.3s ease;
-            border: 2px solid transparent;
+            margin: 0;
           }
-          
           .splide__pagination__page.is-active {
-            background: #06b6d4;
-            border-color: rgba(6, 182, 212, 0.8);
-            transform: scale(1.2);
-            box-shadow: 0 0 10px rgba(6, 182, 212, 0.5);
+            background: #00E5FF;
+            width: 1.5rem;
+            transform: none;
           }
-          
-          .splide__pagination__page:hover {
-            background: rgba(107, 114, 128, 0.8);
-            transform: scale(1.1);
-          }
-          
-          .product-card {
-            box-shadow: 0 0 15px rgba(6, 182, 212, 0.2), 0 0 30px rgba(6, 182, 212, 0.1);
-            transition: all 0.3s ease;
-            width: 100%;
-            max-width: 320px;
-            margin: 0 auto;
-          }
-          
-          .product-card:hover {
-            box-shadow: 0 0 25px rgba(6, 182, 212, 0.4), 0 0 50px rgba(6, 182, 212, 0.2), 0 0 75px rgba(6, 182, 212, 0.1);
-            transform: translateY(-5px);
-          }
-          
+          :fullscreen { background: #05060A !important; }
           @media (max-width: 768px) {
-            .splide__arrow {
-              width: 2.5rem;
-              height: 2.5rem;
-            }
-            
-            .splide__arrow--prev {
-              left: -1rem;
-            }
-            
-            .splide__arrow--next {
-              right: -1rem;
-            }
+            .splide__arrow { width: 2.5rem; height: 2.5rem; }
+            .splide__arrow--prev { left: -0.5rem; }
+            .splide__arrow--next { right: -0.5rem; }
           }
         `}</style>
-        
-        {/* Animaciones CSS personalizadas para el título futurista */}
-        <style>{`
-          @keyframes gradientShift {
-            0%, 100% {
-              background-position: 0% 50%;
-            }
-            50% {
-              background-position: 100% 50%;
-            }
-          }
-          
-          @keyframes scan {
-            0% {
-              transform: translateX(-100%) skewX(-12deg);
-              opacity: 0;
-            }
-            50% {
-              opacity: 1;
-            }
-            100% {
-              transform: translateX(100%) skewX(-12deg);
-              opacity: 0;
-            }
-          }
-          
-          /* Efecto de brillo adicional para el título */
-          .products-title h1 {
-            text-shadow: 
-              0 0 10px rgba(6, 182, 212, 0.5),
-              0 0 20px rgba(6, 182, 212, 0.3),
-              0 0 30px rgba(6, 182, 212, 0.2),
-              0 0 40px rgba(147, 51, 234, 0.3),
-              0 0 50px rgba(147, 51, 234, 0.2);
-          }
-          
-          /* Efecto de parpadeo sutil */
-          .products-title h1 span {
-            animation: 
-              gradientShift 3s ease-in-out infinite,
-              subtleGlow 4s ease-in-out infinite;
-          }
-          
-          @keyframes subtleGlow {
-            0%, 100% {
-              filter: brightness(1);
-            }
-            50% {
-              filter: brightness(1.2);
-            }
-          }
-        `}</style>
-        
       </div>
     </section>
   );

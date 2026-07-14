@@ -24,7 +24,7 @@ export const useModelReady = () => {
     if (modelFullyLoaded) {
       // Calcular el tiempo transcurrido desde el inicio
       const elapsedTime = Date.now() - startTime;
-      const minimumLoadingTime = 5000; // 5 segundos mínimo
+      const minimumLoadingTime = 400;
       const remainingTime = Math.max(0, minimumLoadingTime - elapsedTime);
 
       // Esperar el tiempo restante para completar los 5 segundos

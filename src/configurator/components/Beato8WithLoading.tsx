@@ -9,7 +9,7 @@ const Beato8WithLoading: React.FC<Props> = ({ className, style, currentUser, onL
   <ConfiguratorWithLoading
     name="BEATO8"
     subtitle="Features: Metal body, 8 ARCADE buttons, and 4 assignable knobs."
-    duration={1000}
+
     className={className}
     style={style}
   >

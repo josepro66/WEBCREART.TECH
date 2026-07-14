@@ -1,12 +1,12 @@
 import React from 'react';
-import Beato8ControllerViewer from '../components/3d/Beato8ControllerViewer';
+import ProductModelViewer from '../components/3d/ProductModelViewer';
 import ProductInfoPage from './ProductInfoPage';
 
 const Beato8Info: React.FC = () => (
   <ProductInfoPage
     name="BEATO8"
     subtitle="Controlador MIDI Compacto y Potente"
-    viewer={<Beato8ControllerViewer className="h-[500px] w-full" transparent={true} />}
+    viewer={<ProductModelViewer modelUrl={`${import.meta.env.BASE_URL}models/BEATO.glb`} className="h-[500px] w-full" preserveMaterials />}
     glowGradient="from-cyan-500/20 to-fuchsia-500/20"
     description="El BEATO8 es un controlador MIDI compacto y potente diseñado para productores que buscan versatilidad en un formato reducido. Con 8 botones arcade de alta calidad y 4 knobs asignables, ofrece un control preciso y expresivo para cualquier flujo de trabajo musical."
     secondDescription="Su construcción metálica robusta y diseño ergonómico lo hacen ideal para uso en estudio y presentaciones en vivo, proporcionando la confiabilidad que necesitas para tus proyectos más importantes."
@@ -40,7 +40,7 @@ const Beato8Info: React.FC = () => (
       },
     ]}
     price="$750.000 COP"
-    productId="beato8"
+    productId="beato"
     ctaGradient="from-purple-500 to-cyan-500"
   />
 );

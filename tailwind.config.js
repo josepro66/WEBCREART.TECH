@@ -7,6 +7,8 @@ export default {
         'orbitron': ['Orbitron', 'monospace'],
         'inter': ['Inter', 'sans-serif'],
         'chakra': ['Chakra Petch', 'sans-serif'],
+        'grotesk': ['Space Grotesk', 'sans-serif'],
+        'plexmono': ['IBM Plex Mono', 'monospace'],
       },
       colors: {
         neon: {
@@ -26,6 +28,8 @@ export default {
         'glow': 'glow 2s ease-in-out infinite alternate',
         'float': 'float 6s ease-in-out infinite',
         'pulse-neon': 'pulse-neon 2s ease-in-out infinite',
+        'marquee': 'marquee 30s linear infinite',
+        'marquee-slow': 'marquee 50s linear infinite',
       },
       keyframes: {
         glow: {
@@ -39,7 +43,11 @@ export default {
         'pulse-neon': {
           '0%, 100%': { opacity: '1' },
           '50%': { opacity: '0.5' },
-        }
+        },
+        marquee: {
+          '0%': { transform: 'translateX(0)' },
+          '100%': { transform: 'translateX(-50%)' },
+        },
       }
     },
   },

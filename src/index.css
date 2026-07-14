@@ -17,10 +17,38 @@ html {
 
 body {
   font-family: 'Inter', sans-serif;
-  background: linear-gradient(135deg, #475569 0%, #334155 100%);
+  background: #000000;
   color: white;
   overflow-x: hidden;
   min-height: 100vh;
+}
+
+/* ─── 21st.dev–style global background ─── */
+.bg-21st-base {
+  background: #000000;
+}
+
+/* Dot-grid — más sutil */
+.bg-21st-dots {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+  background-size: 22px 22px;
+  background-position: 0 0;
+  -webkit-mask-image: radial-gradient(ellipse 85% 70% at 50% 40%, black 35%, transparent 90%);
+          mask-image: radial-gradient(ellipse 85% 70% at 50% 40%, black 35%, transparent 90%);
+}
+
+/* Bloom muy contenido — apenas un toque de color */
+.bg-21st-bloom {
+  background:
+    radial-gradient(ellipse 50% 35% at 50% 0%, rgba(0, 229, 255, 0.04) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 40% at 90% 95%, rgba(139, 92, 246, 0.03) 0%, transparent 60%),
+    radial-gradient(ellipse 35% 30% at 10% 80%, rgba(0, 229, 255, 0.02) 0%, transparent 60%);
+}
+
+/* Noise grain — adds depth, prevents banding */
+.bg-21st-noise {
+  background-image: url("data:image/svg+xml;utf8,<svg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.55 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  opacity: 0.025;
 }
 
 /* Custom scrollbar */
@@ -29,16 +57,17 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #1A1A1A;
+  background: #0A0B0D;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(45deg, #D0FF00, #FF47E2);
+  background: #2A2E36;
   border-radius: 4px;
+  border: 2px solid #0A0B0D;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(45deg, #FF47E2, #00E5FF);
+  background: #00E5FF;
 }
 
 /* Neon glow utilities */
@@ -123,95 +152,60 @@ body {
   z-index: 1000;
   display: flex;
   flex-direction: column;
-  background: transparent;
-  padding: 0;
-  border: none;
+  background: rgba(9, 9, 11, 0.55);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  padding: 10px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
   transition: all 0.3s ease;
-  align-items: center;
-  gap: clamp(0px, 0.15vw, 3px);
-  left: clamp(1px, 0.5vw, 15px);
+  align-items: stretch;
+  gap: 6px;
+  left: 14px;
+  width: clamp(160px, 14vw, 200px);
+  box-shadow: 0 20px 50px -20px rgba(0, 0, 0, 0.7);
 }
 
-.product-menu-item,
-.product-menu button,
-.product-menu [class*="button"],
-.product-menu [role="button"] {
-  width: clamp(28px, 7vw, 72px);
-  height: clamp(28px, 7vw, 72px);
-  min-width: clamp(28px, 7vw, 72px);
-  min-height: clamp(28px, 7vw, 72px);
-  aspect-ratio: 1 / 1;
-  padding: clamp(2px, 0.4vw, 7px);
-  font-size: clamp(5px, 1.1vw, 11px);
-  font-weight: bold;
+.product-menu-item {
+  width: 100%;
+  padding: 10px 12px 10px 14px;
   box-sizing: border-box;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  justify-content: center;
-  text-align: center;
-  border-radius: 6px;
+  justify-content: flex-start;
+  gap: 10px;
+  text-align: left;
+  border-radius: 10px;
   cursor: pointer;
-  transition: all 0.3s ease;
-  overflow: hidden;
+  transition: transform 0.22s ease, background 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+  overflow: visible;
   position: relative;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
-  gap: clamp(0px, 0.1vw, 2px);
+  font-family: 'Inter', sans-serif;
 }
 
-.product-menu button,
-.product-menu [class*="button"],
-.product-menu [role="button"] {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(10px);
-  color: white;
+.product-menu-item:active {
+  transform: scale(0.98) !important;
 }
 
-.product-menu button:hover,
-.product-menu [class*="button"]:hover,
-.product-menu [role="button"]:hover {
-  background: rgba(255, 255, 255, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  transform: scale(1.05);
-}
-
-.product-menu button:active,
-.product-menu [class*="button"]:active,
-.product-menu [role="button"]:active {
-  transform: scale(0.95);
-}
-
-.product-menu-item img,
-.product-menu button img,
-.product-menu [class*="button"] img,
-.product-menu [role="button"] img {
-  width: clamp(18px, 5vw, 60px);
-  height: clamp(8px, 2.5vw, 25px);
-  object-fit: contain;
-}
-
-.product-menu-item svg,
-.product-menu button svg,
-.product-menu [class*="button"] svg,
-.product-menu [role="button"] svg {
-  width: clamp(16px, 4vw, 40px);
-  height: clamp(16px, 4vw, 40px);
-}
-
-.product-menu-item div div,
-.product-menu button span,
-.product-menu [class*="button"] span,
-.product-menu [role="button"] span {
-  font-size: clamp(4px, 1vw, 10px);
-  line-height: 1.1;
-  font-weight: bold;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
+/* En pantallas pequeñas: compactar a icono + nombre corto */
+@media (max-width: 768px) {
+  .product-menu {
+    width: clamp(56px, 16vw, 80px);
+    padding: 8px 6px;
+    left: 8px;
+  }
+  .product-menu-item {
+    flex-direction: column;
+    padding: 8px 6px;
+    gap: 4px;
+    text-align: center;
+  }
+  .product-menu-item > div {
+    text-align: center !important;
+  }
 }
 
 .rotate-screen-overlay {

@@ -1,17 +1,15 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
+import StarfieldBackground from './components/StarfieldBackground';
+import PalettePanel, { paletteSubtitle } from './components/PalettePanel';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import gsap from 'gsap';
 
-import { PAYU_CONFIG, getMixoCurrencyConfig } from './payuConfig.js';
-import MD5 from 'crypto-js/md5';
-import { PayPalButtons, PayPalScriptProvider } from '@paypal/react-paypal-js';
-import type { ReactPayPalScriptOptions } from '@paypal/react-paypal-js';
 import Swal from 'sweetalert2';
+import ReserveCtaBar from './components/ReserveCtaBar';
+import ReservaModal from './components/ReservaModal';
 
-// PayPal Client ID
-const PAYPAL_CLIENT_ID = "test";
 
 // Tipos para los objetos seleccionables
 interface Selectable {
@@ -86,6 +84,7 @@ const MixoConfigurator: React.FC<{ onProductChange?: (product: 'beato' | 'knobo'
     };
   }, []);
   
+  const [showReservaModal, setShowReservaModal] = useState(false);
   const [chosenColors, setChosenColors] = useState<ChosenColors>(() => {
     const saved = localStorage.getItem('mixo_chosenColors');
     if (saved) {
@@ -104,7 +103,6 @@ const MixoConfigurator: React.FC<{ onProductChange?: (product: 'beato' | 'knobo'
     };
   });
   const [selectable, setSelectable] = useState<Selectable>({ chasis: [], buttons: [], knobs: [], faders: [] });
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [screenshot, setScreenshot] = useState<string | null>(null);
   const lastModalShotRef = useRef<string | null>(null);
 
@@ -140,154 +138,6 @@ const MixoConfigurator: React.FC<{ onProductChange?: (product: 'beato' | 'knobo'
     top:    { pos: new THREE.Vector3(1, 1.95, -0.4), target: new THREE.Vector3(-0.35, -1.4, -0.4) },
   };
 
-  // ==================================================================
-  // INICIO DE LAS FUNCIONES DE PAGO SEGURO
-  // ==================================================================
-  
-  /**
-   * Llama al backend para crear una orden de pago segura en PayPal.
-   * El backend calcula el precio correcto y devuelve un ID de orden.
-   */
-  const createPaypalOrderOnServer = async (): Promise<string> => {
-    try {
-      const response = await fetch('http://localhost:4000/api/create-paypal-order', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        // Envía la configuración para que el backend calcule el precio.
-        body: JSON.stringify({ customization: chosenColors }),
-      });
-      if (!response.ok) throw new Error('Error en el servidor al crear la orden.');
-      const order = await response.json();
-      return order.id; // Devuelve solo el ID de la orden.
-    } catch (error) {
-      console.error("Error al crear la orden de PayPal:", error);
-      alert("No se pudo iniciar el pago. Inténtalo de nuevo.");
-      return Promise.reject(error);
-    }
-  };
-
-  /**
-   * Llama al backend para que verifique la transacción con la API de PayPal.
-   */
-  const verifyPaypalPaymentOnServer = async (orderID: string): Promise<boolean> => {
-    try {
-      const response = await fetch('http://localhost:4000/api/verify-paypal-payment', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        // Envía el ID de la orden para que el servidor la verifique.
-        body: JSON.stringify({ orderID, customization: chosenColors, screenshot }),
-      });
-      if (!response.ok) throw new Error('La verificación del pago falló en el servidor.');
-      console.log("Pago verificado exitosamente por el servidor.");
-      return true;
-    } catch (error) {
-      console.error("Error en la verificación del pago:", error);
-      alert("Hubo un problema al verificar tu pago. Por favor, contacta a soporte.");
-      return false;
-    }
-  };
-  // ==================================================================
-  // FIN DE LAS FUNCIONES DE PAGO SEGURO
-  // ==================================================================
-
-  // Función para abrir el modal de pago
-  const handleOpenPayment = useCallback(() => {
-    // Guardar posición y configuración actual de la cámara
-    const originalPos = cameraRef.current?.position.clone();
-    const originalTarget = controlsRef.current?.target.clone();
-    const originalFov = cameraRef.current?.fov;
-
-    // Mover a la posición inicial (frontal) - usar la vista normal mejorada
-    const initialPos = CAMERA_VIEWS.normal.pos.clone();
-    const initialTarget = CAMERA_VIEWS.normal.target.clone();
-    cameraRef.current!.position.copy(initialPos);
-    cameraRef.current!.fov = 35; // FOV ligeramente más amplio para mejor vista
-    cameraRef.current!.updateProjectionMatrix();
-    if (controlsRef.current) {
-      controlsRef.current.target.copy(initialTarget);
-      controlsRef.current.update();
-    }
-
-    setTimeout(() => {
-      rendererRef.current!.render(sceneRef.current!, cameraRef.current!);
-      const img = rendererRef.current!.domElement.toDataURL('image/png');
-      setScreenshot(img);
-
-      // Restaurar posición, target y FOV originales
-      cameraRef.current!.position.copy(originalPos!);
-      cameraRef.current!.fov = originalFov!;
-      cameraRef.current!.updateProjectionMatrix();
-      if (controlsRef.current && originalTarget) {
-        controlsRef.current.target.copy(originalTarget);
-        controlsRef.current.update();
-      }
-      setShowPaymentModal(true);
-    }, 50);
-  }, [rendererRef, sceneRef, cameraRef, controlsRef, CAMERA_VIEWS, setScreenshot, setShowPaymentModal]);
-
-  // Función para manejar el checkout de PayU localmente
-  const handlePayUCheckoutLocal = () => {
-    const popupTarget = 'payu_checkout';
-    let popupRef = window.open('', popupTarget);
-    
-    if (!popupRef) {
-      alert('Please allow popups to continue with payment');
-      return;
-    }
-
-    // Obtener configuración de la moneda seleccionada
-    const currencyConfig = getMixoCurrencyConfig(selectedCurrency);
-    
-    // Generar firma localmente
-    const signatureString = `${PAYU_CONFIG.API_KEY}~${PAYU_CONFIG.MERCHANT_ID}~${payuData.referenceCode}~${currencyConfig.amount}~${selectedCurrency}`;
-    const signature = MD5(signatureString).toString();
-
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = currencyConfig.url;
-    form.target = popupTarget;
-
-    const formData = {
-      merchantId: PAYU_CONFIG.MERCHANT_ID,
-      accountId: currencyConfig.accountId,
-      description: `Mixo Configurator - ${selectedCurrency} ${currencyConfig.symbol}${currencyConfig.amount}`,
-      referenceCode: payuData.referenceCode,
-      amount: currencyConfig.amount,
-      currency: selectedCurrency,
-      buyerEmail: payuData.buyerEmail,
-      signature: signature,
-      test: PAYU_CONFIG.TEST_MODE ? '1' : '0',
-      confirmationUrl: PAYU_CONFIG.CONFIRMATION_URL,
-      responseUrl: PAYU_CONFIG.RESPONSE_URL,
-      // Parámetros para forzar moneda y país
-      lng: currencyConfig.language,
-      // Datos del modal para el webhook
-      extra1: 'Mixo',
-      extra2: chosenColors.chasis || 'Custom',
-      extra3: `Applied colors - Faders: ${Object.keys(chosenColors.faders || {}).length}`,
-      extra4: `Mixo Configurator - ${selectedCurrency} ${currencyConfig.symbol}${currencyConfig.amount}`,
-      // Additional parameters for PayU
-      payerCountry: 'CO',
-      payerCity: 'Bogota',
-      payerPhone: '+57-300-1234567',
-      // Forzar configuración regional
-      country: 'CO',
-      // Evitar detección automática de ubicación
-      ipAddress: '8.8.4.4'
-    };
-
-    Object.entries(formData).forEach(([key, value]) => {
-      const input = document.createElement('input');
-      input.type = 'hidden';
-      input.name = key;
-      input.value = value;
-      form.appendChild(input);
-    });
-
-    document.body.appendChild(form);
-    form.submit();
-    document.body.removeChild(form);
-  };
 
   // Referencias para la posición inicial de la cámara
   const initialCameraPosRef = useRef<THREE.Vector3 | null>(null);
@@ -301,17 +151,6 @@ const MixoConfigurator: React.FC<{ onProductChange?: (product: 'beato' | 'knobo'
   useEffect(() => {
     localStorage.setItem('mixo_chosenColors', JSON.stringify(chosenColors));
   }, [chosenColors]);
-
-  // Asegurar que el modal de pago esté cerrado al cargar
-  useEffect(() => {
-    setShowPaymentModal(false);
-    console.log('MixoConfigurator: Modal cerrado al cargar, showPaymentModal:', false);
-  }, []);
-
-  // Log para monitorear cambios en showPaymentModal
-  useEffect(() => {
-    console.log('MixoConfigurator: showPaymentModal cambió a:', showPaymentModal);
-  }, [showPaymentModal]);
 
   // Capturar screenshot del canvas
   const getScreenshot = useCallback(() => {
@@ -579,7 +418,23 @@ Best regards.`;
       else if (meshName.includes('boton')) {
         const savedName = initialChosen.buttons[child.name];
         const defaultColor = savedName && PALETTES.buttons[savedName] ? savedName : 'Amarillo';
-        child.material = new THREE.MeshPhysicalMaterial({ color: PALETTES.buttons[defaultColor].hex, metalness: 0.0, roughness: 0.0, clearcoat: 1.0, clearcoatRoughness: 0.0, reflectivity: 1.0, transmission: 0.0, thickness: 0.3, ior: 1.5, attenuationDistance: 0.5, attenuationColor: 0xFFFF00, transparent: false, opacity: 1.0, emissive: 0xFFFF00, emissiveIntensity: 3.0 });
+        const ledColor = new THREE.Color(PALETTES.buttons[defaultColor].hex);
+        child.material = new THREE.MeshPhysicalMaterial({
+          color: new THREE.Color(0xffffff),
+          metalness: 0.0,
+          roughness: 0.18,
+          clearcoat: 1.0,
+          clearcoatRoughness: 0.04,
+          transmission: 0.82,
+          ior: 1.52,
+          thickness: 0.28,
+          attenuationColor: ledColor.clone(),
+          attenuationDistance: 0.1,
+          transparent: true,
+          opacity: 1.0,
+          emissive: ledColor.clone(),
+          emissiveIntensity: 0.0,
+        });
         newSelectable.buttons.push(child);
         initialChosen.buttons[child.name] = defaultColor;
       }
@@ -638,9 +493,11 @@ Best regards.`;
       const colorName = chosenColors.buttons[button.name];
       if (colorName && PALETTES.buttons[colorName]) {
         const colorHex = PALETTES.buttons[colorName].hex;
-        material.emissive.setHex(parseInt(colorHex.replace('#', ''), 16));
-        material.emissiveIntensity = 3.0;
+        const ledColor = new THREE.Color(colorHex);
+        material.emissive.copy(ledColor);
+        material.attenuationColor.copy(ledColor);
       }
+      material.emissiveIntensity = 0.0; // LED off when deselected
     }
   }, [chosenColors, PALETTES]);
 
@@ -648,10 +505,13 @@ Best regards.`;
   const loadModel = useCallback(async () => {
     try {
       const { GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader.js');
+      const { MeshoptDecoder } = await import('three/examples/jsm/libs/meshopt_decoder.module.js');
       const loader = new GLTFLoader();
+      loader.setMeshoptDecoder(MeshoptDecoder);
       
       loader.load(`${import.meta.env.BASE_URL}models/MIXO.glb`, (gltf: any) => {
         const model = gltf.scene as THREE.Group;
+        if (modelRef.current && sceneRef.current) sceneRef.current.remove(modelRef.current);
         modelRef.current = model;
         prepareModelParts(model);
         centerAndScaleModel(model);
@@ -688,11 +548,13 @@ Best regards.`;
         return;
       }
       
-      material.emissive.setHex(color);
       if (object.name.toLowerCase().includes('boton')) {
-        material.emissiveIntensity = 3.0;
+        // Frosted dome: keep stored LED color, just boost intensity when selected
+        material.emissiveIntensity = 3.5;
+        return;
       }
-      else if (object.name.toLowerCase().includes('aro')) {
+      material.emissive.setHex(color);
+      if (object.name.toLowerCase().includes('aro')) {
         material.emissiveIntensity = 0.3;
         material.opacity = 0.8;
       }
@@ -814,8 +676,11 @@ Best regards.`;
       const newChosenColors = { ...chosenColors, buttons: { ...chosenColors.buttons } };
       selectedButtons.forEach(btn => {
         const material = btn.material as THREE.MeshPhysicalMaterial;
-        material.color.set(colorData.hex);
-        material.emissive.setHex(parseInt(colorData.hex.replace('#', ''), 16));
+        // Keep dome white/frosted — only update LED (emissive) color
+        const newLedColor = new THREE.Color(colorData.hex);
+        material.emissive.copy(newLedColor);
+        material.attenuationColor.copy(newLedColor);
+        material.emissiveIntensity = 0.0; // LED off after applying color
         newChosenColors.buttons[btn.name] = colorName;
         const aroName = btn.name.replace('boton', 'aro');
         const aroMesh = selectable.buttons.find(m => m.name === aroName);
@@ -870,8 +735,11 @@ Best regards.`;
       setChosenColors(prev => ({ ...prev, buttons: { ...prev.buttons, [selectedForColoring.name]: colorName } }));
       if (selectedForColoring.material instanceof THREE.MeshPhysicalMaterial) {
         const material = selectedForColoring.material;
-        material.color = color;
-        material.emissive.setHex(parseInt(colorData.hex.replace('#', ''), 16));
+        // Keep dome white/frosted — only update LED (emissive) color
+        const singleLedColor = new THREE.Color(colorData.hex);
+        material.emissive.copy(singleLedColor);
+        material.attenuationColor.copy(singleLedColor);
+        material.emissiveIntensity = 0.0;
         const aroName = selectedForColoring.name.replace('boton', 'aro');
         const aroMesh = selectable.buttons.find(m => m.name === aroName);
         if (aroMesh && aroMesh.material instanceof THREE.MeshPhysicalMaterial) {
@@ -1020,12 +888,16 @@ Best regards.`;
         if (mesh && PALETTES.buttons[colorName]) {
           if (mesh.material instanceof THREE.MeshPhysicalMaterial) {
             const material = mesh.material;
-            material.color = new THREE.Color(PALETTES.buttons[colorName].hex);
             if (mesh.name.toLowerCase().includes('boton')) {
-              material.emissive.setHex(parseInt(PALETTES.buttons[colorName].hex.replace('#', ''), 16));
-              material.attenuationColor.setHex(parseInt(PALETTES.buttons[colorName].hex.replace('#', ''), 16));
-            } else if (mesh.name.toLowerCase().includes('aro')) {
-              material.attenuationColor.setHex(parseInt(PALETTES.buttons[colorName].hex.replace('#', ''), 16));
+              // Frosted dome: update LED color but not intensity (keep current on/off state)
+              const syncLedColor = new THREE.Color(PALETTES.buttons[colorName].hex);
+              material.emissive.copy(syncLedColor);
+              material.attenuationColor.copy(syncLedColor);
+            } else {
+              material.color = new THREE.Color(PALETTES.buttons[colorName].hex);
+              if (mesh.name.toLowerCase().includes('aro')) {
+                material.attenuationColor.setHex(parseInt(PALETTES.buttons[colorName].hex.replace('#', ''), 16));
+              }
             }
           }
         }
@@ -1049,36 +921,6 @@ Best regards.`;
     { id: 'faders', icon: 'fader.png', isImage: true, title: 'Customize Faders - Change slider control colors' }
   ];
 
-  // Estado para selección de moneda
-  const [selectedCurrency, setSelectedCurrency] = useState('USD');
-
-  const [payuData, setPayuData] = useState({
-    referenceCode: `mixo_${Date.now()}`,
-    amount: '200.00', // Se actualiza según la moneda
-    currency: 'USD',
-    signature: '',
-    description: 'Mixo Configurator',
-    buyerEmail: 'customer@email.com',
-  });
-
-  // Actualizar datos de PayU cuando cambie la moneda
-  useEffect(() => {
-    const currencyConfig = getMixoCurrencyConfig(selectedCurrency);
-    setPayuData(prev => ({
-      ...prev,
-      amount: currencyConfig.amount,
-      currency: selectedCurrency,
-      description: `Mixo Configurator - ${selectedCurrency} ${currencyConfig.symbol}${currencyConfig.amount}`
-    }));
-  }, [selectedCurrency]);
-
-  // Al abrir el modal de carrito, genera un referenceCode único
-  useEffect(() => {
-    if (showPaymentModal) {
-      const uniqueRef = `mixo-${Date.now()}`;
-      setPayuData(prev => ({ ...prev, referenceCode: uniqueRef }));
-    }
-  }, [showPaymentModal]);
 
   const [sidebarFiles, setSidebarFiles] = useState<File[]>([]);
   const handleSidebarFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1088,7 +930,7 @@ Best regards.`;
   };
 
       return (
-      <PayPalScriptProvider options={{ clientId: PAYPAL_CLIENT_ID, currency: "USD" }}>
+      <>
         {/* Pantalla de rotación para móviles */}
         {!isLandscape && window.innerWidth <= 768 && (
           <div className="fixed inset-0 z-50 bg-black flex flex-col items-center justify-center text-white text-center p-8">
@@ -1119,21 +961,7 @@ Best regards.`;
         )}
 
         {/* Imagen de fondo */}
-        <div 
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100vw',
-            height: '100vh',
-            zIndex: -1,
-            backgroundImage: `url(${import.meta.env.BASE_URL}textures/fondo.jpg)`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat',
-            backgroundAttachment: 'fixed'
-          }}
-        />
+        <StarfieldBackground />
         <div className="w-full h-screen text-gray-200 overflow-hidden relative" style={{ background: "transparent" }}>
         <div style={{ position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh", zIndex: 0, pointerEvents: "none", background: "transparent" }} />
         {/* <Particles 
@@ -1176,7 +1004,7 @@ Best regards.`;
           style={{ left: '-20px' }}
         >
           <button
-            onClick={() => window.location.href = 'https://www.crearttech.com/'}
+            onClick={() => window.location.href = import.meta.env.BASE_URL}
             className="relative px-3 md:px-5 py-1 md:py-2 rounded-full font-bold text-xs md:text-sm uppercase tracking-wider text-white transition-all duration-300 hover:-translate-y-0.5 bg-gradient-to-r from-cyan-500/20 via-purple-500/20 to-pink-500/20 border border-cyan-500/55"
           >
             <span className="relative z-10 flex items-center gap-2">
@@ -1194,13 +1022,16 @@ Best regards.`;
         <main className="flex w-full h-full" style={{ minHeight: "100vh", height: "100vh", position: "relative", zIndex: 1, overflow: "hidden", background: "transparent" }}>
           <div className="flex-grow h-full" style={{ position: "relative", zIndex: 1, background: "transparent" }}>
             <div ref={mountRef} className="w-full h-full transition-all duration-300" onClick={handleCanvasClick} style={{ position: "relative", zIndex: 1 }} />
-            {currentView === 'normal' && (
-              <button
-                onClick={handleFinalizeOpenModal}
-                className="fixed bottom-10 left-1/2 transform -translate-x-1/2 z-50 px-6 py-3 text-lg font-bold uppercase tracking-wide text-black bg-purple-400 border-none rounded cursor-pointer transition-all duration-200 shadow-lg hover:bg-yellow-200 hover:scale-105 hover:shadow-xl"
-              >
-                Finish and Send Configuration
-              </button>
+            {currentView === 'normal' && (<>
+              <ReserveCtaBar product="mixo" onSendConfig={handleFinalizeOpenModal} onReserve={() => setShowReservaModal(true)} />
+              <ReservaModal
+                isOpen={showReservaModal}
+                onClose={() => setShowReservaModal(false)}
+                onPagoExitoso={() => setShowReservaModal(false)}
+                productType="mixo"
+                chosenColors={chosenColors}
+              />
+              </>
             )}
           </div>
         </main>
@@ -1332,9 +1163,9 @@ Best regards.`;
               padding: currentView === 'normal' ? 'clamp(4px, 1vw, 8px)' : 'clamp(12px, 2vw, 16px)',
               display: 'flex',
               flexDirection: 'column',
-              background: currentView === 'normal' ? 'transparent' : 'rgba(17, 24, 39, 0.65)',
-              borderLeft: currentView === 'normal' ? 'none' : '1px solid #4b5563',
-              backdropFilter: currentView === 'normal' ? undefined : 'blur(6px)',
+              background: currentView === 'normal' ? 'transparent' : 'rgba(11, 18, 32, 0.85)',
+              borderLeft: currentView === 'normal' ? 'none' : '1px solid rgba(0, 255, 255, 0.3)',
+              backdropFilter: currentView === 'normal' ? undefined : 'blur(10px)',
               overflowY: currentView === 'normal' ? 'visible' : 'auto'
             }}
           >
@@ -1364,60 +1195,14 @@ Best regards.`;
 
             {/* Sección de colores - igual a Beato16 (2 columnas y márgenes) */}
             {currentView !== 'normal' && (
-              <div style={{ marginTop: 'clamp(12px, 2.5vw, 20px)' }} className="animate-fadeIn">
-                <p 
-                  style={{
-                    fontWeight: 900,
-                    fontSize: 'clamp(12px, 3vw, 16px)',
-                    letterSpacing: '0.05em',
-                    textTransform: 'uppercase',
-                    margin: '0 0 clamp(10px, 2vw, 14px) 0',
-                    color: '#e5e7eb',
-                    textAlign: 'left'
-                  }}
-                  className="animate-fadeIn"
-                >
-                  {getTitle()}
-                </p>
-                <div 
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-                    rowGap: '5px',
-                    columnGap: '0px',
-                    padding: 0,
-                    justifyItems: 'start',
-                    marginLeft: isMobile ? '-24px' : '35px',
-                    transform: isMobile ? 'translateX(-36px)' : 'none',
-                    transition: 'transform 150ms ease'
-                  }}
-                  className="animate-scaleIn"
-                >
-                  {Object.entries(getCurrentColors()).map(([name, colorData], index) => (
-                    <div
-                      key={name}
-                      style={{
-                        width: 'clamp(30px, 7vw, 44px)',
-                        height: 'clamp(30px, 7vw, 44px)',
-                        borderRadius: '50%',
-                        cursor: 'pointer',
-                        border: colorData.hex === '#F5F5F5' || colorData.hex === '#FFFFFF' ? '2px solid #888' : '1px solid #a259ff',
-                        boxShadow: '0 0 6px 1px rgba(162, 89, 255, 0.33)',
-                        transition: 'transform 0.15s ease',
-                        background: colorData.hex,
-                        marginLeft: '0px'
-                      }}
-                      title={name}
-                      onClick={() => applyColor(name, colorData)}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = 'scale(1.07)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = 'scale(1)';
-                      }}
-                    />
-                  ))}
-                </div>
+              <div style={{ marginTop: 'clamp(12px, 2.5vw, 20px)', display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }} className="animate-fadeIn">
+                <PalettePanel
+                  title={getTitle()}
+                  subtitle={paletteSubtitle(currentView)}
+                  colors={getCurrentColors() as Record<string, { hex: string }>}
+                  onSelect={(name, colorData) => applyColor(name, colorData as any)}
+                  selectedCount={currentView === 'buttons' ? selectedButtons.length : currentView === 'knobs' ? selectedKnobs.length : currentView === 'faders' ? selectedFaders.length : 0}
+                />
               </div>
             )}
             {(selectedButtons.length > 0 || selectedKnobs.length > 0 || selectedFaders.length > 0) && (
@@ -1495,72 +1280,8 @@ Best regards.`;
           </div>
         )}
         
-        {showPaymentModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
-            <div className="relative bg-[#3a4060] rounded-2xl shadow-2xl border-2 border-[#a259ff] p-4 md:py-4 md:px-8 w-full max-w-4xl mx-4 animate-fade-in">
-              <button onClick={() => setShowPaymentModal(false)} className="absolute top-3 right-3 text-gray-400 hover:text-pink-400 text-2xl font-bold">×</button>
-              <h2 className="text-3xl md:text-4xl font-bold text-purple-400 mb-4 text-center tracking-widest">PAGO SEGURO - MIXO</h2>
-              <div className="flex flex-col md:flex-row gap-4 items-center mb-4">
-                <div className="w-full max-w-[320px] md:max-w-[380px] aspect-[4/3] flex items-center justify-center ml-16 md:ml-24">
-                  {screenshot && (<img src={screenshot} alt="Custom controller" className="w-full h-full object-contain" style={{ background: 'none', boxShadow: 'none', border: 'none' }} />)}
-                </div>
-                <div className="flex-1 mt-8 md:mt-0">
-                  <h3 className="text-xl font-semibold mb-2 text-cyan-400">Tu configuración:</h3>
-                  <ul className="text-base space-y-1">
-                    <li><b>Chasis:</b> {chosenColors.chasis}</li>
-                    <li><b>Buttons:</b> {Object.values(chosenColors.buttons).join(', ') || 'Default'}</li>
-                    <li><b>Knobs:</b> {Object.values(chosenColors.knobs).join(', ') || 'Default'}</li>
-                    <li><b>Faders:</b> {Object.values(chosenColors.faders).join(', ') || 'Default'}</li>
-                  </ul>
-                </div>
-              </div>
-            {/* Selector de moneda */}
-            <div className="mb-6">
-                              <h3 className="text-lg font-semibold mb-3 text-cyan-400">Select your currency:</h3>
-              <div className="flex gap-4 justify-center">
-                <button
-                  onClick={() => setSelectedCurrency('USD')}
-                  className={`px-6 py-3 rounded-lg font-bold text-lg transition-all ${
-                    selectedCurrency === 'USD'
-                      ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-[0_0_12px_2px_#3b82f6]'
-                      : 'bg-gray-600 text-gray-300 hover:bg-gray-500'
-                  }`}
-                >
-                  USD $200.00
-                </button>
-                <button
-                  onClick={() => setSelectedCurrency('COP')}
-                  className={`px-6 py-3 rounded-lg font-bold text-lg transition-all ${
-                    selectedCurrency === 'COP'
-                      ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-[0_0_12px_2px_#3b82f6]'
-                      : 'bg-gray-600 text-gray-300 hover:bg-gray-500'
-                  }`}
-                >
-                  COP $800,000
-                </button>
-              </div>
-              <p className="text-center text-sm text-gray-400 mt-2">
-                Selected price: {selectedCurrency} {getMixoCurrencyConfig(selectedCurrency).symbol}{getMixoCurrencyConfig(selectedCurrency).amount}
-              </p>
-            </div>
-
-              <div className="flex flex-col gap-4 mt-4">
-                              {/* PayPal temporarily disabled - only PayU available */}
-                <div className="w-full py-3 rounded-lg bg-gray-600 text-gray-400 font-bold text-lg text-center">
-                  PayPal temporarily unavailable
-                </div>
-                <button
-                  onClick={handlePayUCheckoutLocal}
-                  className="w-full py-3 rounded-lg bg-gradient-to-r from-green-400 to-cyan-400 text-white font-bold text-lg shadow-[0_0_12px_2px_#0ff580] hover:scale-105 transition-all mt-2"
-                >
-                  Pay with PayU ({selectedCurrency} {getMixoCurrencyConfig(selectedCurrency).symbol}{getMixoCurrencyConfig(selectedCurrency).amount})
-              </button>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
-    </PayPalScriptProvider>
+    </>
   );
 };
 

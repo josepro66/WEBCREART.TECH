@@ -1,11 +1,11 @@
 import React from 'react';
-import FadoViewer from '../components/3d/FadoViewer';
+import ProductModelViewer from '../components/3d/ProductModelViewer';
 import ProductInfoPage from './ProductInfoPage';
 
 const FadoInfo: React.FC = () => (
   <ProductInfoPage
     name="FADO"
-    viewer={<FadoViewer className="h-[500px] w-full" />}
+    viewer={<ProductModelViewer modelUrl={`${import.meta.env.BASE_URL}models/FADO.glb`} className="h-[500px] w-full" preserveMaterials />}
     glowGradient="from-purple-500/20 to-blue-500/20"
     description="Fado es un controlador MIDI centrado en el control de mezcla y parámetros a través de faders de alta precisión. Diseñado para productores, DJs y artistas en vivo, Fado ofrece una interfaz intuitiva y robusta para la manipulación de audio, video o cualquier software compatible con MIDI."
     secondDescription="Su diseño modular y compacto lo hace perfecto para cualquier estudio o setup en vivo, proporcionando un control táctil que los flujos de trabajo basados en mouse no pueden igualar."

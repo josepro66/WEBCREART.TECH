@@ -1,0 +1,57 @@
+rules_version = '2';
+
+// Reglas de seguridad para CREART.TECH
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Reservas: NINGÚN cliente puede escribir ni leer ───────────
+    // Solo la Cloud Function `crearReservaVerificada` (Admin SDK) las crea,
+    // tras verificar el pago con la API de PayPal del lado del servidor.
+    // El Admin SDK ignora estas reglas, por eso aquí todo es false.
+    match /reservas/{reservaId} {
+      allow read, write: if false;
+    }
+
+    // ── Datos del usuario: solo el dueño puede leer/escribir ──────
+    match /users/{uid} {
+      // Lectura: solo el dueño (request.resource no existe en lecturas)
+      allow read: if request.auth != null && request.auth.uid == uid;
+      // Escritura: solo el dueño y con estructura validada
+      allow write: if request.auth != null && request.auth.uid == uid
+        && esPerfilValido(request.resource.data);
+
+      // Configuraciones guardadas del usuario (autosave del configurador)
+      match /configs/{configId} {
+        allow read: if request.auth != null && request.auth.uid == uid;
+        allow create, update: if request.auth != null
+          && request.auth.uid == uid
+          && esConfigValida(request.resource.data);
+        allow delete: if request.auth != null && request.auth.uid == uid;
+      }
+    }
+
+    // Todo lo demás: bloqueado
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // ── Validaciones ─────────────────────────────────────────────
+
+    function esPerfilValido(d) {
+      return d.keys().hasOnly(['nombre', 'email', 'creadoEn', 'actualizadoEn'])
+        && d.nombre is string && d.nombre.size() <= 100
+        && d.email is string && d.email.size() <= 254;
+    }
+
+    function esConfigValida(d) {
+      return d.keys().hasOnly(['modelo', 'colores', 'nombre', 'creadoEn', 'actualizadoEn'])
+        && d.modelo is string
+        && d.modelo in ['beato', 'beato8', 'beato16', 'knobo', 'mixo', 'loopo', 'fado', 'wavo']
+        && d.colores is map
+        && d.colores.size() <= 200
+        && (!('nombre' in d) || (d.nombre is string && d.nombre.size() <= 80))
+        && d.actualizadoEn == request.time;
+    }
+  }
+}

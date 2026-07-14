@@ -1,8 +1,12 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
+import StarfieldBackground from './components/StarfieldBackground';
+import PalettePanel, { paletteSubtitle } from './components/PalettePanel';
 import * as THREE from 'three';
 import gsap from 'gsap';
 
 import Swal from 'sweetalert2';
+import ReserveCtaBar from './components/ReserveCtaBar';
+import ReservaModal from './components/ReservaModal';
 
 // Tipos para los objetos seleccionables
 interface Selectable {
@@ -68,6 +72,7 @@ const FadoConfigurator: React.FC<{ onProductChange?: (product: 'beato' | 'knobo'
     };
   }, []);
   
+  const [showReservaModal, setShowReservaModal] = useState(false);
   const [chosenColors, setChosenColors] = useState<ChosenColors>(() => {
     const saved = localStorage.getItem('fado_chosenColors');
     if (saved) {
@@ -235,54 +240,28 @@ const FadoConfigurator: React.FC<{ onProductChange?: (product: 'beato' | 'knobo'
     }
 
     const allMeshes: string[] = [];
-    
-    // Debug: Mostrar estructura del modelo
-    console.log('🏗️ Estructura del modelo fado.glb:');
-    const printStructure = (obj: THREE.Object3D, level: number = 0) => {
-      const indent = '  '.repeat(level);
-      const type = obj.type;
-      const name = obj.name || 'sin nombre';
-      console.log(`${indent}${type}: ${name}`);
-      obj.children.forEach(child => printStructure(child, level + 1));
-    };
-    printStructure(model);
-    
-    // Buscar específicamente la colección "faders"
-    console.log('🔍 Buscando colección "faders"...');
-    const findFadersCollection = (obj: THREE.Object3D): THREE.Object3D | null => {
-      if (obj.name.toLowerCase() === 'faders') {
-        console.log('✅ Encontrada colección "faders":', obj);
-        return obj;
-      }
-      for (const child of obj.children) {
-        const found = findFadersCollection(child);
-        if (found) return found;
-      }
-      return null;
-    };
-    
-    const fadersCollection = findFadersCollection(model);
-    if (fadersCollection) {
-      console.log('🎛️ Contenido de la colección faders:');
-      fadersCollection.children.forEach((child, index) => {
-        console.log(`   ${index + 1}. ${child.type}: ${child.name}`);
-      });
-    } else {
-      console.log('⚠️ No se encontró la colección "faders"');
+
+    const isLogo = (mesh: THREE.Mesh) => {
+      const names = [mesh.name, mesh.parent?.name ?? ''].map(s => s.toLowerCase())
+      return names.some(n =>
+        n.includes('crearttech') || n.includes('logo') ||
+        (n.includes('fado') && !n.includes('fader'))
+      )
     }
-    
+
     model.traverse((child: THREE.Object3D) => {
       if (!(child instanceof THREE.Mesh)) return;
       child.castShadow = true;
       child.receiveShadow = true;
       const meshName = typeof child.name === 'string' ? child.name.toLowerCase() : '';
       allMeshes.push(child.name);
-      
-      console.log(`🔍 Procesando mesh: "${child.name}" (lowercase: "${meshName}")`);
-      
-      // Log específico para meshes que contengan 'fader'
-      if (meshName.includes('fader')) {
-        console.log(`🎯 MESH FADER DETECTADO: "${child.name}" (meshName: "${meshName}")`);
+
+      if (isLogo(child)) {
+        child.material = new THREE.MeshPhysicalMaterial({
+          color: '#D0D0D0', metalness: 0.5, roughness: 0.28,
+          clearcoat: 1.0, clearcoatRoughness: 0.06,
+        });
+        return;
       }
 
       if (meshName.includes('cubechasis')) {
@@ -300,7 +279,6 @@ const FadoConfigurator: React.FC<{ onProductChange?: (product: 'beato' | 'knobo'
         child.material = new THREE.MeshPhysicalMaterial({ color: 0x000000, metalness: 0.0, roughness: 0.2, clearcoat: 0.8, clearcoatRoughness: 0.1, reflectivity: 0.5, transmission: 0.3, thickness: 0.5, ior: 1.4, attenuationDistance: 1.0, attenuationColor: 0xffffff, transparent: true, opacity: 0.7 });
       }
       else if (meshName.includes('fader')) {
-        console.log('Fader detectado en Fado:', child.name);
         if (meshName === 'fader1_1' || meshName === 'fader2_1' || meshName === 'fader3_1' || meshName === 'fader4_1' || meshName === 'fader5_1' || meshName === 'fader6_1' || meshName === 'fader7_1' || meshName === 'fader8_1') {
           const saved = initialChosen.faders[child.name];
           const defaultColor = saved && PALETTES.faders[saved] ? saved : 'Black';
@@ -334,11 +312,13 @@ const FadoConfigurator: React.FC<{ onProductChange?: (product: 'beato' | 'knobo'
   const loadModel = useCallback(async () => {
     try {
       const { GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader.js');
+      const { MeshoptDecoder } = await import('three/examples/jsm/libs/meshopt_decoder.module.js');
       const loader = new GLTFLoader();
+      loader.setMeshoptDecoder(MeshoptDecoder);
       
       loader.load(`${import.meta.env.BASE_URL}models/FADO.glb`, (gltf: any) => {
-        console.log('FadoConfigurator: Model loaded successfully');
         const model = gltf.scene as THREE.Group;
+        if (modelRef.current && sceneRef.current) sceneRef.current.remove(modelRef.current);
         modelRef.current = model;
         prepareModelParts(model);
         centerAndScaleModel(model);
@@ -905,21 +885,7 @@ const FadoConfigurator: React.FC<{ onProductChange?: (product: 'beato' | 'knobo'
         )}
 
         {/* Imagen de fondo */}
-        <div 
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100vw',
-            height: '100vh',
-            zIndex: -1,
-            backgroundImage: 'url(/textures/fondo.jpg)',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat',
-            backgroundAttachment: 'fixed'
-          }}
-        />
+        <StarfieldBackground />
         <div className="w-full h-screen text-gray-200 overflow-hidden relative" style={{ background: "transparent" }}>
         {/* Fondo degradado estático */}
         <div
@@ -976,7 +942,7 @@ const FadoConfigurator: React.FC<{ onProductChange?: (product: 'beato' | 'knobo'
           style={{ left: '80px' }}
         >
           <button 
-            onClick={() => window.location.href = 'https://www.crearttech.com/' }
+            onClick={() => window.location.href = import.meta.env.BASE_URL }
             className="relative px-3 md:px-5 py-1 md:py-2 rounded-full font-bold text-xs md:text-sm uppercase tracking-wider text-white transition-all duration-300 hover:-translate-y-0.5 bg-gradient-to-r from-cyan-500/20 via-purple-500/20 to-pink-500/20 border border-cyan-500/55"
           >
             <span className="relative z-10 flex items-center gap-2">
@@ -1155,9 +1121,9 @@ const FadoConfigurator: React.FC<{ onProductChange?: (product: 'beato' | 'knobo'
               padding: currentView === 'normal' ? 'clamp(4px, 1vw, 8px)' : 'clamp(12px, 2vw, 16px)',
               display: 'flex',
               flexDirection: 'column',
-              background: currentView === 'normal' ? 'transparent' : 'rgba(17, 24, 39, 0.65)',
-              borderLeft: currentView === 'normal' ? 'none' : '1px solid #4b5563',
-              backdropFilter: currentView === 'normal' ? undefined : 'blur(6px)',
+              background: currentView === 'normal' ? 'transparent' : 'rgba(11, 18, 32, 0.85)',
+              borderLeft: currentView === 'normal' ? 'none' : '1px solid rgba(0, 255, 255, 0.3)',
+              backdropFilter: currentView === 'normal' ? undefined : 'blur(10px)',
               overflowY: currentView === 'normal' ? 'visible' : 'auto'
             }}
           >
@@ -1187,60 +1153,14 @@ const FadoConfigurator: React.FC<{ onProductChange?: (product: 'beato' | 'knobo'
 
             {/* Sección de colores - igual a Beato16 (2 columnas y márgenes responsive) */}
             {currentView !== 'normal' && (
-              <div style={{ marginTop: 'clamp(12px, 2.5vw, 20px)' }} className="animate-fadeIn">
-                <p 
-                  style={{
-                    fontWeight: 900,
-                    fontSize: 'clamp(12px, 3vw, 16px)',
-                    letterSpacing: '0.05em',
-                    textTransform: 'uppercase',
-                    margin: '0 0 clamp(10px, 2vw, 14px) 0',
-                    color: '#e5e7eb',
-                    textAlign: 'left'
-                  }}
-                  className="animate-fadeIn"
-                >
-                  {getTitle()}
-                </p>
-                <div 
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-                    rowGap: '5px',
-                    columnGap: '0px',
-                    padding: 0,
-                    justifyItems: 'start',
-                    marginLeft: isMobile ? '-24px' : '35px',
-                    transform: isMobile ? 'translateX(-36px)' : 'none',
-                    transition: 'transform 150ms ease'
-                  }}
-                  className="animate-scaleIn"
-                >
-                  {Object.entries(getCurrentColors()).map(([name, colorData], index) => (
-                    <div
-                      key={name}
-                      style={{
-                        width: 'clamp(30px, 7vw, 44px)',
-                        height: 'clamp(30px, 7vw, 44px)',
-                        borderRadius: '50%',
-                        cursor: 'pointer',
-                        border: colorData.hex === '#F5F5F5' || colorData.hex === '#FFFFFF' || colorData.hex === 'White' ? '2px solid #888' : '1px solid #a259ff',
-                        boxShadow: '0 0 6px 1px rgba(162, 89, 255, 0.33)',
-                        transition: 'transform 0.15s ease',
-                        background: colorData.hex,
-                        marginLeft: '0px'
-                      }}
-                      title={name}
-                      onClick={() => applyColor(name, colorData)}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = 'scale(1.07)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = 'scale(1)';
-                      }}
-                    />
-                  ))}
-                </div>
+              <div style={{ marginTop: 'clamp(12px, 2.5vw, 20px)', display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }} className="animate-fadeIn">
+                <PalettePanel
+                  title={getTitle()}
+                  subtitle={paletteSubtitle(currentView)}
+                  colors={getCurrentColors() as Record<string, { hex: string }>}
+                  onSelect={(name, colorData) => applyColor(name, colorData as any)}
+                  selectedCount={currentView === 'faders' ? selectedFaders.length : 0}
+                />
               </div>
             )}
 
@@ -1287,13 +1207,16 @@ const FadoConfigurator: React.FC<{ onProductChange?: (product: 'beato' | 'knobo'
         </div>
 
         {/* Botón de finalizar (solo visible en vista normal) */}
-        {currentView === 'normal' && (
-          <button 
-            onClick={handleFinalizeOpenModal}
-            className="fixed bottom-10 left-1/2 transform -translate-x-1/2 z-50 px-6 py-3 text-lg font-bold uppercase tracking-wide text-black bg-purple-400 border-none rounded cursor-pointer transition-all duration-200 shadow-lg hover:bg-yellow-200 hover:scale-105 hover:shadow-xl shadow-[0_0_8px_2px_#a259ff80,0_0_16px_4px_#0ff5]"
-          >
-            Finish and Send Configuration
-          </button>
+        {currentView === 'normal' && (<>
+          <ReserveCtaBar product="fado" onSendConfig={handleFinalizeOpenModal} onReserve={() => setShowReservaModal(true)} />
+          <ReservaModal
+            isOpen={showReservaModal}
+            onClose={() => setShowReservaModal(false)}
+            onPagoExitoso={() => setShowReservaModal(false)}
+            productType="fado"
+            chosenColors={chosenColors}
+          />
+          </>
         )}
 
         {/* Flujo de pago eliminado: ahora se usa modal + mailto */}

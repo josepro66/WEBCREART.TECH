@@ -1,15 +1,15 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
+import StarfieldBackground from './components/StarfieldBackground';
+import PalettePanel, { paletteSubtitle } from './components/PalettePanel';
 import * as THREE from 'three';
 import gsap from 'gsap';
 
-import { PAYU_CONFIG, getKnoboCurrencyConfig } from './payuConfig.js';
-import { PayPalButtons, PayPalScriptProvider } from '@paypal/react-paypal-js';
-import type { ReactPayPalScriptOptions } from '@paypal/react-paypal-js';
 import Swal from 'sweetalert2';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
-import { getPayuSignature } from './api';
 import html2canvas from 'html2canvas';
+import ReserveCtaBar from './components/ReserveCtaBar';
+import ReservaModal from './components/ReservaModal';
 
 
 // Tipos para los objetos seleccionables
@@ -88,6 +88,7 @@ const MidiConfigurator: React.FC<{ onProductChange?: (product: 'beato' | 'knobo'
    // Estados de React
   const [currentView, setCurrentView] = useState<'normal' | 'chasis' | 'buttons' | 'knobs'>('normal');
   const [selectedForColoring, setSelectedForColoring] = useState<THREE.Mesh | null>(null);
+  const [showReservaModal, setShowReservaModal] = useState(false);
   const [chosenColors, setChosenColors] = useState<ChosenColors>(() => {
     const saved = localStorage.getItem('knobo_chosenColors');
     if (saved) {
@@ -105,11 +106,9 @@ const MidiConfigurator: React.FC<{ onProductChange?: (product: 'beato' | 'knobo'
     };
   });
   const [selectable, setSelectable] = useState<Selectable>({ chasis: [], buttons: [], knobs: [] });
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [screenshot, setScreenshot] = useState<string | null>(null);
 
   // Estado para mostrar el modal de carrito
-  const [showCartModal, setShowCartModal] = useState(false);
 
   // Ref para guardar el estado anterior de currentView
   const prevViewRef = useRef<'normal' | 'chasis' | 'buttons' | 'knobs'>(currentView);
@@ -170,70 +169,7 @@ const MidiConfigurator: React.FC<{ onProductChange?: (product: 'beato' | 'knobo'
   const initialCameraPosRef = useRef<THREE.Vector3 | null>(null);
   const initialCameraTargetRef = useRef<THREE.Vector3 | null>(null);
 
-  // ==================================================================
-  // INICIO DEL CAMBIO: Función para añadir al carrito de Wix
-  // ==================================================================
-  const handleAddToCart = useCallback(() => {
-    // --- 1. DATOS IMPORTANTES QUE DEBES CONFIGURAR ---
-    // Pega aquí el ID de tu producto base oculto que creaste en Wix Stores.
-    const productId = "3d58a487-8b74-2a0b-7e04-43fca04e5333"; 
 
-    // --- 2. LÓGICA DE TU CONFIGURADOR ---
-    // Aquí debes determinar el paquete de precio y el precio final
-    // basado en las elecciones del usuario.
-    // Por ahora, usamos valores de ejemplo.
-    const paqueteElegido = "Paquete Pro"; // Ejemplo, debes calcular esto
-    const precioCalculado = 250.00; // Ejemplo, debes calcular esto
-
-    // --- 3. RECOPILAR ESPECIFICACIONES ---
-    // Tomamos los colores elegidos del estado de React.
-    const chasis = chosenColors.chasis;
-    const botones = Object.values(chosenColors.buttons).join(', ');
-    const knobs = Object.values(chosenColors.knobs).join(', ');
-
-    // --- 4. CREAR EL OBJETO PARA ENVIAR A WIX ---
-    // Este objeto tiene el formato exacto que espera el código Velo del Paso 3.
-    const cartData = {
-      productId: productId,
-      quantity: 1,
-      options: {
-        // Le dice a Wix qué opción de precio seleccionar.
-        // El nombre "Tipo de Configuración" debe coincidir EXACTAMENTE 
-        // con el nombre de la opción que creaste en tu producto de Wix.
-        choices: {
-          "Tipo de Configuración": paqueteElegido 
-        },
-        // Guarda las especificaciones detalladas para que se vean en el carrito.
-        customTextFields: [{
-          title: "Especificaciones",
-          value: `Chasis: ${chasis}, Botones: ${botones}, Knobs: ${knobs}`
-        }]
-      }
-    };
-
-    // --- 5. ENVIAR EL MENSAJE A WIX ---
-    // Esto le pasa la "nota" a la página de Wix para que añada el producto al carrito.
-    if (window.parent) {
-      window.parent.postMessage(cartData, "*");
-      console.log("Datos del producto dinámico enviados al carrito de Wix:", cartData);
-    }
-    
-    // Opcional: Cierra el modal después de añadir al carrito.
-    setShowPaymentModal(false);
-    setShowCartModal(true);
-
-  }, [chosenColors]); // La función se recalcula si los colores elegidos cambian.
-  // ==================================================================
-  // FIN DEL CAMBIO
-  // ==================================================================
-
-  // Función para enviar configuración (adaptada para React)
-  const sendConfigToWix = useCallback(() => {
-    console.log("Enviando actualización de configuración:", chosenColors);
-    if (window.parent) {
-      window.parent.postMessage(chosenColors, "*");
-    }
-  }, [chosenColors]);
 
   // Capturar screenshot del canvas
   const getScreenshot = useCallback(() => {
@@ -581,10 +517,13 @@ Best regards.`;
     try {
       // Importar GLTFLoader dinámicamente
       const { GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader.js');
+      const { MeshoptDecoder } = await import('three/examples/jsm/libs/meshopt_decoder.module.js');
       const loader = new GLTFLoader();
+      loader.setMeshoptDecoder(MeshoptDecoder);
       
       loader.load(`${import.meta.env.BASE_URL}models/knobo2.glb`, (gltf: any) => {
         const model = gltf.scene as THREE.Group;
+        if (modelRef.current && sceneRef.current) sceneRef.current.remove(modelRef.current);
         modelRef.current = model;
         prepareModelParts(model);
         centerAndScaleModel(model);
@@ -1017,105 +956,7 @@ Best regards.`;
     setChosenColors(newChosenColors);
   }, [selectedForColoring, selectedButtons, chosenColors, selectable, currentView, findAssociatedRing, selectedKnobs]);
 
-  // Abrir modal de pago y capturar imagen con vista frontal fija
-  const handleOpenPayment = useCallback(() => {
-    if (!rendererRef.current || !sceneRef.current || !cameraRef.current) return;
-    // Guardar posición, target y FOV originales
-    const originalPos = cameraRef.current.position.clone();
-    const originalTarget = controlsRef.current ? controlsRef.current.target.clone() : null;
-    const originalFov = cameraRef.current.fov;
 
-    // Mover a la posición inicial (frontal) - usar la vista normal mejorada
-    const initialPos = CAMERA_VIEWS.normal.pos.clone();
-    const initialTarget = CAMERA_VIEWS.normal.target.clone();
-    cameraRef.current.position.copy(initialPos);
-    cameraRef.current.fov = 35; // FOV ligeramente más amplio para mejor vista
-    cameraRef.current.updateProjectionMatrix();
-    if (controlsRef.current) {
-      controlsRef.current.target.copy(initialTarget);
-      controlsRef.current.update();
-    }
-
-    setTimeout(() => {
-      rendererRef.current!.render(sceneRef.current!, cameraRef.current!);
-      const img = rendererRef.current!.domElement.toDataURL('image/png');
-      setScreenshot(img);
-
-      // Restaurar posición, target y FOV originales
-      cameraRef.current!.position.copy(originalPos);
-      cameraRef.current!.fov = originalFov;
-      cameraRef.current!.updateProjectionMatrix();
-      if (controlsRef.current && originalTarget) {
-        controlsRef.current.target.copy(originalTarget);
-        controlsRef.current.update();
-      }
-      setShowPaymentModal(true);
-    }, 50);
-  }, [rendererRef, sceneRef, cameraRef, controlsRef, CAMERA_VIEWS, setScreenshot, setShowPaymentModal]);
-
-  // Función para manejar el checkout de PayU localmente
-  const handlePayUCheckoutLocal = () => {
-    const popupTarget = 'payu_checkout';
-    let popupRef = window.open('', popupTarget);
-    
-    if (!popupRef) {
-      alert('Please allow popups to continue with payment');
-      return;
-    }
-
-    // Obtener configuración de la moneda seleccionada
-    const currencyConfig = getKnoboCurrencyConfig(selectedCurrency);
-    
-    // Generar firma localmente
-    const signatureString = `${PAYU_CONFIG.API_KEY}~${PAYU_CONFIG.MERCHANT_ID}~${payuData.referenceCode}~${currencyConfig.amount}~${selectedCurrency}`;
-    const signature = MD5(signatureString).toString();
-
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = currencyConfig.url;
-    form.target = popupTarget;
-
-    const formData = {
-      merchantId: PAYU_CONFIG.MERCHANT_ID,
-      accountId: currencyConfig.accountId,
-      description: `Knobo Configurator - ${selectedCurrency} ${currencyConfig.symbol}${currencyConfig.amount}`,
-      referenceCode: payuData.referenceCode,
-      amount: currencyConfig.amount,
-      currency: selectedCurrency,
-      buyerEmail: payuData.buyerEmail,
-      signature: signature,
-      test: PAYU_CONFIG.TEST_MODE ? '1' : '0',
-      confirmationUrl: PAYU_CONFIG.CONFIRMATION_URL,
-      responseUrl: PAYU_CONFIG.RESPONSE_URL,
-      // Parámetros para forzar moneda y país
-      lng: currencyConfig.language,
-      // Datos del modal para el webhook
-      extra1: 'Knobo',
-      extra2: chosenColors.chasis || 'Custom',
-      extra3: `Applied colors - Buttons: ${Object.keys(chosenColors.buttons || {}).length}, Knobs: ${Object.keys(chosenColors.knobs || {}).length}`,
-      extra4: `Knobo Configurator - ${selectedCurrency} ${currencyConfig.symbol}${currencyConfig.amount}`,
-      // Additional parameters for PayU
-      payerCountry: 'CO',
-      payerCity: 'Bogota',
-      payerPhone: '+57-300-1234567',
-      // Forzar configuración regional
-      country: 'CO',
-      // Evitar detección automática de ubicación
-      ipAddress: '8.8.4.4'
-    };
-
-    Object.entries(formData).forEach(([key, value]) => {
-      const input = document.createElement('input');
-      input.type = 'hidden';
-      input.name = key;
-      input.value = value;
-      form.appendChild(input);
-    });
-
-    document.body.appendChild(form);
-    form.submit();
-    document.body.removeChild(form);
-  };
 
   // Obtener título según la vista
   const getTitle = () => {
@@ -1137,10 +978,6 @@ Best regards.`;
     }
   };
 
-  // Enviar configuración cuando cambie
-  useEffect(() => {
-    sendConfigToWix();
-  }, [sendConfigToWix]);
 
   // Actualizar la referencia de la vista anterior
   useEffect(() => {
@@ -1167,41 +1004,7 @@ Best regards.`;
     { id: 'knobs', icon: 'M9.42 4.074a.56.56 0 0 0-.56.56v.93c0 .308.252.56.56.56s.56-.252.56-.56v-.93a.56.56 0 0 0-.56-.56M11.554 8.8a.5.5 0 0 1 0 .707l-1.78 1.78a.5.5 0 1 1-.708-.707l1.78-1.78a.5.5 0 0 1 .708 0 M9.42 15.444c-1.16 0-2.32-.44-3.2-1.32a4.527 4.527 0 0 1 0-6.39a4.527 4.527 0 0 1 6.39 0a4.527 4.527 0 0 1 0 6.39c-.88.88-2.03 1.32-3.19 1.32m0-1.1a3.41 3.41 0 1 0 0-6.82a3.41 3.41 0 0 0 0 6.82M6.757 5.2a.56.56 0 1 0-.965.567l.465.809l.005.006a.58.58 0 0 0 .478.262a.53.53 0 0 0 .276-.075a.566.566 0 0 0 .205-.753zm5.315.012a.55.55 0 0 1 .761-.206c.277.152.36.5.203.764l-.458.797a.56.56 0 0 1-.478.277a.564.564 0 0 1-.487-.834zm7.598 5.722a.5.5 0 0 1 .5-.5h2.52a.5.5 0 1 1 0 1h-2.52a.5.5 0 0 1-.5-.5 M22.69 15.454c2.49 0 4.52-2.03 4.52-4.52s-2.03-4.52-4.52-4.52s-4.52 2.03-4.52 4.52s2.03 4.52 4.52 4.52m0-1.11a3.41 3.41 0 1 1 0-6.82a3.41 3.41 0 0 1 0 6.82m-.56-9.7c0-.308.252-.56.56-.56s.56.252.56.56v.945a.566.566 0 0 1-.56.535a.56.56 0 0 1-.56-.56zm-2.103.566a.557.557 0 0 0-.763-.202a.566.566 0 0 0-.204.753l.468.815l.004.006a.58.58 0 0 0 .478.262a.53.53 0 0 0 .276-.075a.566.566 0 0 0 .205-.753zm6.086-.204a.55.55 0 0 0-.761.206l-.458.795a.55.55 0 0 0 .194.759a.5.5 0 0 0 .282.077a.6.6 0 0 0 .478-.261l.005-.007l.463-.805a.55.55 0 0 0-.203-.764 M11.93 22.636H9.42a.5.5 0 0 0 0 1h2.51a.5.5 0 1 0 0-1 M4.9 23.136c0 2.49 2.03 4.52 4.52 4.52s4.52-2.03 4.52-4.52s-2.03-4.52-4.52-4.52s-4.52 2.03-4.52 4.52m7.93 0a3.41 3.41 0 1 1-6.82 0a3.41 3.41 0 0 1 6.82 0m-3.41-6.86a.56.56 0 0 0-.56.56v.93c0 .308.252.56.56.56s.56-.252.56-.56v-.93a.56.56 0 0 0-.56-.56m-3.418.93a.566.566 0 0 1 .755.206l.464.807c.137.258.06.6-.205.753a.53.53 0 0 1-.276.074a.58.58 0 0 1-.478-.261l-.005-.007l-.468-.814a.566.566 0 0 1 .207-.755zm6.08.209a.55.55 0 0 1 .761-.206c.277.151.36.499.203.764l-.462.802a.567.567 0 0 1-.766.194a.55.55 0 0 1-.194-.76zm8.475 3.588a.5.5 0 0 1 .707 0l1.78 1.78a.5.5 0 0 1-.707.707l-1.78-1.78a.5.5 0 0 1 0-.707 M22.69 27.656c-1.16 0-2.32-.44-3.2-1.32a4.527 4.527 0 0 1 0-6.39a4.527 4.527 0 0 1 6.39 0a4.527 4.527 0 0 1 0 6.39c-.88.88-2.04 1.32-3.19 1.32m0-1.11a3.41 3.41 0 1 0 0-6.82a3.41 3.41 0 0 0 0 6.82 M22.13 16.836c0-.308.252-.56.56-.56s.56.252.56.56v.945a.57.57 0 0 1-.56.545a.56.56 0 0 1-.56-.56zm-2.103.576a.566.566 0 0 0-.755-.206l-.006.003a.565.565 0 0 0-.206.755l.468.814l.004.007a.58.58 0 0 0 .478.262a.53.53 0 0 0 .276-.074a.566.566 0 0 0 .205-.753zm6.086-.203a.55.55 0 0 0-.761.206l-.458.795a.55.55 0 0 0 .194.759a.5.5 0 0 0 .282.077a.6.6 0 0 0 .478-.261l.005-.007l.463-.805a.55.55 0 0 0-.203-.764 M1 5.75A4.75 4.75 0 0 1 5.75 1h20.52a4.75 4.75 0 0 1 4.75 4.75v20.48a4.75 4.75 0 0 1-4.75 4.75H5.75A4.75 4.75 0 0 1 1 26.23zM5.75 3A2.75 2.75 0 0 0 3 5.75v20.48a2.75 2.75 0 0 0 2.75 2.75h20.52a2.75 2.75 0 0 0 2.75-2.75V5.75A2.75 2.75 0 0 0 26.27 3z', title: 'Knobs' }
   ];
 
-  // Estado para selección de moneda
-  const [selectedCurrency, setSelectedCurrency] = useState('USD');
-  
-  const [payuData, setPayuData] = useState({
-    referenceCode: `knobo_${Date.now()}`,
-    amount: '100.00', // Se actualiza según la moneda
-    currency: 'USD',
-    signature: '',
-    description: 'Knobo Configurator',
-    buyerEmail: 'customer@email.com',
-  });
 
-  // Actualizar datos de PayU cuando cambie la moneda
-  useEffect(() => {
-    const currencyConfig = getKnoboCurrencyConfig(selectedCurrency);
-    setPayuData(prev => ({
-      ...prev,
-      amount: currencyConfig.amount,
-      currency: selectedCurrency,
-      description: `Knobo Configurator - ${selectedCurrency} ${currencyConfig.symbol}${currencyConfig.amount}`
-    }));
-  }, [selectedCurrency]);
-
-  // Al abrir el modal de carrito, genera un referenceCode único
-  useEffect(() => {
-    if (showCartModal || showPaymentModal) {
-      const uniqueRef = `knobo-${Date.now()}`;
-      setPayuData(prev => ({ ...prev, referenceCode: uniqueRef }));
-    }
-  }, [showCartModal, showPaymentModal]);
-
-  // Función para validar email simple
-  // Elimina la función isValidEmail
-
-  const PAYPAL_CLIENT_ID = "sb"; // Cambia por tu clientId real en producción
 
   const [sidebarFiles, setSidebarFiles] = useState<File[]>([]);
   const handleSidebarFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1243,21 +1046,7 @@ Best regards.`;
       )}
 
       {/* Imagen de fondo */}
-      <div 
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100vw',
-          height: '100vh',
-          zIndex: -1,
-          backgroundImage: 'url(/textures/fondo.jpg)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
-          backgroundAttachment: 'fixed'
-        }}
-      />
+      <StarfieldBackground />
       <div className="w-full h-screen text-gray-200 overflow-hidden relative" style={{ background: "transparent" }}>
       {/* Fondo degradado estático recomendado */}
       <div
@@ -1314,7 +1103,7 @@ Best regards.`;
         style={{ left: '-20px' }}
       >
         <button
-          onClick={() => window.location.href = 'https://www.crearttech.com/'}
+          onClick={() => window.location.href = import.meta.env.BASE_URL}
           className="relative px-3 md:px-5 py-1 md:py-2 rounded-full font-bold text-xs md:text-sm uppercase tracking-wider text-white transition-all duration-300 hover:-translate-y-0.5 bg-gradient-to-r from-cyan-500/20 via-purple-500/20 to-pink-500/20 border border-cyan-500/55"
         >
           <span className="relative z-10 flex items-center gap-2">
@@ -1495,9 +1284,9 @@ Best regards.`;
             padding: currentView === 'normal' ? 'clamp(4px, 1vw, 8px)' : 'clamp(12px, 2vw, 16px)',
             display: 'flex',
             flexDirection: 'column',
-            background: currentView === 'normal' ? 'transparent' : 'rgba(17, 24, 39, 0.65)',
-            borderLeft: currentView === 'normal' ? 'none' : '1px solid #4b5563',
-            backdropFilter: currentView === 'normal' ? undefined : 'blur(6px)',
+            background: currentView === 'normal' ? 'transparent' : 'rgba(11, 18, 32, 0.85)',
+            borderLeft: currentView === 'normal' ? 'none' : '1px solid rgba(0, 255, 255, 0.3)',
+            backdropFilter: currentView === 'normal' ? undefined : 'blur(10px)',
             overflowY: currentView === 'normal' ? 'visible' : 'auto'
           }}
         >
@@ -1527,232 +1316,32 @@ Best regards.`;
 
           {/* Sección de colores - igual a Beato16 */}
           {currentView !== 'normal' && (
-            <div style={{ marginTop: 'clamp(12px, 2.5vw, 20px)' }} className="animate-fadeIn">
-              <p 
-                style={{
-                  fontWeight: 900,
-                  fontSize: 'clamp(12px, 3vw, 16px)',
-                  letterSpacing: '0.05em',
-                  textTransform: 'uppercase',
-                  margin: '0 0 clamp(10px, 2vw, 14px) 0',
-                  color: '#e5e7eb',
-                  textAlign: 'left'
-                }}
-                className="animate-fadeIn"
-              >
-                {getTitle()}
-              </p>
-              <div 
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-                  rowGap: '5px',
-                  columnGap: '0px',
-                  padding: 0,
-                  justifyItems: 'start',
-                  marginLeft: isMobile ? '-24px' : '35px',
-                  transform: isMobile ? 'translateX(-36px)' : 'none',
-                  transition: 'transform 150ms ease'
-                }}
-                className="animate-scaleIn"
-              >
-                {Object.entries(getCurrentColors()).map(([name, colorData]: [string, any], index) => (
-                  <div
-                    key={name}
-                    style={{
-                      width: 'clamp(30px, 7vw, 44px)',
-                      height: 'clamp(30px, 7vw, 44px)',
-                      borderRadius: '50%',
-                      cursor: 'pointer',
-                      border: (colorData as any).hex === '#F5F5F5' || (colorData as any).hex === '#FFFFFF' ? '2px solid #888' : '1px solid #a259ff',
-                      boxShadow: '0 0 6px 1px rgba(162, 89, 255, 0.33)',
-                      transition: 'transform 0.15s ease',
-                      background: (colorData as any).hex,
-                      marginLeft: '0px'
-                    }}
-                    title={name}
-                    onClick={() => applyColor(name, colorData as any)}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = 'scale(1.07)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = 'scale(1)';
-                    }}
-                  />
-                ))}
+              <div style={{ marginTop: 'clamp(12px, 2.5vw, 20px)', display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }} className="animate-fadeIn">
+                <PalettePanel
+                  title={getTitle()}
+                  subtitle={paletteSubtitle(currentView)}
+                  colors={getCurrentColors() as Record<string, { hex: string }>}
+                  onSelect={(name, colorData) => applyColor(name, colorData as any)}
+                  selectedCount={currentView === 'buttons' ? selectedButtons.length : currentView === 'knobs' ? selectedKnobs.length : 0}
+                />
               </div>
-            </div>
-          )}
+            )}
         </div>
       </div>
 
       {/* Botón de finalizar (solo visible en vista normal) */}
-      {currentView === 'normal' && (
-        <button 
-          onClick={handleFinalizeOpenModal}
-          className="fixed bottom-10 left-1/2 transform -translate-x-1/2 z-50 px-6 py-3 text-lg font-bold uppercase tracking-wide text-black bg-purple-400 border-none rounded cursor-pointer transition-all duración-200 shadow-lg hover:bg-yellow-200 hover:scale-105 hover:shadow-xl shadow-[0_0_8px_2px_#a259ff80,0_0_16px_4px_#0ff5]"
-        >
-          Finish and Send Configuration
-        </button>
+      {currentView === 'normal' && (<>
+        <ReserveCtaBar product="knobo" onSendConfig={handleFinalizeOpenModal} onReserve={() => setShowReservaModal(true)} />
+        <ReservaModal
+          isOpen={showReservaModal}
+          onClose={() => setShowReservaModal(false)}
+          onPagoExitoso={() => setShowReservaModal(false)}
+          productType="knobo"
+          chosenColors={chosenColors}
+        />
+        </>
       )}
 
-      {/* Modal de pago */}
-      {showPaymentModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
-          <div className="relative bg-[#3a4060] rounded-2xl shadow-2xl border-2 border-[#a259ff] p-4 md:py-4 md:px-8 w-full max-w-4xl mx-4 animate-fade-in">
-            <button onClick={() => setShowPaymentModal(false)} className="absolute top-3 right-3 text-gray-400 hover:text-pink-400 text-2xl font-bold">×</button>
-            <h2 className="text-3xl md:text-4xl font-bold text-purple-400 mb-4 text-center tracking-widest">PAGO SEGURO - KNOBO</h2>
-            <div className="flex flex-col md:flex-row gap-4 items-center mb-4">
-              <div className="w-full max-w-[320px] md:max-w-[380px] aspect-[4/3] flex items-center justify-center ml-16 md:ml-24">
-                {screenshot && (
-                  <img src={screenshot} alt="Custom controller" className="w-full h-full object-contain" style={{ background: 'none', boxShadow: 'none', border: 'none' }} />
-                )}
-              </div>
-              <div className="flex-1 mt-8 md:mt-0">
-                <h3 className="text-xl font-semibold mb-2 text-cyan-400">Tu configuración:</h3>
-                <ul className="text-base space-y-1">
-                  <li><b>Chassis:</b> {chosenColors.chasis}</li>
-                  <li><b>Buttons:</b> {Object.values(chosenColors.buttons).join(', ') || 'Default'}</li>
-                  <li><b>Knobs:</b> {Object.values(chosenColors.knobs).join(', ') || 'Default'}</li>
-                </ul>
-              </div>
-            </div>
-            {/* Selector de moneda */}
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold mb-3 text-cyan-400">Select your currency:</h3>
-              <div className="flex gap-4 justify-center">
-                <button
-                  onClick={() => setSelectedCurrency('USD')}
-                  className={`px-6 py-3 rounded-lg font-bold text-lg transition-all ${
-                    selectedCurrency === 'USD'
-                      ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-[0_0_12px_2px_#3b82f6]'
-                      : 'bg-gray-600 text-gray-300 hover:bg-gray-500'
-                  }`}
-                >
-                  USD $100.00
-                </button>
-                <button
-                  onClick={() => setSelectedCurrency('COP')}
-                  className={`px-6 py-3 rounded-lg font-bold text-lg transition-all ${
-                    selectedCurrency === 'COP'
-                      ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-[0_0_12px_2px_#3b82f6]'
-                      : 'bg-gray-600 text-gray-300 hover:bg-gray-500'
-                  }`}
-                >
-                  COP $400,000
-                </button>
-              </div>
-              <p className="text-center text-sm text-gray-400 mt-2">
-                Selected price: {selectedCurrency} {getKnoboCurrencyConfig(selectedCurrency).symbol}{getKnoboCurrencyConfig(selectedCurrency).amount}
-              </p>
-            </div>
-
-            <div className="flex flex-col gap-4 mt-4">
-                              {/* PayPal temporarily disabled - only PayU available */}
-                <div className="w-full py-3 rounded-lg bg-gray-600 text-gray-400 font-bold text-lg text-center">
-                  PayPal temporarily unavailable
-                </div>
-                <button
-                  onClick={handlePayUCheckoutLocal}
-                  className="w-full py-3 rounded-lg bg-gradient-to-r from-green-400 to-cyan-400 text-white font-bold text-lg shadow-[0_0_12px_2px_#0ff580] hover:scale-105 transition-all mt-2"
-                >
-                  Pay with PayU ({selectedCurrency} {getKnoboCurrencyConfig(selectedCurrency).symbol}{getKnoboCurrencyConfig(selectedCurrency).amount})
-                </button>
-              </div>
-              <p className="text-xs text-gray-400 mt-6 text-center">Your purchase is 100% safe and protected.</p>
-          </div>
-        </div>
-      )}
-
-      {/* Modal de carrito */}
-      {showCartModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
-          <div className="relative bg-[#232846] rounded-2xl shadow-2xl border-2 border-[#a259ff] p-6 w-full max-w-2xl mx-4 animate-fade-in flex flex-col items-center">
-            <button onClick={() => setShowCartModal(false)} className="absolute top-3 right-3 text-gray-400 hover:text-pink-400 text-2xl font-bold">×</button>
-            <h2 className="text-2xl md:text-3xl font-bold text-purple-400 mb-4 text-center tracking-widest">Cart</h2>
-            <div className="flex flex-col md:flex-row gap-4 items-center w-full">
-              <div className="w-full max-w-[220px] aspect-[4/3] flex items-center justify-center">
-                {screenshot && (
-                  <img src={screenshot} alt="Custom controller" className="w-full h-full object-contain" style={{ background: 'none', boxShadow: 'none', border: 'none' }} />
-                )}
-              </div>
-              <div className="flex-1 mt-4 md:mt-0 w-full">
-                <h3 className="text-lg font-semibold mb-2 text-cyan-400">Your Product:</h3>
-                <ul className="text-base space-y-1 mb-2">
-                  <li><b>Chassis:</b> {chosenColors.chasis}</li>
-                  <li><b>Buttons:</b> {Object.values(chosenColors.buttons).join(', ') || 'Default'}</li>
-                  <li><b>Knobs:</b> {Object.values(chosenColors.knobs).join(', ') || 'Default'}</li>
-                </ul>
-                <div className="text-xl font-bold text-green-300 mb-2">${payuData.amount} USD</div>
-              </div>
-            </div>
-            <div className="flex flex-col gap-4 mt-6 w-full">
-              <PayPalButtons
-                style={{ layout: "horizontal", color: "blue", shape: "rect", label: "paypal", height: 48 }}
-                createOrder={(data, actions) => {
-                  if (!actions.order) return Promise.reject("PayPal actions.order no disponible");
-                  return actions.order.create({
-                    intent: "CAPTURE",
-                    purchase_units: [
-                      {
-                        amount: {
-                          value: payuData.amount || "185.00",
-                          currency_code: "USD"
-                        },
-                        description: "Custom MIDI controller"
-                      }
-                    ]
-                  });
-                }}
-                onApprove={async (data, actions) => {
-                  if (actions && actions.order) {
-                    const details = await actions.order.capture();
-                    const buyerEmail = details?.payer?.email_address || '';
-                    // Enviar configuración personalizada al backend
-                    try {
-                      await fetch('http://localhost:4000/api/paypal-config', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                          colors: chosenColors,
-                          screenshot,
-                          paypalOrderId: data.orderID,
-                          buyerEmail
-                        })
-                      });
-                    } catch (err) {
-                      alert('Error guardando configuración personalizada en backend: ' + err);
-                    }
-                    alert("¡Pago realizado con PayPal!");
-                    setShowPaymentModal(false);
-                    setShowCartModal(true);
-                  }
-                }}
-                onError={(err) => {
-                  alert("Error en el pago con PayPal: " + err);
-                }}
-              />
-              <form action="https://sandbox.checkout.payulatam.com/ppp-web-gateway-payu/" method="post" target="_blank" className="w-full flex flex-col items-center">
-                <input type="hidden" name="merchantId" value="508029" />
-                <input type="hidden" name="accountId" value="512321" />
-                <input type="hidden" name="description" value="Custom MIDI controller" />
-                <input type="hidden" name="referenceCode" value={payuData.referenceCode} />
-                <input type="hidden" name="amount" value={payuData.amount} />
-                <input type="hidden" name="currency" value={payuData.currency} />
-                <input type="hidden" name="signature" value={payuData.signature} />
-                <input type="hidden" name="test" value="1" />
-                <button
-                  type="submit"
-                  className="w-full py-3 rounded-lg bg-gradient-to-r from-green-400 to-cyan-400 text-white font-bold text-lg shadow-[0_0_12px_2px_#0ff580] hover:scale-105 transition-all mt-2"
-                >
-                  Pagar con PayU
-                </button>
-              </form>
-            </div>
-            <p className="text-xs text-gray-400 mt-6 text-center">Tu compra es 100% segura y protegida.</p>
-          </div>
-        </div>
-      )}
     </div>
   </div>
 );

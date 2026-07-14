@@ -38,7 +38,7 @@ interface UseThreeDConfiguratorProps {
 }
 
 const CAMERA_VIEWS = {
-  normal: { pos: new THREE.Vector3(2, 1, -0.1), target: new THREE.Vector3(0, -0.5, -0.1) },
+  normal: { pos: new THREE.Vector3(2, -0.5, 1.5), target: new THREE.Vector3(0, -0.5, -0.1) },
   top:    { pos: new THREE.Vector3(1, 1.65, -0.6), target: new THREE.Vector3(-0.35, -0.9, -0.6) },
 };
 
@@ -252,7 +252,9 @@ export const useThreeDConfigurator = ({
   // Cargar modelo
   const loadModel = useCallback(async () => {
     try {
+      const { MeshoptDecoder } = await import('three/examples/jsm/libs/meshopt_decoder.module.js');
       const loader = new GLTFLoader();
+      loader.setMeshoptDecoder(MeshoptDecoder);
       loader.load(modelPath,
         (gltf) => {
           const model = gltf.scene as THREE.Group;

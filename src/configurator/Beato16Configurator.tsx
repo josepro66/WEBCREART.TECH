@@ -1,9 +1,12 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
+import StarfieldBackground from './components/StarfieldBackground';
+import PalettePanel, { paletteSubtitle } from './components/PalettePanel';
 import * as THREE from 'three';
 import gsap from 'gsap';
 
 import Swal from 'sweetalert2';
- 
+import ReserveCtaBar from './components/ReserveCtaBar';
+import ReservaModal from './components/ReservaModal';
 
 
 // Tipos para los objetos seleccionables
@@ -62,6 +65,7 @@ const Beato16Configurator: React.FC<Beato16ConfiguratorProps> = ({ currentUser, 
   // Estados de React
   const [currentView, setCurrentView] = useState<'normal' | 'chasis' | 'buttons' | 'knobs' | 'teclas' | 'faders'>('normal');
   const [selectedForColoring, setSelectedForColoring] = useState<THREE.Mesh | null>(null);
+  const [showReservaModal, setShowReservaModal] = useState(false);
   const [chosenColors, setChosenColors] = useState<ChosenColors>(() => {
     // Siempre iniciar con colores por defecto al cargar el componente
     // const saved = localStorage.getItem('beato16_chosenColors');
@@ -108,7 +112,7 @@ const Beato16Configurator: React.FC<Beato16ConfiguratorProps> = ({ currentUser, 
   };
 
   const CAMERA_VIEWS = {
-    normal: { pos: new THREE.Vector3(2, 1, -0.1), target: new THREE.Vector3(0, -0.5, -0.1) },
+    normal: { pos: new THREE.Vector3(2, -0.5, 1.5), target: new THREE.Vector3(0, -0.5, -0.1) },
     top: { pos: new THREE.Vector3(1, 1.95, -0.3), target: new THREE.Vector3(-0.35, -1.2, -0.3) },
   };
 
@@ -474,13 +478,19 @@ const Beato16Configurator: React.FC<Beato16ConfiguratorProps> = ({ currentUser, 
   const loadModel = useCallback(async () => {
     try {
       const { GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader.js');
+      const { MeshoptDecoder } = await import('three/examples/jsm/libs/meshopt_decoder.module.js');
       const loader = new GLTFLoader();
+      loader.setMeshoptDecoder(MeshoptDecoder);
       
       loader.load(`${import.meta.env.BASE_URL}models/BEATO16.glb`, (gltf: any) => {
         const model = gltf.scene as THREE.Group;
+        if (modelRef.current && sceneRef.current) sceneRef.current.remove(modelRef.current);
         modelRef.current = model;
         prepareModelParts(model);
         centerAndScaleModel(model);
+        // Aplicar rotaciones al modelo
+        model.rotation.y = Math.PI / 6; // 30 grados en Y
+        model.rotation.x = -Math.PI / 4; // -45 grados en X (inclinación hacia atrás)
         sceneRef.current?.add(model);
         if (!modelOriginalPositionRef.current) {
           modelOriginalPositionRef.current = model.position.clone();
@@ -603,6 +613,175 @@ const Beato16Configurator: React.FC<Beato16ConfiguratorProps> = ({ currentUser, 
       });
     }
   }, [selectable, chosenColors]);
+
+  // ==================================================================
+  // WEB MIDI: el modelo 3D reacciona cuando se toca el Beato 16 físico.
+  //   - Pads (notas 36-51/52-67/68-83 → bancos A/B/C):
+  //       Note On  → el botón BAJA (se hunde en el chasis) + emisivo cian
+  //       Note Off → vuelve a su posición original
+  //   - Knobs (CC 30-33/40-43/50-53): rotación según valor
+  //   - Fader (CC 34/44/54): el fader se mueve verticalmente según valor
+  // ==================================================================
+  useEffect(() => {
+    if (selectable.buttons.length === 0) return;
+    if (!(navigator as any).requestMIDIAccess) return;
+
+    // Orden estable de meshes por nombre — coincide con la numeración del editor.
+    const sortByName = (arr: THREE.Mesh[]) => [...arr].sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
+    const sortedPads = sortByName(selectable.buttons);
+    const sortedKnobs = sortByName(selectable.knobs);
+    const sortedFaders = sortByName(selectable.faders);
+
+    // Calcula profundidad de hundimiento ~10% de la altura del bbox del primer pad.
+    const computePressDepth = (mesh: THREE.Mesh): number => {
+      try {
+        const bbox = new THREE.Box3().setFromObject(mesh);
+        const size = bbox.getSize(new THREE.Vector3());
+        return Math.max(0.005, size.y * 0.35);
+      } catch {
+        return 0.02;
+      }
+    };
+    const pressDepth = sortedPads[0] ? computePressDepth(sortedPads[0]) : 0.02;
+
+    // Cache posiciones originales para restaurar al soltar.
+    const originalY = new Map<string, number>();
+    const captureOrig = (mesh: THREE.Mesh) => {
+      if (!originalY.has(mesh.uuid)) originalY.set(mesh.uuid, mesh.position.y);
+    };
+    sortedPads.forEach(captureOrig);
+    sortedFaders.forEach(captureOrig);
+
+    let midiAccess: any = null;
+    const cleanupFns: Array<() => void> = [];
+    // Para soltar el pad automáticamente si no llega Note Off (modo toggle del firmware).
+    const autoReleaseTimers = new Map<string, ReturnType<typeof setTimeout>>();
+
+    const pressMesh = (mesh: THREE.Mesh | undefined, hex: number) => {
+      if (!mesh) return;
+      captureOrig(mesh);
+      mesh.position.y = (originalY.get(mesh.uuid) ?? 0) - pressDepth;
+      const mat = mesh.material as THREE.MeshStandardMaterial;
+      if (mat && mat.emissive) {
+        mat.emissive.setHex(hex);
+        mat.emissiveIntensity = 1.3;
+      }
+      // Failsafe: si no llega Note Off en 1.5s, soltar igual.
+      const existing = autoReleaseTimers.get(mesh.uuid);
+      if (existing) clearTimeout(existing);
+      autoReleaseTimers.set(mesh.uuid, setTimeout(() => releaseMesh(mesh), 1500));
+    };
+
+    const releaseMesh = (mesh: THREE.Mesh | undefined) => {
+      if (!mesh) return;
+      const orig = originalY.get(mesh.uuid);
+      if (orig !== undefined) mesh.position.y = orig;
+      const mat = mesh.material as THREE.MeshStandardMaterial;
+      if (mat && mat.emissive) {
+        mat.emissive.setHex(0x000000);
+        mat.emissiveIntensity = 0;
+      }
+      const timer = autoReleaseTimers.get(mesh.uuid);
+      if (timer) { clearTimeout(timer); autoReleaseTimers.delete(mesh.uuid); }
+    };
+
+    const rotateKnob = (mesh: THREE.Mesh | undefined, value: number) => {
+      if (!mesh) return;
+      // Rango ~270° centrado en el cero, alrededor del eje Y local.
+      mesh.rotation.y = (value / 127) * Math.PI * 1.5 - Math.PI * 0.75;
+      const mat = mesh.material as THREE.MeshStandardMaterial;
+      if (mat && mat.emissive) {
+        mat.emissive.setHex(0x004455);
+        mat.emissiveIntensity = 0.6;
+      }
+    };
+
+    const moveFader = (mesh: THREE.Mesh | undefined, value: number) => {
+      if (!mesh) return;
+      captureOrig(mesh);
+      const orig = originalY.get(mesh.uuid) ?? 0;
+      // Recorrido proporcional al alto del fader.
+      const bbox = new THREE.Box3().setFromObject(mesh);
+      const travel = Math.max(0.01, bbox.getSize(new THREE.Vector3()).y * 0.5);
+      // El hardware del BEATO 16 envía el valor invertido (fader arriba = valor bajo), por eso (127 - value).
+      mesh.position.y = orig - travel * 0.5 + ((127 - value) / 127) * travel;
+    };
+
+    const padIndexFromNote = (num: number): number => {
+      if (num >= 36 && num <= 51) return num - 36;
+      if (num >= 52 && num <= 67) return num - 52;
+      if (num >= 68 && num <= 83) return num - 68;
+      return -1;
+    };
+
+    const handleMidiMessage = (msg: any) => {
+      const data: Uint8Array = msg.data;
+      if (!data || data.length < 2) return;
+      const status = data[0] & 0xF0;
+      const num = data[1];
+      const val = data[2] ?? 0;
+
+      // Note On con velocity > 0 → presionar
+      if (status === 0x90 && val > 0) {
+        const idx = padIndexFromNote(num);
+        if (idx >= 0 && idx < sortedPads.length) pressMesh(sortedPads[idx], 0x00ffff);
+        return;
+      }
+      // Note Off  o  Note On con velocity 0 → soltar
+      if (status === 0x80 || (status === 0x90 && val === 0)) {
+        const idx = padIndexFromNote(num);
+        if (idx >= 0 && idx < sortedPads.length) releaseMesh(sortedPads[idx]);
+        return;
+      }
+
+      // CC (knobs / fader)
+      if (status === 0xB0) {
+        let knobIdx = -1; let faderHit = false;
+        if (num >= 30 && num <= 33) knobIdx = num - 30;
+        else if (num >= 40 && num <= 43) knobIdx = num - 40;
+        else if (num >= 50 && num <= 53) knobIdx = num - 50;
+        else if (num === 34 || num === 44 || num === 54) faderHit = true;
+
+        if (knobIdx >= 0 && knobIdx < sortedKnobs.length) {
+          rotateKnob(sortedKnobs[knobIdx], val);
+        } else if (faderHit && sortedFaders.length > 0) {
+          moveFader(sortedFaders[0], val);
+        }
+      }
+    };
+
+    const subscribeInput = (input: any) => {
+      input.onmidimessage = handleMidiMessage;
+      cleanupFns.push(() => { try { input.onmidimessage = null; } catch (e) { /* noop */ } });
+    };
+
+    const isCrart = (n: string) => /beato|creart|arduino/i.test(n || '');
+
+    (navigator as any).requestMIDIAccess({ sysex: false }).then((access: any) => {
+      midiAccess = access;
+      const allInputs = Array.from(access.inputs.values()) as any[];
+      const targets = allInputs.filter(i => isCrart(i.name));
+      const inputsToUse = targets.length ? targets : allInputs;
+      inputsToUse.forEach(subscribeInput);
+      access.onstatechange = (e: any) => {
+        if (e.port && e.port.type === 'input' && e.port.state === 'connected') {
+          if (isCrart(e.port.name) || !targets.length) subscribeInput(e.port);
+        }
+      };
+      console.log('[Beato16 3D] MIDI conectado:', inputsToUse.map(i => i.name).join(', ') || 'sin dispositivos', '| pads:', sortedPads.length, '| knobs:', sortedKnobs.length, '| depth:', pressDepth.toFixed(4));
+    }).catch((err: any) => {
+      console.warn('[Beato16 3D] MIDI no disponible:', err?.message || err);
+    });
+
+    return () => {
+      cleanupFns.forEach(fn => fn());
+      autoReleaseTimers.forEach(t => clearTimeout(t));
+      // Restaurar posiciones de pads y fader al desmontar.
+      sortedPads.forEach(m => { const o = originalY.get(m.uuid); if (o !== undefined) m.position.y = o; });
+      sortedFaders.forEach(m => { const o = originalY.get(m.uuid); if (o !== undefined) m.position.y = o; });
+      if (midiAccess) midiAccess.onstatechange = null;
+    };
+  }, [selectable]);
 
   // Función para establecer emisivo
   const setEmissive = useCallback((object: THREE.Mesh | null, color: number = 0x000000) => {
@@ -888,21 +1067,7 @@ const Beato16Configurator: React.FC<Beato16ConfiguratorProps> = ({ currentUser, 
         )}
 
         {/* Imagen de fondo */}
-        <div 
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100vw',
-            height: '100vh',
-            zIndex: -1,
-            backgroundImage: 'url(/textures/fondo.jpg)',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat',
-            backgroundAttachment: 'fixed'
-          }}
-        />
+        <StarfieldBackground />
         <div className="w-full h-screen text-gray-200 overflow-hidden relative" style={{ background: "transparent" }}>
         <div style={{ position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh", zIndex: 0, pointerEvents: "none", background: "transparent" }} />
         {/* <Particles 
@@ -947,7 +1112,7 @@ const Beato16Configurator: React.FC<Beato16ConfiguratorProps> = ({ currentUser, 
           style={{ left: '70px' }}
         >
           <button
-            onClick={() => window.location.href = 'https://www.crearttech.com/'}
+            onClick={() => window.location.href = import.meta.env.BASE_URL}
             className="relative px-3 md:px-5 py-1 md:py-2 rounded-full font-bold text-xs md:text-sm uppercase tracking-wider text-white transition-all duration-300 hover:-translate-y-0.5 bg-gradient-to-r from-cyan-500/20 via-purple-500/20 to-pink-500/20 border border-cyan-500/55"
           >
             <span className="relative z-10 flex items-center gap-2">
@@ -1137,9 +1302,9 @@ const Beato16Configurator: React.FC<Beato16ConfiguratorProps> = ({ currentUser, 
               padding: currentView === 'normal' ? 'clamp(4px, 1vw, 8px)' : 'clamp(12px, 2vw, 16px)',
               display: 'flex',
               flexDirection: 'column',
-              background: currentView === 'normal' ? 'transparent' : 'rgba(17, 24, 39, 0.65)',
-              borderLeft: currentView === 'normal' ? 'none' : '1px solid #4b5563',
-              backdropFilter: currentView === 'normal' ? undefined : 'blur(6px)',
+              background: currentView === 'normal' ? 'transparent' : 'rgba(11, 18, 32, 0.85)',
+              borderLeft: currentView === 'normal' ? 'none' : '1px solid rgba(0, 255, 255, 0.3)',
+              backdropFilter: currentView === 'normal' ? undefined : 'blur(10px)',
               overflowY: currentView === 'normal' ? 'visible' : 'auto'
             }}
           >
@@ -1169,60 +1334,14 @@ const Beato16Configurator: React.FC<Beato16ConfiguratorProps> = ({ currentUser, 
 
             {/* Sección de colores - solo visible cuando no está en vista normal */}
             {currentView !== 'normal' && (
-              <div style={{ marginTop: 'clamp(12px, 2.5vw, 20px)' }} className="animate-fadeIn">
-                <p 
-                  style={{
-                    fontWeight: 900,
-                    fontSize: 'clamp(12px, 3vw, 16px)',
-                    letterSpacing: '0.05em',
-                    textTransform: 'uppercase',
-                    margin: '0 0 clamp(10px, 2vw, 14px) 0',
-                    color: '#e5e7eb',
-                    textAlign: 'left'
-                  }}
-                  className="animate-fadeIn"
-                >
-                  {getTitle()}
-                </p>
-                <div 
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-                    rowGap: '5px',
-                    columnGap: '0px',
-                    padding: 0,
-                    justifyItems: 'start',
-                    marginLeft: isMobile ? '-24px' : '35px',
-                    transform: isMobile ? 'translateX(-36px)' : 'none',
-                    transition: 'transform 150ms ease'
-                  }}
-                  className="animate-scaleIn"
-                >
-                  {Object.entries(getCurrentColors()).map(([name, colorData]: [string, any], index) => (
-                    <div
-                      key={name}
-                      style={{
-                        width: 'clamp(30px, 7vw, 44px)',
-                        height: 'clamp(30px, 7vw, 44px)',
-                        borderRadius: '50%',
-                        cursor: 'pointer',
-                        border: colorData.hex === '#F5F5F5' || colorData.hex === '#FFFFFF' ? '2px solid #888' : '1px solid #a259ff',
-                        boxShadow: '0 0 6px 1px rgba(162, 89, 255, 0.33)',
-                        transition: 'transform 0.15s ease',
-                        background: colorData.hex,
-                        marginLeft: '0px'
-                      }}
-                      title={name}
-                      onClick={() => applyColor(name, colorData as PaletteColor)}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = 'scale(1.07)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = 'scale(1)';
-                      }}
-                    />
-                  ))}
-                </div>
+              <div style={{ marginTop: 'clamp(12px, 2.5vw, 20px)', display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }} className="animate-fadeIn">
+                <PalettePanel
+                  title={getTitle()}
+                  subtitle={paletteSubtitle(currentView)}
+                  colors={getCurrentColors() as Record<string, { hex: string }>}
+                  onSelect={(name, colorData) => applyColor(name, colorData as any)}
+                  selectedCount={currentView === 'buttons' ? selectedButtons.length : currentView === 'knobs' ? selectedKnobs.length : currentView === 'teclas' ? selectedTeclas.length : currentView === 'faders' ? selectedFaders.length : 0}
+                />
               </div>
             )}
           </div>
@@ -1230,8 +1349,21 @@ const Beato16Configurator: React.FC<Beato16ConfiguratorProps> = ({ currentUser, 
         </div>
 
         {currentView === 'normal' && (
-          <button onClick={handleFinalizeOpenModal} className="fixed bottom-10 left-1/2 transform -translate-x-1/2 z-50 px-6 py-3 text-lg font-bold uppercase tracking-wide text-black bg-purple-400 border-none rounded cursor-pointer transition-all duración-200 shadow-lg hover:bg-yellow-200 hover:scale-105 hover:shadow-xl shadow-[0_0_8px_2px_#a259ff80,0_0_16px_4px_#0ff5]">Finish and Send Configuration</button>
+          <ReserveCtaBar
+            product="beato16"
+            onSendConfig={handleFinalizeOpenModal}
+            onReserve={() => setShowReservaModal(true)}
+          />
         )}
+
+        {/* Modal de Reserva + Pago PayPal (anticipo $50 verificado server-side) */}
+        <ReservaModal
+          isOpen={showReservaModal}
+          onClose={() => setShowReservaModal(false)}
+          onPagoExitoso={() => setShowReservaModal(false)}
+          productType="beato16"
+          chosenColors={chosenColors}
+        />
 
         {/* Modal: SweetAlert resumen + mailto/html2canvas */}
       </div>

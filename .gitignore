@@ -35,3 +35,6 @@ yarn-error.log*
 # Borradores internos
 DRAFT_SECURITY_REPORT.md
 SECURITY_ANALYSIS_TODO.md
+
+# Backups de modelos 3D sin comprimir (no desplegar)
+models_originals/

@@ -1,11 +1,11 @@
 import React from 'react';
-import WavoViewer from '../components/3d/WavoViewer';
+import ProductModelViewer from '../components/3d/ProductModelViewer';
 import ProductInfoPage from './ProductInfoPage';
 
 const WavoInfo: React.FC = () => (
   <ProductInfoPage
     name="WAVO"
-    viewer={<WavoViewer className="h-[500px] w-full" />}
+    viewer={<ProductModelViewer modelUrl={`${import.meta.env.BASE_URL}models/wavo.glb`} className="h-[500px] w-full" />}
     glowGradient="from-cyan-500/20 to-purple-500/20"
     description="Wavo es un sintetizador híbrido analógico-digital de última generación diseñado para productores, músicos y diseñadores sonoros que buscan una identidad acústica única. Con un motor sonoro potente y controles interactivos en tiempo real, Wavo te permite modular ondas, programar secuencias complejas y experimentar con un keybed ultra responsivo. Todo esto alojado en un chasis robusto de metal completamente personalizable en colores de carcasa, perillas, botones y teclas, adaptándose visualmente a tu estudio o presentación en vivo."
     carouselTitle="Síntesis Dinámica e Intuitiva"

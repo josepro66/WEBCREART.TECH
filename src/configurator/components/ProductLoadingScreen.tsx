@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import WarpStarfield from './WarpStarfield';
 
 interface ProductLoadingScreenProps {
   isVisible: boolean;
@@ -13,7 +14,7 @@ const ProductLoadingScreen: React.FC<ProductLoadingScreenProps> = ({
   isVisible,
   name,
   subtitle,
-  duration = 4100,
+  duration = 600,
   onComplete,
 }) => {
   const [progress, setProgress] = useState(0);
@@ -52,23 +53,8 @@ const ProductLoadingScreen: React.FC<ProductLoadingScreenProps> = ({
             fontFamily: 'Arial, sans-serif', overflow: 'hidden',
           }}
         >
-          {/* Background image */}
-          <img
-            src={`${import.meta.env.BASE_URL}textures/carga.jpg`}
-            alt=""
-            aria-hidden="true"
-            style={{
-              position: 'absolute', top: 0, left: 0,
-              width: '100%', height: '100%', objectFit: 'cover', zIndex: -2,
-            }}
-          />
-
-          {/* Overlay */}
-          <div style={{
-            position: 'absolute', top: 0, left: 0,
-            width: '100%', height: '100%',
-            backgroundColor: 'rgba(0,0,0,0.35)', zIndex: -1,
-          }} />
+          {/* Fondo turbo warp — estrellas a máxima velocidad */}
+          <WarpStarfield />
 
           {/* Product name */}
           <motion.div

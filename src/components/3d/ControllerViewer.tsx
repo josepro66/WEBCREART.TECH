@@ -1,6 +1,7 @@
 import React, { useLayoutEffect, useRef, useState } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { Center, Html, useProgress, Environment, PresentationControls, useGLTF, Float, ContactShadows } from '@react-three/drei'
+import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js'
 import * as THREE from 'three'
 
 type Props = { className?: string }
@@ -42,11 +43,13 @@ function prepareModel(scene: THREE.Object3D, targetSize = 1.9, ringColor = 0x1c1
 }
 
 function Beato16Primitive() {
-  const gltf = useGLTF(`${import.meta.env.BASE_URL}models/beato16.glb`)
+  const gltf = useGLTF(`${import.meta.env.BASE_URL}models/BEATO16.glb`)
   useLayoutEffect(() => {
     prepareModel(gltf.scene)
     // Rotar el modelo 30 grados en el eje Y
     gltf.scene.rotation.y = Math.PI / 6; // 30 grados en radianes
+    // Inclinar hacia atrás 45 grados en el eje X
+    gltf.scene.rotation.x = -Math.PI / 4; // -45 grados en radianes
   }, [gltf.scene])
   return (
     <Center>
@@ -73,7 +76,7 @@ export default function ControllerViewer({ className }: Props) {
   return (
     <div ref={containerRef} className={className ?? 'h-96 w-full'}>
       <Canvas
-        camera={{ position: [0, 0.8, 3.2], fov: 50 }}
+        camera={{ position: [0, -0.6, 1.2], fov: 50 }}
         shadows
         onCreated={(state) => {
           state.gl.toneMapping = THREE.ACESFilmicToneMapping

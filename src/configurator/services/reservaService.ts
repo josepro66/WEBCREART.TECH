@@ -35,13 +35,8 @@
  * }
  */
 
-import {
-  collection,
-  addDoc,
-  serverTimestamp,
-  FirestoreError,
-} from 'firebase/firestore';
-import { db } from '../../firebaseConfig';
+import { httpsCallable } from 'firebase/functions';
+import { functions } from '../../firebaseConfig';
 
 // ─── Tipos ────────────────────────────────────────────────────────
 
@@ -50,11 +45,12 @@ export interface ClienteInfo {
   email: string;
 }
 
-export interface ColoresConfig {
-  chasis: string;
-  botones: Record<string, string>;
-  perillas: Record<string, string>;
-}
+/**
+ * Colores de la configuración: `chasis` + los grupos que tenga el
+ * hardware (botones, perillas, teclas, faders...). La Cloud Function
+ * valida en el servidor que solo sean strings/mapas planos con límites.
+ */
+export type ColoresConfig = Record<string, string | Record<string, string>>;
 
 /** Datos del pago confirmado por PayPal */
 export interface PagoInfo {
@@ -74,26 +70,23 @@ export interface ReservaGuardada {
   payload: ReservaPayload;
 }
 
-// ─── Constantes ───────────────────────────────────────────────────
+// ─── Errores de la Cloud Function → mensajes amigables ────────────
 
-const COLECCION      = 'reservas';
-const MONTO_ANTICIPO = 50;
-const MONEDA         = 'USD';
-const VERSION_SCHEMA = 1;
-
-// Mapa de códigos de error Firestore → mensajes amigables
-const FIRESTORE_ERRORS: Record<string, string> = {
-  'permission-denied':  'No tienes permisos para guardar la reserva. Intenta iniciar sesión nuevamente.',
-  'unavailable':        'Sin conexión con el servidor. Verifica tu internet e intenta de nuevo.',
-  'resource-exhausted': 'Demasiadas solicitudes. Espera un momento e intenta de nuevo.',
-  'unauthenticated':    'Tu sesión expiró. Por favor vuelve a iniciar sesión.',
+const FUNCTION_ERRORS: Record<string, string> = {
+  'unauthenticated':      'Tu sesión expiró. Por favor vuelve a iniciar sesión.',
+  'permission-denied':    'No tienes permisos para guardar la reserva.',
+  'failed-precondition':  'No pudimos verificar tu pago con PayPal. Tu pago fue procesado correctamente — contáctanos con tu ID de orden.',
+  'not-found':            'No encontramos la orden de pago. Contáctanos con tu ID de orden de PayPal.',
+  'unavailable':          'Sin conexión con el servidor de pagos. Verifica tu internet e intenta de nuevo.',
+  'invalid-argument':     'Datos de la reserva inválidos. Revisa tu configuración e intenta de nuevo.',
 };
 
 // ─── Función principal ────────────────────────────────────────────
 
 /**
- * Guarda la reserva en Firestore SOLO después de que PayPal confirmó el pago.
- * Incluye el paypalOrderId y paypalCaptureId como prueba irrefutable del cobro.
+ * Registra la reserva llamando a la Cloud Function `crearReservaVerificada`,
+ * que verifica el pago con la API de PayPal del lado del servidor ANTES de
+ * escribir en Firestore. El cliente ya NO escribe la reserva directamente.
  */
 export async function guardarReserva(
   payload: ReservaPayload
@@ -106,46 +99,28 @@ export async function guardarReserva(
   if (!payload.modelo) {
     throw new Error('El modelo del controlador es requerido.');
   }
-  if (!payload.pagoInfo?.paypalOrderId || !payload.pagoInfo?.paypalCaptureId) {
-    throw new Error('Datos de pago incompletos. No se puede guardar la reserva sin confirmación de pago.');
+  if (!payload.pagoInfo?.paypalOrderId) {
+    throw new Error('Datos de pago incompletos. No se puede registrar la reserva sin la orden de PayPal.');
   }
 
-  const documento = {
-    cliente: {
-      nombre: payload.cliente.nombre.trim(),
-      email:  payload.cliente.email.trim().toLowerCase(),
-    },
-    controlador: {
-      modelo: payload.modelo.toLowerCase(),
-      colores: {
-        chasis:   payload.colores.chasis,
-        botones:  payload.colores.botones,
-        perillas: payload.colores.perillas,
-      },
-    },
-    pago: {
-      estado:          'anticipo_pagado',
-      montoAnticipo:   MONTO_ANTICIPO,
-      monedaAnticipo:  MONEDA,
-      paypalOrderId:   payload.pagoInfo.paypalOrderId,
-      paypalCaptureId: payload.pagoInfo.paypalCaptureId,
-      pagadoEn:        serverTimestamp(),
-    },
-    meta: {
-      creadoEn:      serverTimestamp(),
-      actualizadoEn: serverTimestamp(),
-      version:       VERSION_SCHEMA,
-    },
-  };
-
   try {
-    const ref = await addDoc(collection(db, COLECCION), documento);
-    return { id: ref.id, payload };
+    const crearReservaVerificada = httpsCallable<
+      { orderID: string; modelo: string; colores: ColoresConfig },
+      { reservaId: string; yaExistia: boolean }
+    >(functions, 'crearReservaVerificada');
+
+    const result = await crearReservaVerificada({
+      orderID: payload.pagoInfo.paypalOrderId,
+      modelo: payload.modelo.toLowerCase(),
+      colores: payload.colores,
+    });
+
+    return { id: result.data.reservaId, payload };
   } catch (err) {
-    const firestoreErr = err as FirestoreError;
+    const code = (err as { code?: string })?.code?.replace('functions/', '') || '';
     const mensajeAmigable =
-      FIRESTORE_ERRORS[firestoreErr.code] ??
-      'Ocurrió un error al registrar tu reserva. Tu pago fue procesado correctamente — contáctanos con tu ID de orden.';
+      FUNCTION_ERRORS[code] ??
+      'Ocurrió un error al registrar tu reserva. Si tu pago fue procesado, contáctanos con tu ID de orden de PayPal.';
     throw new Error(mensajeAmigable);
   }
 }

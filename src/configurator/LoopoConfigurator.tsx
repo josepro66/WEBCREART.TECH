@@ -1,8 +1,12 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
+import StarfieldBackground from './components/StarfieldBackground';
+import PalettePanel, { paletteSubtitle } from './components/PalettePanel';
 import * as THREE from 'three';
 import gsap from 'gsap';
 
 import Swal from 'sweetalert2';
+import ReserveCtaBar from './components/ReserveCtaBar';
+import ReservaModal from './components/ReservaModal';
 
 // Tipos para los objetos seleccionables
 interface Selectable {
@@ -66,6 +70,7 @@ const LoopoConfigurator: React.FC<{ onProductChange?: (product: 'beato' | 'knobo
     };
   }, []);
   
+  const [showReservaModal, setShowReservaModal] = useState(false);
   const [chosenColors, setChosenColors] = useState<ChosenColors>(() => {
     const saved = localStorage.getItem('loopo_chosenColors');
     if (saved) {
@@ -269,11 +274,13 @@ const LoopoConfigurator: React.FC<{ onProductChange?: (product: 'beato' | 'knobo
   const loadModel = useCallback(async () => {
     try {
       const { GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader.js');
+      const { MeshoptDecoder } = await import('three/examples/jsm/libs/meshopt_decoder.module.js');
       const loader = new GLTFLoader();
+      loader.setMeshoptDecoder(MeshoptDecoder);
       
       loader.load(`${import.meta.env.BASE_URL}models/LOOPO.glb`, (gltf: any) => {
-        console.log('LoopoConfigurator: Model loaded successfully');
         const model = gltf.scene as THREE.Group;
+        if (modelRef.current && sceneRef.current) sceneRef.current.remove(modelRef.current);
         modelRef.current = model;
         prepareModelParts(model);
         centerAndScaleModel(model);
@@ -812,21 +819,7 @@ Best regards.`;
         )}
 
         {/* Imagen de fondo */}
-        <div 
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100vw',
-            height: '100vh',
-            zIndex: -1,
-            backgroundImage: `url(${import.meta.env.BASE_URL}textures/fondo.jpg)`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat',
-            backgroundAttachment: 'fixed'
-          }}
-        />
+        <StarfieldBackground />
         <div className="w-full h-screen text-gray-200 overflow-hidden relative" style={{ background: "transparent" }}>
         {/* Fondo degradado estático */}
         <div
@@ -883,7 +876,7 @@ Best regards.`;
           style={{ left: '-20px' }}
         >
           <button 
-            onClick={() => window.location.href = 'https://www.crearttech.com/' }
+            onClick={() => window.location.href = import.meta.env.BASE_URL }
             className="relative px-3 md:px-5 py-1 md:py-2 rounded-full font-bold text-xs md:text-sm uppercase tracking-wider text-white transition-all duration-300 hover:-translate-y-0.5 bg-gradient-to-r from-cyan-500/20 via-purple-500/20 to-pink-500/20 border border-cyan-500/55"
           >
             <span className="relative z-10 flex items-center gap-2">
@@ -1058,9 +1051,9 @@ Best regards.`;
               padding: currentView === 'normal' ? 'clamp(4px, 1vw, 8px)' : 'clamp(12px, 2vw, 16px)',
               display: 'flex',
               flexDirection: 'column',
-              background: currentView === 'normal' ? 'transparent' : 'rgba(17, 24, 39, 0.65)',
-              borderLeft: currentView === 'normal' ? 'none' : '1px solid #4b5563',
-              backdropFilter: currentView === 'normal' ? undefined : 'blur(6px)',
+              background: currentView === 'normal' ? 'transparent' : 'rgba(11, 18, 32, 0.85)',
+              borderLeft: currentView === 'normal' ? 'none' : '1px solid rgba(0, 255, 255, 0.3)',
+              backdropFilter: currentView === 'normal' ? undefined : 'blur(10px)',
               overflowY: currentView === 'normal' ? 'visible' : 'auto'
             }}
           >
@@ -1090,60 +1083,14 @@ Best regards.`;
 
             {/* Sección de colores - igual a Beato16 (2 columnas y márgenes responsive) */}
             {currentView !== 'normal' && (
-              <div style={{ marginTop: 'clamp(12px, 2.5vw, 20px)' }} className="animate-fadeIn">
-                <p 
-                  style={{
-                    fontWeight: 900,
-                    fontSize: 'clamp(12px, 3vw, 16px)',
-                    letterSpacing: '0.05em',
-                    textTransform: 'uppercase',
-                    margin: '0 0 clamp(10px, 2vw, 14px) 0',
-                    color: '#e5e7eb',
-                    textAlign: 'left'
-                  }}
-                  className="animate-fadeIn"
-                >
-                  {getTitle()}
-                </p>
-                <div 
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-                    rowGap: '5px',
-                    columnGap: '0px',
-                    padding: 0,
-                    justifyItems: 'start',
-                    marginLeft: isMobile ? '-24px' : '35px',
-                    transform: isMobile ? 'translateX(-36px)' : 'none',
-                    transition: 'transform 150ms ease'
-                  }}
-                  className="animate-scaleIn"
-                >
-                  {Object.entries(getCurrentColors()).map(([name, colorData], index) => (
-                    <div
-                      key={name}
-                      style={{
-                        width: 'clamp(30px, 7vw, 44px)',
-                        height: 'clamp(30px, 7vw, 44px)',
-                        borderRadius: '50%',
-                        cursor: 'pointer',
-                        border: colorData.hex === '#F5F5F5' || colorData.hex === '#FFFFFF' ? '2px solid #888' : '1px solid #a259ff',
-                        boxShadow: '0 0 6px 1px rgba(162, 89, 255, 0.33)',
-                        transition: 'transform 0.15s ease',
-                        background: colorData.hex,
-                        marginLeft: '0px'
-                      }}
-                      title={name}
-                      onClick={() => applyColor(name, colorData)}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = 'scale(1.07)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = 'scale(1)';
-                      }}
-                    />
-                  ))}
-                </div>
+              <div style={{ marginTop: 'clamp(12px, 2.5vw, 20px)', display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }} className="animate-fadeIn">
+                <PalettePanel
+                  title={getTitle()}
+                  subtitle={paletteSubtitle(currentView)}
+                  colors={getCurrentColors() as Record<string, { hex: string }>}
+                  onSelect={(name, colorData) => applyColor(name, colorData as any)}
+                  selectedCount={currentView === 'knobs' ? selectedKnobs.length : 0}
+                />
               </div>
             )}
 
@@ -1184,13 +1131,16 @@ Best regards.`;
         </div>
 
         {/* Botón de finalizar (solo visible en vista normal) */}
-        {currentView === 'normal' && (
-          <button 
-            onClick={handleFinalizeOpenModal}
-            className="fixed bottom-10 left-1/2 transform -translate-x-1/2 z-50 px-6 py-3 text-lg font-bold uppercase tracking-wide text-black bg-purple-400 border-none rounded cursor-pointer transition-all duración-200 shadow-lg hover:bg-yellow-200 hover:scale-105 hover:shadow-xl shadow-[0_0_8px_2px_#a259ff80,0_0_16px_4px_#0ff5]"
-          >
-            Finish and Send Configuration
-          </button>
+        {currentView === 'normal' && (<>
+          <ReserveCtaBar product="loopo" onSendConfig={handleFinalizeOpenModal} onReserve={() => setShowReservaModal(true)} />
+          <ReservaModal
+            isOpen={showReservaModal}
+            onClose={() => setShowReservaModal(false)}
+            onPagoExitoso={() => setShowReservaModal(false)}
+            productType="loopo"
+            chosenColors={chosenColors}
+          />
+          </>
         )}
 
         {/* Flujo de pago eliminado: ahora se usa modal + mailto */}

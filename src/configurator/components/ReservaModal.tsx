@@ -12,6 +12,8 @@
 import React, { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import PaypalAnticipo from './PaypalAnticipo';
+import { useAuth } from '../../auth/AuthContext';
+import { PRODUCT_IDENTITY, type ProductId } from '../productIdentity';
 
 // ─── Paleta de colores ────────────────────────────────────────────
 
@@ -44,14 +46,28 @@ const PRODUCT_LABELS: Record<string, string> = {
   fado:    'FADO',
   loopo:   'LOOPO',
   knobo:   'KNOBO',
+  wavo:    'WAVO',
+};
+
+// Etiquetas humanas por grupo de color (cada configurador tiene sus grupos)
+const GROUP_LABELS: Record<string, { plural: string; singular: string }> = {
+  buttons: { plural: 'Botones',  singular: 'Botón' },
+  knobs:   { plural: 'Perillas', singular: 'Perilla' },
+  teclas:  { plural: 'Teclas',   singular: 'Tecla' },
+  keys:    { plural: 'Teclas',   singular: 'Tecla' },
+  faders:  { plural: 'Faders',   singular: 'Fader' },
 };
 
 // ─── Tipos ────────────────────────────────────────────────────────
 
-interface ChosenColors {
+/**
+ * Colores elegidos: `chasis` + cualquier grupo de {nombre → color}.
+ * Cada configurador aporta los grupos que su hardware tiene
+ * (buttons/knobs/teclas/faders/keys). `type` se ignora.
+ */
+export interface ChosenColors {
   chasis: string;
-  buttons: Record<string, string>;
-  knobs: Record<string, string>;
+  [group: string]: string | Record<string, string> | undefined;
 }
 
 interface Usuario {
@@ -66,7 +82,8 @@ interface ReservaModalProps {
   onPagoExitoso?: (reservaId: string) => void;
   productType: string;
   chosenColors: ChosenColors;
-  currentUser: Usuario;
+  /** Opcional: si no se pasa, se toma del usuario autenticado (useAuth). */
+  currentUser?: Usuario;
 }
 
 type Paso = 'resumen' | 'pago';
@@ -114,6 +131,14 @@ const ReservaModal: React.FC<ReservaModalProps> = ({
 }) => {
   const [paso, setPaso] = useState<Paso>('resumen');
 
+  // Usuario: prop explícita o el autenticado en Firebase (los configuradores
+  // viven detrás del login, así que aquí siempre hay sesión).
+  const { user: fbUser } = useAuth();
+  const usuario: Usuario = currentUser ?? {
+    nombre: fbUser?.displayName || fbUser?.email?.split('@')[0] || 'Cliente',
+    email:  fbUser?.email || '',
+  };
+
   // Volver al resumen al cerrar
   const handleClose = () => {
     setPaso('resumen');
@@ -126,7 +151,19 @@ const ReservaModal: React.FC<ReservaModalProps> = ({
     onPagoExitoso?.(reservaId);
   };
 
-  // ── Colores agrupados ─────────────────────────────────────────
+  // ── Grupos de color presentes en esta configuración ───────────
+  const colorGroups = useMemo(() => {
+    const groups: { key: string; values: Record<string, string> }[] = [];
+    for (const [key, value] of Object.entries(chosenColors)) {
+      if (key === 'chasis' || key === 'type') continue;
+      if (value && typeof value === 'object' && Object.keys(value).length > 0) {
+        groups.push({ key, values: value as Record<string, string> });
+      }
+    }
+    return groups;
+  }, [chosenColors]);
+
+  // ── Filas del resumen visual ──────────────────────────────────
   const colorItems = useMemo(() => {
     const items: { label: string; colorName: string }[] = [];
 
@@ -134,34 +171,32 @@ const ReservaModal: React.FC<ReservaModalProps> = ({
       items.push({ label: 'Chasis', colorName: chosenColors.chasis });
     }
 
-    const btnVals = Object.values(chosenColors.buttons);
-    if (btnVals.length > 0) {
-      const unique = [...new Set(btnVals)];
+    for (const { key, values } of colorGroups) {
+      const labels = GROUP_LABELS[key] ?? { plural: key, singular: key };
+      const unique = [...new Set(Object.values(values))];
       unique.length === 1
-        ? items.push({ label: 'Botones', colorName: unique[0] })
-        : unique.forEach((c, i) => items.push({ label: `Botón ${i + 1}`, colorName: c }));
-    }
-
-    const knobVals = Object.values(chosenColors.knobs);
-    if (knobVals.length > 0) {
-      const unique = [...new Set(knobVals)];
-      unique.length === 1
-        ? items.push({ label: 'Perillas', colorName: unique[0] })
-        : unique.forEach((c, i) => items.push({ label: `Perilla ${i + 1}`, colorName: c }));
+        ? items.push({ label: labels.plural, colorName: unique[0] })
+        : unique.forEach((c, i) => items.push({ label: `${labels.singular} ${i + 1}`, colorName: c }));
     }
 
     return items;
-  }, [chosenColors]);
+  }, [chosenColors.chasis, colorGroups]);
 
   const productLabel = PRODUCT_LABELS[productType] ?? productType.toUpperCase();
-  const productPrice = PRODUCT_PRICES[productType] ?? '—';
+  const identityPrice = PRODUCT_IDENTITY[productType as ProductId]?.priceUsd;
+  const productPrice =
+    PRODUCT_PRICES[productType] ?? (identityPrice ? `US$${identityPrice}` : '—');
 
-  // ── Colores de PaypalAnticipo (formato del servicio) ──────────
-  const coloresParaServicio = {
-    chasis:   chosenColors.chasis,
-    botones:  chosenColors.buttons,
-    perillas: chosenColors.knobs,
+  // ── Colores para el servicio de reserva (nombres en español) ──
+  const GROUP_TO_SERVICE: Record<string, string> = {
+    buttons: 'botones', knobs: 'perillas', teclas: 'teclas', keys: 'teclas', faders: 'faders',
   };
+  const coloresParaServicio: Record<string, string | Record<string, string>> = {
+    chasis: chosenColors.chasis,
+  };
+  for (const { key, values } of colorGroups) {
+    coloresParaServicio[GROUP_TO_SERVICE[key] ?? key] = values;
+  }
 
   return (
     <AnimatePresence>
@@ -395,7 +430,7 @@ const ReservaModal: React.FC<ReservaModalProps> = ({
                       <PaypalAnticipo
                         productType={productType}
                         colores={coloresParaServicio}
-                        currentUser={currentUser}
+                        currentUser={usuario}
                         onSuccess={handlePagoExitoso}
                         onError={() => {/* el hook ya muestra el Swal de error */}}
                       />

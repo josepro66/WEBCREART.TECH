@@ -1,7 +1,10 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
+import StarfieldBackground from './components/StarfieldBackground';
 import * as THREE from 'three';
 import gsap from 'gsap';
 import Swal from 'sweetalert2';
+import ReserveCtaBar from './components/ReserveCtaBar';
+import ReservaModal from './components/ReservaModal';
 
 // Tipos para los objetos seleccionables
 interface Selectable {
@@ -83,6 +86,7 @@ const WavoConfigurator: React.FC<WavoConfiguratorProps> = ({ currentUser, onLogo
   }, []);
 
   // Inicialización de colores elegidos (con persistencia en localStorage)
+  const [showReservaModal, setShowReservaModal] = useState(false);
   const [chosenColors, setChosenColors] = useState<ChosenColors>(() => {
     const saved = localStorage.getItem('wavo_chosenColors');
     if (saved) {
@@ -333,14 +337,20 @@ const WavoConfigurator: React.FC<WavoConfiguratorProps> = ({ currentUser, onLogo
   const loadModel = useCallback(async () => {
     try {
       const { GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader.js');
+      const { MeshoptDecoder } = await import('three/examples/jsm/libs/meshopt_decoder.module.js');
       const loader = new GLTFLoader();
+      loader.setMeshoptDecoder(MeshoptDecoder);
 
       loader.load(
         `${import.meta.env.BASE_URL}models/wavo.glb`,
         (gltf: any) => {
-          console.log('[Wavo] Modelo GLB cargado OK');
           const model = gltf.scene as THREE.Group;
           model.rotation.set(0, -0.30, 0);
+          // Guard: remove any existing model before adding the new one
+          // (prevents duplication on StrictMode double-invoke or async remounts)
+          if (modelRef.current && sceneRef.current) {
+            sceneRef.current.remove(modelRef.current);
+          }
           modelRef.current = model;
 
           // Prepara las partes sin textura de pantalla (se aplica abajo si carga)
@@ -875,26 +885,12 @@ Saludos cordiales.`;
   return (
     <div className="w-full h-screen text-gray-200 overflow-hidden relative" style={{ background: "transparent" }}>
       {/* Fondo degradado estático */}
-      <div 
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100vw',
-          height: '100vh',
-          zIndex: -1,
-          backgroundImage: `url(${import.meta.env.BASE_URL}textures/fondo.jpg)`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
-          backgroundAttachment: 'fixed'
-        }}
-      />
+      <StarfieldBackground />
 
       {/* Botón Home */}
       <div className="fixed top-4 z-50 flex items-center gap-3" style={{ left: '20px' }}>
         <button 
-          onClick={() => window.location.href = 'https://www.crearttech.com/'}
+          onClick={() => window.location.href = import.meta.env.BASE_URL}
           className="px-4 py-2 rounded-full font-bold text-xs uppercase tracking-wider text-white transition-all duration-300 hover:-translate-y-0.5 bg-gradient-to-r from-cyan-500/20 via-purple-500/20 to-pink-500/20 border border-cyan-500/50"
         >
           <span className="flex items-center gap-2">
@@ -1075,13 +1071,16 @@ Saludos cordiales.`;
       </div>
 
       {/* Botón Finalizar */}
-      {currentView === 'normal' && (
-        <button 
-          onClick={handleFinalizeOpenModal}
-          className="fixed bottom-10 left-1/2 transform -translate-x-1/2 z-50 px-6 py-3 text-lg font-bold uppercase tracking-wide text-black bg-cyan-400 border-none rounded cursor-pointer transition-all duration-200 shadow-lg hover:bg-yellow-200 hover:scale-105 hover:shadow-[0_0_15px_#00FFFF]"
-        >
-          Finalizar y Enviar Configuración
-        </button>
+      {currentView === 'normal' && (<>
+        <ReserveCtaBar product="wavo" onSendConfig={handleFinalizeOpenModal} onReserve={() => setShowReservaModal(true)} />
+        <ReservaModal
+          isOpen={showReservaModal}
+          onClose={() => setShowReservaModal(false)}
+          onPagoExitoso={() => setShowReservaModal(false)}
+          productType="wavo"
+          chosenColors={chosenColors}
+        />
+        </>
       )}
     </div>
   );
