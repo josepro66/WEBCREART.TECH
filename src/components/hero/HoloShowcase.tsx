@@ -157,6 +157,33 @@ const HoloShowcase: React.FC = () => {
             obj.receiveShadow = true
           })
 
+          // Cargar textura de pantalla para el Wavo
+          if (s.id === 'wavo') {
+            const texLoader = new THREE.TextureLoader()
+            texLoader.load(
+              `${base}textures/pantallawavo.png`,
+              (texture) => {
+                texture.flipY = false
+                texture.colorSpace = THREE.SRGBColorSpace
+                model.traverse((child) => {
+                  if (child instanceof THREE.Mesh && child.name.toLowerCase().includes('pantallawavo')) {
+                    child.material = new THREE.MeshPhysicalMaterial({
+                      map: texture,
+                      emissiveMap: texture,
+                      color: 0xffffff,
+                      roughness: 0.1,
+                      metalness: 0.9,
+                      emissive: new THREE.Color(0xffffff),
+                      emissiveIntensity: 0.8,
+                    })
+                  }
+                })
+              },
+              undefined,
+              () => {}
+            )
+          }
+
           model.visible = false
           model.userData.baseScale = scale
           modelsRef.current[s.id] = model
