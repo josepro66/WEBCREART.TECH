@@ -1,13 +1,9 @@
 /**
  * ReserveCtaBar — Barra de acción inferior compartida por todos los configuradores.
  *
- * Reemplaza el viejo "Finish and Send Configuration" con un CTA persuasivo,
- * coloreado con la identidad del producto y opcional botón de reserva (PayPal).
- *
- * Uso:
- *   <ReserveCtaBar product="beato16"
- *                  onSendConfig={handleFinalizeOpenModal}
- *                  onReserve={() => setShowReservaModal(true)} />
+ * Botones:
+ *   1. "Enviar diseño" — abre flujo email clásico
+ *   2. "Comprar" — abre ReservaModal (3 opciones de compra)
  */
 
 import React from 'react'
@@ -15,11 +11,8 @@ import { PRODUCT_IDENTITY, type ProductId } from '../productIdentity'
 
 interface Props {
   product: ProductId
-  /** Click en "Enviar mi diseño" — abre el flujo email/SweetAlert clásico. */
   onSendConfig: () => void
-  /** Click en "Reservar cupo" — abre ReservaModal. Si no se pasa, oculta el botón. */
   onReserve?: () => void
-  /** Texto del precio mostrado al lado del CTA (override; por defecto usa identity). */
   priceLabel?: string
 }
 
@@ -49,7 +42,7 @@ const ReserveCtaBar: React.FC<Props> = ({ product, onSendConfig, onReserve, pric
         fontFamily: "'Inter', sans-serif",
       }}
     >
-      {/* Precio + tagline a la izquierda */}
+      {/* Precio */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', paddingRight: 6 }}>
         <span
           style={{
@@ -79,7 +72,7 @@ const ReserveCtaBar: React.FC<Props> = ({ product, onSendConfig, onReserve, pric
       {/* Divisor */}
       <div style={{ width: 1, alignSelf: 'stretch', background: 'rgba(255,255,255,0.08)' }} />
 
-      {/* Botón secundario: enviar diseño por email */}
+      {/* Enviar diseño */}
       <button
         onClick={onSendConfig}
         style={{
@@ -111,7 +104,7 @@ const ReserveCtaBar: React.FC<Props> = ({ product, onSendConfig, onReserve, pric
         Enviar diseño
       </button>
 
-      {/* Botón principal: reservar (solo si hay handler) */}
+      {/* Comprar — abre modal con las 3 opciones */}
       {showReserve && (
         <button
           onClick={onReserve}
@@ -147,7 +140,7 @@ const ReserveCtaBar: React.FC<Props> = ({ product, onSendConfig, onReserve, pric
           }}
         >
           <span style={{ fontSize: 14 }}>⚡</span>
-          {id.ctaCopy.primary}
+          Comprar
           <span
             aria-hidden
             className="creart-cta-shine"

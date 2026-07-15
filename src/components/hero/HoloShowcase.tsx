@@ -1,11 +1,11 @@
 /**
- * HoloShowcase — carrusel orbital 3D del Hero.
+ * HoloShowcase — carrusel 3D del Hero con navegación por flechas.
  *
  * Canvas Three.js con modelos CREART (WAVO, BEATO16, MIXO, FADO, KNOBO)
- * en rotación automática con iluminación de estudio HDR, transiciones
- * crossfade + zoom suaves, y materiales PBR mejorados.
+ * controlados manualmente con flechas ← →, iluminación de estudio mejorada,
+ * transiciones crossfade + zoom suaves, y materiales PBR.
  */
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState, useCallback } from 'react'
 import * as THREE from 'three'
 
 interface Slide {
@@ -66,7 +66,7 @@ const SLIDES: Slide[] = [
   },
 ]
 
-const TRANSITION_DURATION = 1.2
+const TRANSITION_DURATION = 1.0
 const FPS60 = 1 / 60
 
 const HoloShowcase: React.FC = () => {
@@ -74,18 +74,19 @@ const HoloShowcase: React.FC = () => {
   const [activeIdx, setActiveIdx] = useState(0)
   const activeRef = useRef(0)
   const modelsRef = useRef<Record<string, THREE.Group>>({})
-  const autoRef = useRef<number | null>(null)
+  const transitioningRef = useRef(false)
 
   useEffect(() => { activeRef.current = activeIdx }, [activeIdx])
 
-  useEffect(() => {
-    autoRef.current = window.setTimeout(() => {
-      setActiveIdx((i) => (i + 1) % SLIDES.length)
-    }, 6000)
-    return () => {
-      if (autoRef.current) window.clearTimeout(autoRef.current)
-    }
-  }, [activeIdx])
+  const goNext = useCallback(() => {
+    if (transitioningRef.current) return
+    setActiveIdx((i) => (i + 1) % SLIDES.length)
+  }, [])
+
+  const goPrev = useCallback(() => {
+    if (transitioningRef.current) return
+    setActiveIdx((i) => (i - 1 + SLIDES.length) % SLIDES.length)
+  }, [])
 
   useEffect(() => {
     const mount = mountRef.current
@@ -103,18 +104,20 @@ const HoloShowcase: React.FC = () => {
     renderer.setSize(mount.clientWidth, mount.clientHeight)
     renderer.outputColorSpace = THREE.SRGBColorSpace
     renderer.toneMapping = THREE.ACESFilmicToneMapping
-    renderer.toneMappingExposure = 1.4
+    renderer.toneMappingExposure = 1.6
     renderer.shadowMap.enabled = true
     renderer.shadowMap.type = THREE.PCFSoftShadowMap
     mount.appendChild(renderer.domElement)
 
-    // ── Iluminación de estudio cinematográfica ──
-    const hemi = new THREE.HemisphereLight(0xe8ecf2, 0x080a0f, 0.6)
+    // ── Iluminación de estudio premium ──
+
+    // Hemisférica: techo blanco frío + suelo oscuro
+    const hemi = new THREE.HemisphereLight(0xf0f4ff, 0x080a12, 0.8)
     scene.add(hemi)
 
-    // Key light — principal, sombras nítidas
-    const key = new THREE.DirectionalLight(0xffffff, 3.0)
-    key.position.set(3, 6, 4)
+    // Key light — principal desde arriba-derecha, sombras definidas
+    const key = new THREE.DirectionalLight(0xffffff, 3.5)
+    key.position.set(3, 7, 4)
     key.castShadow = true
     key.shadow.mapSize.set(1024, 1024)
     key.shadow.bias = -0.001
@@ -122,34 +125,44 @@ const HoloShowcase: React.FC = () => {
     key.shadow.camera.far = 20
     scene.add(key)
 
-    // Fill suave desde el frente
-    const fill = new THREE.DirectionalLight(0xd0dae8, 1.0)
-    fill.position.set(-1, 1, 5)
+    // Fill frontal — suave, elimina sombras duras en la cara del producto
+    const fill = new THREE.DirectionalLight(0xe0e8f0, 1.4)
+    fill.position.set(-1.5, 2, 6)
     scene.add(fill)
 
-    // Back/rim light — contorno trasero
-    const back = new THREE.DirectionalLight(0xb0c4e0, 0.8)
-    back.position.set(-3, 3, -4)
+    // Fill lateral izquierdo — rellena el lado opuesto a la key
+    const fillLeft = new THREE.DirectionalLight(0xd0dae8, 0.7)
+    fillLeft.position.set(-5, 2, 0)
+    scene.add(fillLeft)
+
+    // Back/rim light — contorno trasero para separar del fondo
+    const back = new THREE.DirectionalLight(0xc0d0e8, 1.0)
+    back.position.set(-3, 4, -5)
     scene.add(back)
 
-    // Rim cian — acento de marca que baña el borde izquierdo
-    const rimCyan = new THREE.PointLight(0x00e5ff, 2.2, 14)
-    rimCyan.position.set(-3, 0.8, -1.5)
+    // Rim cian — acento de marca, borde izquierdo
+    const rimCyan = new THREE.PointLight(0x00e5ff, 3.0, 16)
+    rimCyan.position.set(-4, 1, -2)
     scene.add(rimCyan)
 
-    // Acento cálido sutil desde abajo-derecha
-    const warmAccent = new THREE.PointLight(0xff9f43, 0.6, 10)
-    warmAccent.position.set(2.5, -0.5, 1)
+    // Acento cálido desde abajo-derecha
+    const warmAccent = new THREE.PointLight(0xff9f43, 0.8, 12)
+    warmAccent.position.set(3, -0.5, 1.5)
     scene.add(warmAccent)
 
-    // Spot cenital — crea un disco de luz sobre el modelo
-    const spot = new THREE.SpotLight(0xffffff, 1.8, 12, Math.PI / 6, 0.7, 1)
-    spot.position.set(0, 7, 1)
+    // Spot cenital — disco de luz concentrada sobre el modelo
+    const spot = new THREE.SpotLight(0xffffff, 2.2, 14, Math.PI / 5.5, 0.6, 1)
+    spot.position.set(0, 8, 2)
     spot.target.position.set(0, 0, 0)
     scene.add(spot)
     scene.add(spot.target)
 
-    // Environment map — carga el HDR para reflejos PBR
+    // Luz inferior sutil — levanta las sombras del fondo
+    const bottomFill = new THREE.PointLight(0xd0e0f0, 0.5, 10)
+    bottomFill.position.set(0, -2, 2)
+    scene.add(bottomFill)
+
+    // Environment map para reflejos PBR
     let envMap: THREE.Texture | null = null
     const loadEnv = async () => {
       try {
@@ -173,12 +186,11 @@ const HoloShowcase: React.FC = () => {
       loader.setMeshoptDecoder(MeshoptDecoder)
 
       const base = import.meta.env.BASE_URL
-      await Promise.all(SLIDES.map((s, i) => new Promise<void>((resolve) => {
+      await Promise.all(SLIDES.map((s) => new Promise<void>((resolve) => {
         loader.load(`${base}${s.model}`, (gltf) => {
           if (cancelled) return resolve()
           const model = gltf.scene
 
-          // Centrar y escalar
           const box = new THREE.Box3().setFromObject(model)
           const center = box.getCenter(new THREE.Vector3())
           const size = box.getSize(new THREE.Vector3())
@@ -187,13 +199,12 @@ const HoloShowcase: React.FC = () => {
           model.scale.setScalar(scale)
           model.rotation.set(0.28, -0.45, 0)
 
-          // Mejorar materiales PBR
           model.traverse((obj) => {
             if (!(obj instanceof THREE.Mesh)) return
             obj.castShadow = true
             obj.receiveShadow = true
             if (obj.material instanceof THREE.MeshStandardMaterial) {
-              obj.material.envMapIntensity = 1.2
+              obj.material.envMapIntensity = 1.4
             }
           })
 
@@ -205,7 +216,6 @@ const HoloShowcase: React.FC = () => {
         }, undefined, () => resolve())
       })))
 
-      // Mostrar el primer modelo
       const first = modelsRef.current[SLIDES[activeRef.current].id]
       if (first) first.visible = true
     }
@@ -251,6 +261,7 @@ const HoloShowcase: React.FC = () => {
         }
 
         transitionProgress = 0
+        transitioningRef.current = true
         lastActive = activeRef.current
       }
 
@@ -282,11 +293,12 @@ const HoloShowcase: React.FC = () => {
             incomingModel.scale.setScalar(bs)
             setModelOpacity(incomingModel, 1)
             incomingModel = null
+            transitioningRef.current = false
           }
         }
       }
 
-      // ── Animar modelo activo ──
+      // ── Animar modelo activo (flotar suave) ──
       const activeModel = modelsRef.current[SLIDES[activeRef.current]?.id]
       if (activeModel && transitionProgress >= 1) {
         activeModel.rotation.y = -0.55 + Math.sin(t * 0.35) * 0.22 + t * 0.12
@@ -334,7 +346,6 @@ const HoloShowcase: React.FC = () => {
           className="relative"
           style={{ width: 'min(78%, 520px)', aspectRatio: '1 / 1' }}
         >
-          {/* Anillo exterior */}
           <div
             className="absolute inset-0 rounded-full"
             style={{
@@ -344,7 +355,6 @@ const HoloShowcase: React.FC = () => {
           >
             <div className="absolute inset-2 rounded-full border border-dashed border-white/[0.04]" />
           </div>
-          {/* Anillo medio con marcas del color activo */}
           <div
             className="absolute inset-[10%] rounded-full"
             style={{
@@ -369,7 +379,6 @@ const HoloShowcase: React.FC = () => {
               />
             ))}
           </div>
-          {/* Anillo interior pulsante */}
           <div
             className="absolute inset-[24%] rounded-full"
             style={{
@@ -377,7 +386,6 @@ const HoloShowcase: React.FC = () => {
               animation: 'holo-spin 46s linear infinite, holo-pulse 4s ease-in-out infinite',
             }}
           />
-          {/* Halo glow del acento */}
           <div
             className="absolute inset-[12%] rounded-full pointer-events-none"
             style={{
@@ -386,7 +394,6 @@ const HoloShowcase: React.FC = () => {
               filter: 'blur(20px)',
             }}
           />
-          {/* Segundo halo más sutil */}
           <div
             className="absolute inset-[30%] rounded-full pointer-events-none"
             style={{
@@ -442,6 +449,26 @@ const HoloShowcase: React.FC = () => {
         </div>
       </div>
 
+      {/* ── Flechas de navegación ── */}
+      <button
+        onClick={goPrev}
+        aria-label="Modelo anterior"
+        className="holo-arrow holo-arrow-left"
+      >
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <path d="M12 4L6 10L12 16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </button>
+      <button
+        onClick={goNext}
+        aria-label="Siguiente modelo"
+        className="holo-arrow holo-arrow-right"
+      >
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <path d="M8 4L14 10L8 16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </button>
+
       {/* Nombre del modelo — esquina inferior izquierda */}
       <div className="absolute bottom-16 left-4 z-30 pointer-events-none">
         <div className="text-[9px] font-plexmono tracking-[0.28em] text-gray-500 uppercase mb-1">
@@ -462,12 +489,14 @@ const HoloShowcase: React.FC = () => {
         </div>
       </div>
 
-      {/* Chips selectores */}
+      {/* Indicadores de posición */}
       <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 flex gap-1.5">
         {SLIDES.map((s, i) => (
           <button
             key={s.id}
-            onClick={() => setActiveIdx(i)}
+            onClick={() => {
+              if (!transitioningRef.current) setActiveIdx(i)
+            }}
             aria-label={`Ver ${s.label}`}
             className="group relative overflow-hidden"
             style={{
@@ -504,6 +533,40 @@ const HoloShowcase: React.FC = () => {
         @keyframes holo-pulse {
           0%, 100% { opacity: 0.5; transform: rotate(0deg) scale(1); }
           50%      { opacity: 1; transform: rotate(180deg) scale(1.02); }
+        }
+        .holo-arrow {
+          position: absolute;
+          top: 50%;
+          transform: translateY(-50%);
+          z-index: 30;
+          width: 40px;
+          height: 40px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 50%;
+          border: 1px solid rgba(255,255,255,0.1);
+          background: rgba(10, 11, 13, 0.6);
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
+          color: rgba(255,255,255,0.5);
+          cursor: pointer;
+          transition: all 0.25s ease;
+        }
+        .holo-arrow:hover {
+          border-color: ${SLIDES[0].tint}60;
+          color: #fff;
+          background: rgba(0, 229, 255, 0.08);
+          box-shadow: 0 0 16px rgba(0, 229, 255, 0.15);
+        }
+        .holo-arrow:active {
+          transform: translateY(-50%) scale(0.92);
+        }
+        .holo-arrow-left {
+          left: 4px;
+        }
+        .holo-arrow-right {
+          right: 4px;
         }
       `}</style>
     </div>

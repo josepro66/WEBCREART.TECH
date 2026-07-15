@@ -81,13 +81,39 @@ const FUNCTION_ERRORS: Record<string, string> = {
   'invalid-argument':     'Datos de la reserva inválidos. Revisa tu configuración e intenta de nuevo.',
 };
 
+// ─── Cotización de envío ──────────────────────────────────────────
+
+export interface ShippingRate {
+  carrier: string;
+  service: string;
+  price: number;
+  currency: string;
+  days: string | number | null;
+  objectId: string;
+}
+
+export interface ShippingQuote {
+  rates: ShippingRate[];
+  fromCountry: string;
+  toCountry: string;
+  modelo: string;
+}
+
+export async function cotizarEnvio(
+  modelo: string,
+  countryCode: string,
+): Promise<ShippingQuote> {
+  const fn = httpsCallable<
+    { modelo: string; countryCode: string },
+    ShippingQuote
+  >(functions, 'cotizarEnvio');
+
+  const result = await fn({ modelo, countryCode });
+  return result.data;
+}
+
 // ─── Función principal ────────────────────────────────────────────
 
-/**
- * Registra la reserva llamando a la Cloud Function `crearReservaVerificada`,
- * que verifica el pago con la API de PayPal del lado del servidor ANTES de
- * escribir en Firestore. El cliente ya NO escribe la reserva directamente.
- */
 export async function guardarReserva(
   payload: ReservaPayload
 ): Promise<ReservaGuardada> {
