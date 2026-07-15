@@ -436,18 +436,6 @@ const HoloShowcase: React.FC = () => {
         />
       </div>
 
-      {/* Readout técnico — esquina superior derecha */}
-      <div className="absolute top-4 right-4 z-30 text-right pointer-events-none">
-        <div
-          className="text-[9px] font-plexmono tracking-[0.28em] uppercase"
-          style={{ color: active.tint, transition: 'color 0.6s' }}
-        >
-          MODEL / {String(activeIdx + 1).padStart(2, '0')} of {String(SLIDES.length).padStart(2, '0')}
-        </div>
-        <div className="text-[10px] font-plexmono tracking-[0.2em] text-gray-500 mt-1">
-          {active.code}
-        </div>
-      </div>
 
       {/* ── Flechas de navegación ── */}
       <button
@@ -471,21 +459,12 @@ const HoloShowcase: React.FC = () => {
 
       {/* Nombre del modelo — esquina inferior izquierda */}
       <div className="absolute bottom-16 left-4 z-30 pointer-events-none">
-        <div className="text-[9px] font-plexmono tracking-[0.28em] text-gray-500 uppercase mb-1">
-          ▲ Especificación
-        </div>
         <div
           key={active.id}
           className="text-3xl font-grotesk font-bold tracking-[-0.02em] text-white"
           style={{ animation: 'holo-slide-in 0.6s ease-out' }}
         >
           {active.label}
-        </div>
-        <div
-          className="text-[10px] font-plexmono tracking-[0.16em] uppercase mt-1"
-          style={{ color: `${active.tint}99`, transition: 'color 0.6s' }}
-        >
-          {active.spec}
         </div>
       </div>
 
