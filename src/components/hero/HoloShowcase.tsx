@@ -103,50 +103,31 @@ const HoloShowcase: React.FC = () => {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
     renderer.setSize(mount.clientWidth, mount.clientHeight)
     renderer.outputColorSpace = THREE.SRGBColorSpace
-    renderer.toneMapping = THREE.ACESFilmicToneMapping
-    renderer.toneMappingExposure = 0.8
     renderer.shadowMap.enabled = true
     renderer.shadowMap.type = THREE.PCFSoftShadowMap
     mount.appendChild(renderer.domElement)
 
-    // ── Iluminación de estudio (match con configurador) ──
+    // ── Iluminación idéntica al configurador ──
 
-    // Ambient light — reduce for less overall brightness
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.9)
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1.4)
     scene.add(ambientLight)
 
-    // Main light — reduce intensity
-    const mainLight = new THREE.DirectionalLight(0xffffff, 2.0)
+    const mainLight = new THREE.DirectionalLight(0xffffff, 3.5)
     mainLight.position.set(5, 4, 1)
     mainLight.castShadow = true
-    mainLight.shadow.mapSize.set(1024, 1024)
-    mainLight.shadow.bias = -0.001
+    mainLight.shadow.mapSize.set(4096, 4096)
+    mainLight.shadow.camera.near = 0.5
+    mainLight.shadow.camera.far = 50
+    mainLight.shadow.normalBias = 0.02
     scene.add(mainLight)
 
-    // Fill light — suave, rellena sombras
-    const fillLight = new THREE.DirectionalLight(0x99ccff, 0.3)
+    const fillLight = new THREE.DirectionalLight(0x99ccff, 0.5)
     fillLight.position.set(-8, 5, -5)
     scene.add(fillLight)
 
-    // Point light para brillos
-    const pointLight = new THREE.PointLight(0xffffff, 0.4, 20)
+    const pointLight = new THREE.PointLight(0xffffff, 0.7, 20)
     pointLight.position.set(0, 5, 5)
     scene.add(pointLight)
-
-    // Environment map para reflejos PBR
-    let envMap: THREE.Texture | null = null
-    const loadEnv = async () => {
-      try {
-        const { RGBELoader } = await import('three/examples/jsm/loaders/RGBELoader.js')
-        const rgbe = new RGBELoader()
-        rgbe.load(`${import.meta.env.BASE_URL}textures/studio_small_03_1k.hdr`, (texture) => {
-          texture.mapping = THREE.EquirectangularReflectionMapping
-          envMap = texture
-          scene.environment = texture
-        })
-      } catch {}
-    }
-    loadEnv()
 
     // ── Cargar modelos ──
     let cancelled = false
@@ -174,9 +155,6 @@ const HoloShowcase: React.FC = () => {
             if (!(obj instanceof THREE.Mesh)) return
             obj.castShadow = true
             obj.receiveShadow = true
-            if (obj.material instanceof THREE.MeshStandardMaterial) {
-              obj.material.envMapIntensity = 0.3
-            }
           })
 
           model.visible = false
@@ -300,7 +278,6 @@ const HoloShowcase: React.FC = () => {
       ro.disconnect()
       if (mount.contains(renderer.domElement)) mount.removeChild(renderer.domElement)
       renderer.dispose()
-      if (envMap) envMap.dispose()
     }
   }, [])
 

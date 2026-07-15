@@ -34,33 +34,34 @@ function WavoHero() {
     renderer.setSize(w, h)
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
     renderer.outputColorSpace = THREE.SRGBColorSpace
-    renderer.toneMapping = THREE.ACESFilmicToneMapping
-    renderer.toneMappingExposure = 1.8
+    renderer.shadowMap.enabled = true
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap
     mount.appendChild(renderer.domElement)
 
     const camera = new THREE.PerspectiveCamera(46, w / h, 0.1, 100)
     camera.position.set(-0.1, 0.8, 3.2)
     camera.lookAt(-0.1, -0.1, 0)
 
-    // Iluminación de estudio: key blanca dura + fill neutro suave +
-    // un solo rim cian (acento de marca). Sin luces disco moradas/rosas.
-    scene.add(new THREE.HemisphereLight(0xf2f4f8, 0x0a0b0d, 0.9))
+    // Iluminación idéntica al configurador
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1.4)
+    scene.add(ambientLight)
 
-    const key = new THREE.DirectionalLight(0xffffff, 2.6)
-    key.position.set(3, 5, 4)
+    const key = new THREE.DirectionalLight(0xffffff, 3.5)
+    key.position.set(5, 4, 1)
+    key.castShadow = true
+    key.shadow.mapSize.set(4096, 4096)
+    key.shadow.camera.near = 0.5
+    key.shadow.camera.far = 50
+    key.shadow.normalBias = 0.02
     scene.add(key)
 
-    const frontFill = new THREE.DirectionalLight(0xe8ecf2, 1.2)
-    frontFill.position.set(-0.5, 0.5, 5)
-    scene.add(frontFill)
+    const fillLight = new THREE.DirectionalLight(0x99ccff, 0.5)
+    fillLight.position.set(-8, 5, -5)
+    scene.add(fillLight)
 
-    const backFill = new THREE.DirectionalLight(0xd8dee8, 0.7)
-    backFill.position.set(-4, 2, -3)
-    scene.add(backFill)
-
-    const rimCyan = new THREE.PointLight(0x00e5ff, 1.6, 12)
-    rimCyan.position.set(-2.5, 0.6, -1.5)
-    scene.add(rimCyan)
+    const pointLight = new THREE.PointLight(0xffffff, 0.7, 20)
+    pointLight.position.set(0, 5, 5)
+    scene.add(pointLight)
 
     let model: THREE.Group | null = null
     let frameId = 0
@@ -85,65 +86,9 @@ function WavoHero() {
 
         model.traverse((obj) => {
           if (!(obj instanceof THREE.Mesh)) return
-          const n = obj.name.toLowerCase()
-
-          if (n.includes('pantallawavo')) {
-            obj.material = new THREE.MeshPhysicalMaterial({
-              color: 0x000000, roughness: 0.05, metalness: 0.95,
-              emissive: new THREE.Color(0x00e5ff), emissiveIntensity: 1.4,
-            })
-          } else if (n.includes('chasis')) {
-            obj.material = new THREE.MeshPhysicalMaterial({
-              color: '#F5F5F5', metalness: 0.05, roughness: 0.2,
-              clearcoat: 1.0, clearcoatRoughness: 0.08,
-            })
-          } else if (n.includes('knob') || n.includes('encoder') || n.includes('dial') || n.includes('pot')) {
-            obj.material = new THREE.MeshPhysicalMaterial({
-              color: '#7B217E', metalness: 0.08, roughness: 0.35,
-              clearcoat: 0.9, clearcoatRoughness: 0.07,
-            })
-          } else if (n.includes('tecla')) {
-            const num = parseInt(n.replace(/\D/g, '') || '0')
-            obj.material = new THREE.MeshPhysicalMaterial({
-              color: num % 2 === 0 ? '#00e5ff' : '#7B217E',
-              metalness: 0.05, roughness: 0.4,
-              clearcoat: 0.9, clearcoatRoughness: 0.08,
-              ...(num % 2 === 0 ? { emissive: new THREE.Color(0x00e5ff), emissiveIntensity: 0.3 } : {}),
-            })
-          } else if (n.includes('boton')) {
-            const num = parseInt(n.replace(/\D/g, '') || '0')
-            obj.material = new THREE.MeshPhysicalMaterial({
-              color: num % 2 === 0 ? '#E52421' : '#FF007F',
-              metalness: 0.0, roughness: 0.38,
-              clearcoat: 1.0, clearcoatRoughness: 0.06,
-            })
-          } else if (n.includes('fader')) {
-            obj.material = new THREE.MeshPhysicalMaterial({
-              color: '#00e5ff', metalness: 0.2, roughness: 0.28,
-              clearcoat: 0.9, clearcoatRoughness: 0.06,
-              emissive: new THREE.Color(0x00e5ff), emissiveIntensity: 0.3,
-            })
-          }
+          obj.castShadow = true
+          obj.receiveShadow = true
         })
-
-        // Try to load screen texture on top
-        const texLoader = new THREE.TextureLoader()
-        texLoader.load(
-          `${import.meta.env.BASE_URL}textures/pantallawavo.png`,
-          (texture) => {
-            texture.flipY = false
-            texture.colorSpace = THREE.SRGBColorSpace
-            model!.traverse((obj) => {
-              if (obj instanceof THREE.Mesh && obj.name.toLowerCase().includes('pantallawavo')) {
-                obj.material = new THREE.MeshPhysicalMaterial({
-                  map: texture, emissiveMap: texture,
-                  color: 0xffffff, roughness: 0.05, metalness: 0.9,
-                  emissive: new THREE.Color(0xffffff), emissiveIntensity: 0.9,
-                })
-              }
-            })
-          }
-        )
 
         scene.add(model)
       })
