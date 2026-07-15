@@ -146,9 +146,14 @@ const HoloShowcase: React.FC = () => {
           const box = new THREE.Box3().setFromObject(model)
           const center = box.getCenter(new THREE.Vector3())
           const size = box.getSize(new THREE.Vector3())
-          const scale = s.scale / Math.max(size.x, size.y, size.z)
-          model.position.sub(center.multiplyScalar(scale))
+          const maxDim = Math.max(size.x, size.y, size.z)
+          const scale = s.scale / maxDim
           model.scale.setScalar(scale)
+          model.position.set(
+            -center.x * scale,
+            -center.y * scale,
+            -center.z * scale
+          )
           model.rotation.set(0.28, -0.45, 0)
 
           model.traverse((obj) => {
