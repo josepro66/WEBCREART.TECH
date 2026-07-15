@@ -134,7 +134,7 @@ const MixoConfigurator: React.FC<{ onProductChange?: (product: 'beato' | 'knobo'
 
   // Configuración de vistas de cámara
   const CAMERA_VIEWS = {
-    normal: { pos: new THREE.Vector3(2, 1, -0.1), target: new THREE.Vector3(0, -0.5, -0.1) },
+    normal: { pos: new THREE.Vector3(3, 1.5, -0.1), target: new THREE.Vector3(0, -0.5, -0.1) },
     top:    { pos: new THREE.Vector3(1, 1.95, -0.4), target: new THREE.Vector3(-0.35, -1.4, -0.4) },
   };
 
@@ -362,10 +362,13 @@ Best regards.`;
     const maxSize = Math.max(size.x, size.y, size.z);
     const desiredSize = 1.8;
     const scale = desiredSize / maxSize;
-    
+
     obj.scale.set(scale, scale, scale);
-    obj.position.copy(center).multiplyScalar(-scale);
-    obj.position.y -= (size.y / 2) * scale;
+    obj.position.set(
+      -center.x * scale,
+      -center.y * scale - (size.y / 2) * scale,
+      -center.z * scale
+    );
   }, []);
 
   // 3. Al cargar el modelo, aplicar el envMap y MeshPhysicalMaterial
