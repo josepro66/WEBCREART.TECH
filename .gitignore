@@ -1,0 +1,40 @@
+# Archivos grandes que exceden el límite de GitHub
+public/videos/videobeato16.mov
+public/videos/*.mov
+public/videos/*.mp4
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+
+# Dependencias
+node_modules/
+*/node_modules/
+
+# Archivos de build
+dist/
+build/
+
+# Variables de entorno
+.env
+.env.local
+.env.production
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Firebase deployment cache
+.firebase/
+
+# Claude Code memory (archivos internos de trabajo)
+.claude/
+
+# Borradores internos
+DRAFT_SECURITY_REPORT.md
+SECURITY_ANALYSIS_TODO.md
+
+# Backups de modelos 3D sin comprimir (no desplegar)
+models_originals/

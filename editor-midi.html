@@ -1,0 +1,2867 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Creart Behavior Editor — Beato 16</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0E0E10;
+    --bg-panel: #18181B;
+    --bg-control: #232327;
+    --line: #2E2E33;
+    --text: #F2F1ED;
+    --text-dim: #9A9890;
+    --accent: #C8FF4D;
+    --accent-dim: rgba(200,255,77,0.12);
+    --warn: #FF6B57;
+    --font-display: 'Space Grotesk', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    padding:24px;
+    min-height:100vh;
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--font-display);
+    font-size:12px;
+  }
+  header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    margin-bottom:24px;
+    flex-wrap:wrap;
+    gap:12px;
+    border-bottom:1px solid var(--line);
+    padding-bottom:16px;
+  }
+  .brand{
+    font-size:13px;
+    letter-spacing:0.2em;
+    text-transform:uppercase;
+    color:var(--text-dim);
+    font-family:var(--font-mono);
+  }
+  h1{
+    font-size:28px;
+    font-weight:500;
+    margin:4px 0 0;
+    letter-spacing:-0.01em;
+  }
+  .status{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-family:var(--font-mono);
+    font-size:13px;
+    color:var(--text-dim);
+  }
+  .status-dot{
+    width:9px;height:9px;border-radius:50%;
+    background:var(--warn);
+    transition:background .3s;
+  }
+  .status-dot.connected{background:var(--accent);}
+  .status-dot.connected{
+    box-shadow:0 0 0 0 rgba(200,255,77,0.5);
+    animation:pulse-dot 2s infinite;
+  }
+  @keyframes pulse-dot{
+    0%{box-shadow:0 0 0 0 rgba(200,255,77,0.4);}
+    70%{box-shadow:0 0 0 6px rgba(200,255,77,0);}
+    100%{box-shadow:0 0 0 0 rgba(200,255,77,0);}
+  }
+  select, button, input{
+    font-family:var(--font-mono);
+    background:var(--bg-control);
+    color:var(--text);
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:8px 10px;
+    font-size:13px;
+  }
+  select:focus, input:focus{outline:1px solid var(--accent);}
+  button{cursor:pointer; transition:border-color .15s, color .15s;}
+  button:hover{border-color:var(--text-dim);}
+
+  .layout{
+    display:grid;
+    grid-template-columns:1.3fr 1fr;
+    gap:24px;
+    align-items:start;
+  }
+  @media (max-width:900px){
+    .layout{grid-template-columns:1fr;}
+  }
+
+  .setup-panel{
+    background:var(--bg-panel);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:18px 24px;
+    margin-bottom:20px;
+  }
+  .setup-row{
+    display:flex;
+    align-items:flex-end;
+    gap:12px;
+    flex-wrap:wrap;
+  }
+  .setup-field{display:flex; flex-direction:column; gap:4px;}
+  .setup-field label{
+    font-family:var(--font-mono); font-size:11px; color:var(--text-dim);
+    text-transform:uppercase; letter-spacing:0.08em;
+  }
+  .setup-btn{
+    font-family:var(--font-mono);
+    background:var(--bg-control);
+    color:var(--text);
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:9px 14px;
+    font-size:13px;
+    cursor:pointer;
+    transition:border-color .15s, background .15s;
+  }
+  .setup-btn:hover{border-color:var(--text-dim);}
+  .setup-btn.primary{background:var(--accent); color:#0E0E10; border-color:var(--accent); font-weight:700;}
+  .setup-btn.primary:hover{opacity:0.9;}
+  .setup-hint{
+    font-family:var(--font-mono);
+    font-size:11px;
+    color:var(--text-dim);
+    margin:10px 0 0;
+    line-height:1.5;
+  }
+
+  /* ── DEVICE PANEL 3D CSS ── */
+  .device-panel{
+    background: linear-gradient(160deg, #c8c8c8 0%, #b0b2b4 35%, #989a9c 65%, #888a8c 100%);
+    border-radius:22px;
+    padding:18px 16px 20px;
+    border:none;
+    position:relative;
+    box-shadow:
+      inset 0 2px 6px rgba(255,255,255,0.55),
+      inset 0 -3px 8px rgba(0,0,0,0.25),
+      0 10px 40px rgba(0,0,0,0.7),
+      0 3px 10px rgba(0,0,0,0.5);
+  }
+  .device-panel::before{
+    content:'BEATO 16';
+    position:absolute;
+    top:10px; left:50%; transform:translateX(-50%);
+    font-family:var(--font-mono);
+    font-size:9px;
+    letter-spacing:0.25em;
+    color:rgba(0,0,0,0.3);
+    user-select:none;
+    pointer-events:none;
+  }
+
+  .knobs-row{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:7px;
+    margin-bottom:12px;
+    margin-left:42px;
+    justify-items:center;
+    padding-top:10px;
+  }
+  .knob{
+    width:36px;
+    height:36px;
+    border-radius:50%;
+    background: radial-gradient(circle at 38% 30%, #3a3a3a 0%, #1c1c1c 50%, #080808 100%);
+    border:none;
+    cursor:pointer;
+    position:relative;
+    box-shadow:
+      0 4px 10px rgba(0,0,0,0.7),
+      0 1px 3px rgba(0,0,0,0.5),
+      inset 0 1px 2px rgba(255,255,255,0.12);
+    transition:box-shadow .2s;
+  }
+  .knob::after{
+    content:"";
+    position:absolute;
+    top:12%; left:50%;
+    width:2px; height:28%;
+    background:rgba(255,255,255,0.75);
+    transform-origin:bottom center;
+    transform:translateX(-50%) rotate(0deg);
+    border-radius:1px;
+    transition:transform .1s linear;
+  }
+  .knob.selected{box-shadow:0 0 0 2px var(--accent), 0 4px 12px rgba(0,0,0,0.7), inset 0 1px 2px rgba(255,255,255,0.12);}
+  .knob.selected::after{background:var(--accent);}
+  .knob .knob-label{
+    position:absolute; bottom:-20px; left:50%; transform:translateX(-50%);
+    font-family:var(--font-mono); font-size:9px; color:rgba(0,0,0,0.45);
+    white-space:nowrap;
+  }
+
+  .body-row{
+    display:flex;
+    gap:10px;
+    margin-top:20px;
+  }
+  .side-col{
+    display:flex;
+    flex-direction:column;
+    gap:5px;
+    width:32px;
+  }
+  .cherry{
+    aspect-ratio:1;
+    border-radius:5px;
+    background: linear-gradient(160deg, #2e2e2e 0%, #141414 100%);
+    border:none;
+    cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--font-mono); font-size:10px; font-weight:700;
+    color:rgba(255,255,255,0.45);
+    box-shadow:
+      0 3px 7px rgba(0,0,0,0.6),
+      inset 0 1px 1px rgba(255,255,255,0.1),
+      inset 0 -1px 2px rgba(0,0,0,0.4);
+    transition:box-shadow .15s, color .15s, background .15s;
+  }
+  .cherry:active{
+    box-shadow: 0 1px 3px rgba(0,0,0,0.6), inset 0 2px 4px rgba(0,0,0,0.5);
+    transform:translateY(1px);
+  }
+  .cherry.selected{box-shadow:0 0 0 2px var(--accent), 0 3px 7px rgba(0,0,0,0.6), inset 0 1px 1px rgba(255,255,255,0.1); color:var(--accent);}
+  .cherry.bank-active{background:linear-gradient(160deg, #d4ff6a 0%, #9ec93a 100%); color:#0E0E10; box-shadow:0 3px 10px rgba(200,255,77,0.4), inset 0 1px 1px rgba(255,255,255,0.3);}
+  .cherry.shift-active{background:linear-gradient(160deg, #ff8a78 0%, #cc4433 100%); color:#fff; box-shadow:0 3px 10px rgba(255,107,87,0.4), inset 0 1px 1px rgba(255,255,255,0.2);}
+
+  /* Fader 3D */
+  .fader-track{
+    flex:1;
+    width:100%;
+    background: linear-gradient(90deg, #606060 0%, #888 20%, #707070 100%);
+    border:none;
+    border-radius:8px;
+    position:relative;
+    cursor:pointer;
+    display:flex; align-items:flex-end;
+    overflow:hidden;
+    min-height:90px;
+    box-shadow: inset 0 3px 8px rgba(0,0,0,0.55), inset 0 1px 2px rgba(0,0,0,0.4);
+    transition:box-shadow .15s;
+  }
+  .fader-track.selected{box-shadow:inset 0 3px 8px rgba(0,0,0,0.55), 0 0 0 2px var(--accent);}
+  .fader-fill{
+    width:100%;
+    background: linear-gradient(180deg, rgba(200,255,77,0.7) 0%, rgba(200,255,77,0.3) 100%);
+    transition:height .08s linear;
+  }
+  .fader-track.selected .fader-fill{
+    background: linear-gradient(180deg, var(--accent) 0%, rgba(200,255,77,0.5) 100%);
+  }
+
+  /* Pad-grid 3D */
+  .pad-grid{
+    flex:1;
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    grid-template-rows:repeat(4,1fr);
+    gap:6px;
+  }
+  .pad{
+    aspect-ratio:1;
+    border-radius:50%;
+    background: radial-gradient(circle at 38% 30%, #323232 0%, #181818 45%, #050505 100%);
+    border:none;
+    cursor:pointer;
+    width:100%;
+    box-shadow:
+      0 4px 10px rgba(0,0,0,0.7),
+      0 1px 3px rgba(0,0,0,0.5),
+      inset 0 1px 3px rgba(255,255,255,0.08);
+    transition:box-shadow .12s, transform .08s;
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--font-mono); font-size:10px; color:rgba(255,255,255,0.25);
+    position:relative;
+    overflow:hidden;
+  }
+  /* Brillo en la parte superior del domo */
+  .pad::before{
+    content:'';
+    position:absolute;
+    top:10%; left:20%;
+    width:30%; height:22%;
+    background:radial-gradient(ellipse, rgba(255,255,255,0.18) 0%, transparent 70%);
+    border-radius:50%;
+    pointer-events:none;
+  }
+  .pad:active{
+    box-shadow: 0 1px 4px rgba(0,0,0,0.7), inset 0 2px 5px rgba(0,0,0,0.6);
+    transform:translateY(1px);
+  }
+  .pad.selected{box-shadow:0 0 0 2px var(--accent), 0 4px 10px rgba(0,0,0,0.7), inset 0 1px 3px rgba(255,255,255,0.08);}
+  .pad.lit{
+    background:radial-gradient(circle at 38% 30%, #e8ff80 0%, #c8ff4d 40%, #8ab832 100%);
+    color:#0E0E10;
+    box-shadow:0 0 14px rgba(200,255,77,0.6), 0 4px 10px rgba(0,0,0,0.5);
+  }
+  .pad.shift-armed{box-shadow:0 0 0 2px var(--warn), 0 4px 10px rgba(0,0,0,0.7);}
+  .pad.shift-fired{background:radial-gradient(circle at 38% 30%, #ff9a8a 0%, #ff6b57 40%, #cc3322 100%); color:#fff; box-shadow:0 0 14px rgba(255,107,87,0.6), 0 4px 8px rgba(0,0,0,0.5);}
+  .pad.shift-sticky{background:radial-gradient(circle at 38% 30%, #ff9a8a 0%, #ff6b57 40%, #cc3322 100%); color:#fff; box-shadow:0 0 14px rgba(255,107,87,0.6);}
+  @keyframes shift-blink{0%,100%{opacity:1} 50%{opacity:0.25}}
+  .shift-blinking{animation:shift-blink 0.9s ease-in-out infinite;}
+  .cherry.shift-sticky-active{background:linear-gradient(160deg, #ff8a78 0%, #cc4433 100%); color:#fff; box-shadow:0 3px 10px rgba(255,107,87,0.4);}
+
+  .config-panel{
+    background:var(--bg-panel);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:24px;
+    min-height:480px;
+  }
+  .empty-state{
+    color:var(--text-dim);
+    font-size:14px;
+    line-height:1.6;
+    padding:40px 0;
+    text-align:center;
+  }
+  .control-title{
+    font-family:var(--font-mono);
+    font-size:12px;
+    color:var(--text-dim);
+    text-transform:uppercase;
+    letter-spacing:0.1em;
+    margin:0 0 4px;
+  }
+  .control-name{
+    font-size:22px;
+    font-weight:500;
+    margin:0 0 20px;
+  }
+  .section-title{
+    font-size:13px;
+    font-weight:500;
+    margin:0 0 10px;
+    color:var(--text-dim);
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+  }
+  .routing-card{
+    background:var(--bg-control);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:14px;
+    margin-bottom:20px;
+  }
+  .field-row{
+    display:flex;
+    gap:10px;
+    margin-bottom:10px;
+  }
+  .field-row:last-child{margin-bottom:0;}
+  .field{flex:1; display:flex; flex-direction:column; gap:4px;}
+  .field label{font-size:11px; color:var(--text-dim); font-family:var(--font-mono);}
+  .field select, .field input{width:100%;}
+
+  .behavior-list{display:flex; flex-direction:column; gap:8px; margin-bottom:20px;}
+  .behavior-btn{
+    display:flex; align-items:center; gap:12px;
+    padding:12px 14px;
+    border-radius:10px;
+    text-align:left;
+    border:1px solid var(--line);
+    background:var(--bg-control);
+  }
+  .behavior-btn.active{
+    border-color:var(--accent);
+    background:var(--accent-dim);
+  }
+  .behavior-icon{
+    width:32px; height:32px; border-radius:50%;
+    background:var(--bg);
+    flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--font-mono); font-size:13px; color:var(--text-dim);
+  }
+  .behavior-btn.active .behavior-icon{color:var(--accent);}
+  .behavior-name{font-size:14px; font-weight:500; margin:0;}
+  .behavior-desc{font-size:12px; color:var(--text-dim); margin:2px 0 0;}
+
+
+  .param-block{margin-top:4px;}
+  .param-block label{
+    font-size:12px; color:var(--text-dim); font-family:var(--font-mono);
+    display:flex; justify-content:space-between; margin-bottom:8px;
+  }
+  input[type=range]{
+    -webkit-appearance:none;
+    width:100%;
+    height:3px;
+    background:var(--line);
+    border-radius:2px;
+    padding:0;
+    border:none;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;
+    width:16px; height:16px; border-radius:50%;
+    background:var(--accent);
+    cursor:pointer;
+  }
+  input[type=range]::-moz-range-thumb{
+    width:16px; height:16px; border-radius:50%;
+    background:var(--accent); border:none; cursor:pointer;
+  }
+
+  /* Consola MIDI flotante */
+  #log-panel{
+    position:fixed;
+    bottom:60px;
+    right:20px;
+    width:320px;
+    max-height:260px;
+    background:var(--bg-panel);
+    border:1px solid var(--line);
+    border-radius:14px;
+    display:none;
+    flex-direction:column;
+    z-index:200;
+    box-shadow:0 8px 32px rgba(0,0,0,0.6);
+  }
+  #log-panel.open{display:flex;}
+  #log-panel-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:10px 14px;
+    border-bottom:1px solid var(--line);
+    font-family:var(--font-mono);
+    font-size:11px;
+    color:var(--text-dim);
+    flex-shrink:0;
+  }
+  #log-panel-close{
+    background:none; border:none; color:var(--text-dim);
+    cursor:pointer; font-size:16px; padding:0; line-height:1;
+  }
+  #log-panel-close:hover{color:var(--text);}
+  .log{
+    padding:10px 14px;
+    font-family:var(--font-mono);
+    font-size:11px;
+    color:var(--text-dim);
+    overflow-y:auto;
+    flex:1;
+  }
+  .log p{margin:2px 0;}
+  .log .hl{color:var(--accent);}
+
+  /* Setup dropdown */
+  .setup-panel{
+    position:absolute;
+    top:100%;
+    right:0;
+    width:540px;
+    z-index:100;
+    box-shadow:0 8px 32px rgba(0,0,0,0.5);
+    border-radius:14px;
+    border:1px solid var(--line);
+    background:var(--bg-panel);
+    padding:18px 24px;
+    display:none;
+  }
+  .setup-panel.open{display:block;}
+  .setup-trigger-wrap{
+    position:relative;
+  }
+  #setup-toggle-btn{
+    font-family:var(--font-mono);
+    font-size:12px;
+    background:var(--bg-control);
+    color:var(--text-dim);
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:7px 12px;
+    cursor:pointer;
+    transition:border-color .15s, color .15s;
+    display:flex; align-items:center; gap:6px;
+  }
+  #setup-toggle-btn:hover{border-color:var(--text-dim); color:var(--text);}
+  #setup-toggle-btn.open{border-color:var(--accent); color:var(--accent);}
+  #midi-log-btn{
+    position:fixed;
+    bottom:20px;
+    right:20px;
+    font-family:var(--font-mono);
+    font-size:12px;
+    background:var(--bg-panel);
+    color:var(--text-dim);
+    border:1px solid var(--line);
+    border-radius:20px;
+    padding:8px 16px;
+    cursor:pointer;
+    z-index:199;
+    transition:border-color .15s, color .15s;
+    box-shadow:0 4px 12px rgba(0,0,0,0.4);
+  }
+  #midi-log-btn:hover{border-color:var(--text-dim); color:var(--text);}
+
+  /* Boton "i" info mode */
+  #info-toggle-btn{
+    width:26px; height:26px;
+    border-radius:50%;
+    font-family:var(--font-mono);
+    font-size:13px;
+    font-weight:700;
+    background:var(--bg-control);
+    color:var(--text-dim);
+    border:1px solid var(--line);
+    cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    transition:border-color .15s, color .15s, background .15s;
+    flex-shrink:0;
+  }
+  #info-toggle-btn:hover{border-color:var(--text-dim); color:var(--text);}
+  #info-toggle-btn.active{background:var(--accent); color:#0E0E10; border-color:var(--accent);}
+
+  /* Tooltips en info mode */
+  body.info-mode [data-info]{position:relative; cursor:help;}
+  body.info-mode [data-info]:hover::after{
+    content: attr(data-info);
+    position:absolute;
+    bottom:calc(100% + 8px);
+    left:50%;
+    transform:translateX(-50%);
+    background:#1c1c20;
+    color:var(--text);
+    border:1px solid var(--accent);
+    border-radius:8px;
+    padding:8px 12px;
+    font-family:var(--font-mono);
+    font-size:11px;
+    line-height:1.5;
+    white-space:pre-wrap;
+    width:220px;
+    z-index:999;
+    pointer-events:none;
+    box-shadow:0 4px 16px rgba(0,0,0,0.5);
+  }
+  body.info-mode [data-info]:hover::before{
+    content:'';
+    position:absolute;
+    bottom:calc(100% + 2px);
+    left:50%;
+    transform:translateX(-50%);
+    border:5px solid transparent;
+    border-top-color:var(--accent);
+    z-index:999;
+    pointer-events:none;
+  }
+</style>
+</head>
+<body>
+<div id="app">
+<header>
+  <div>
+    <div class="brand">Creart Studio — Behavior Editor</div>
+    <h1>Beato 16</h1>
+  </div>
+  <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+    <div class="status">
+      <div class="status-dot" id="status-dot"></div>
+      <span id="status-text">Buscando dispositivo MIDI...</span>
+    </div>
+    <button id="refresh-midi-btn" title="Buscar dispositivos MIDI de nuevo" style="font-family:var(--font-mono);font-size:12px;background:var(--bg-control);color:var(--text-dim);border:1px solid var(--line);border-radius:8px;padding:7px 12px;cursor:pointer;">↺ Actualizar</button>
+    <select id="midi-out-select" data-info="Selecciona tu Beato 16 aqui para\nque los cambios que hagas se apliquen.\nSi no aparece, conecta el USB y recarga."></select>
+    <button id="info-toggle-btn" title="Modo info" data-info="Ayuda activada! Pasa el mouse\nsobre cualquier boton o control\npara ver que hace cada cosa.">i</button>
+    <div class="setup-trigger-wrap">
+      <button id="setup-toggle-btn" data-info="Abre el menu de ajustes: elige\ntu programa de musica, guarda\ntus configuraciones y mas.">⚙ Configuracion</button>
+      <div class="setup-panel" id="setup-panel">
+        <div class="setup-row">
+          <div class="setup-field" data-info="Elige el programa de musica que usas\n(Ableton, Logic, etc.) y los controles\nse adaptan solos a ese programa.">
+            <label>DAW</label>
+            <select id="daw-select"></select>
+          </div>
+        </div>
+        <p class="setup-hint">Elegir un DAW carga su ruteo MIDI y Funciones. Podes editar cualquier control y guardar tu configuracion.</p>
+        <div class="setup-row" style="margin-top:16px;">
+          <button id="save-config-btn" class="setup-btn" data-info="Guarda todos tus ajustes en un\narchivo en tu computador. Puedes\nabrirlo despues cuando quieras.">Guardar configuracion</button>
+          <button id="load-config-btn" class="setup-btn" data-info="Carga un archivo de ajustes\nque hayas guardado antes.\nTodo vuelve exactamente igual.">Abrir configuracion</button>
+        </div>
+        <div class="setup-row" style="margin-top:12px; align-items:center;">
+          <button id="save-to-device-btn" class="setup-btn primary" data-info="Graba los ajustes dentro del Beato 16.\nAsi funcionara igual aunque lo conectes\na otro computador sin esta app.">Guardar en el Beato 16</button>
+          <button id="export-json-btn" class="setup-btn" data-info="Crea una copia extra de tus ajustes\ncomo archivo de texto. Es solo un\nrespaldo adicional por si acaso.">Exportar copia (JSON)</button>
+          <button id="factory-reset-btn" class="setup-btn" style="border-color:#ff5555; color:#ff5555;" data-info="Borra toda la configuración actual\ny vuelve a los valores de fábrica.\nEsta acción no se puede deshacer.">↺ Valores de fábrica</button>
+          <span id="device-save-status" style="font-family:var(--font-mono); font-size:12px; color:var(--text-dim);"></span>
+        </div>
+        <div id="save-progress-wrap" style="display:none; margin-top:12px;">
+          <div style="background:var(--line); border-radius:4px; height:5px; overflow:hidden;">
+            <div id="save-progress-bar" style="height:100%; width:0%; background:var(--accent); transition:width 0.25s linear;"></div>
+          </div>
+          <span id="save-progress-label" style="font-family:var(--font-mono); font-size:11px; color:var(--text-dim); display:block; margin-top:5px;"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+
+  <div class="device-panel">
+    <div class="knobs-row">
+      <div class="knob" data-id="k0"><span class="knob-label">Knob 1</span></div>
+      <div class="knob" data-id="k1"><span class="knob-label">Knob 2</span></div>
+      <div class="knob" data-id="k2"><span class="knob-label">Knob 3</span></div>
+      <div class="knob" data-id="k3"><span class="knob-label">Knob 4</span></div>
+    </div>
+
+    <div class="body-row">
+      <div class="side-col">
+        <div class="cherry bank-select" data-id="c0" data-bank-target="A" data-info="Banco A: el primer modo del Beato 16.\nCada banco es como un 'perfil' distinto\npara los mismos botones fisicos.">A</div>
+        <div class="cherry bank-select" data-id="c1" data-bank-target="B" data-info="Banco B: el segundo modo del Beato 16.\nPuede tener ajustes completamente\ndistintos al banco A y al C.">B</div>
+        <div class="cherry bank-select" data-id="c2" data-bank-target="C" data-info="Banco C: el tercer modo del Beato 16.\nTres bancos = tres configuraciones\ndistintas en un mismo dispositivo.">C</div>
+        <div class="cherry" data-id="c3" data-info="Boton SHIFT: es como la tecla Ctrl\nde tu teclado. Mantenlo y toca\nun pad para activar su funcion extra.">SH</div>
+        <div style="flex:1"></div>
+        <div class="fader-track" data-id="f0" style="height:90px;" data-info="Esta palanca controla algo en tu\nprograma (volumen, filtro, etc.).\nHazle click para ver su configuracion.">
+          <div class="fader-fill" id="fader-fill" style="height:40%;"></div>
+        </div>
+      </div>
+
+      <div class="pad-grid">
+        <div class="pad" data-id="p12">13</div><div class="pad" data-id="p13">14</div><div class="pad" data-id="p14">15</div><div class="pad" data-id="p15">16</div>
+        <div class="pad" data-id="p8">9</div><div class="pad" data-id="p9">10</div><div class="pad" data-id="p10">11</div><div class="pad" data-id="p11">12</div>
+        <div class="pad" data-id="p4">5</div><div class="pad" data-id="p5">6</div><div class="pad" data-id="p6">7</div><div class="pad" data-id="p7">8</div>
+        <div class="pad" data-id="p0">1</div><div class="pad" data-id="p1">2</div><div class="pad" data-id="p2">3</div><div class="pad" data-id="p3">4</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="config-panel" id="config-panel">
+    <div class="empty-state" id="empty-state">
+      Conecta tu Beato 16 y toca un control fisico (o haz click aqui en pantalla) para configurarlo.
+    </div>
+
+    <div id="config-content" style="display:none;">
+      <p class="control-title">Control seleccionado · banco <span id="bank-tag">A</span></p>
+      <p class="control-name" id="control-name">Pad 1</p>
+
+      <div id="midi-routing-block">
+        <p class="section-title">Ruteo MIDI</p>
+        <div class="routing-card">
+          <div class="field-row">
+            <div class="field" data-info="Note: dispara notas musicales.\nCC: controla parametros como volumen.\nPC: cambia de programa/preset en el DAW.">
+              <label>Tipo</label>
+              <select id="msg-type">
+                <option value="note">Note</option>
+                <option value="cc">CC</option>
+                <option value="pc">PC</option>
+                <option value="pb">Pitch Bend</option>
+              </select>
+            </div>
+            <div class="field" data-info="El numero que identifica exactamente\nque nota o control se activa (0-127).\nDebe coincidir con lo que espera tu DAW.">
+              <label id="num-label">Nota</label>
+              <input type="number" id="msg-num" min="0" max="127" value="36">
+            </div>
+            <div class="field" data-info="Es como una 'linea' separada de\ncomunicacion. Pon el mismo numero\nque tienes configurado en tu DAW.">
+              <label>Canal</label>
+              <input type="number" id="msg-chan" min="1" max="16" value="4">
+            </div>
+          </div>
+          <div id="pc-label-row" style="display:none; margin-top:8px;">
+            <div class="field" style="flex:1;" data-info="Nombre que aparece en el pad.\nAyuda a identificar el preset\nque carga este pad en live.">
+              <label>Nombre del preset</label>
+              <input type="text" id="pc-label-input" maxlength="12" placeholder="ej: Cuerdas" style="width:100%; box-sizing:border-box;">
+            </div>
+          </div>
+          <div class="field-row" id="mode-row">
+            <div class="field" data-info="Momentaneo: suena mientras lo aprietas\ny para cuando sueltas.\nToggle: un toque enciende, otro apaga.">
+              <label>Modo</label>
+              <select id="msg-mode">
+                <option value="momentary">Momentaneo</option>
+                <option value="toggle">Toggle</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+
+        <p class="section-title">Comportamiento</p>
+        <div class="behavior-list" id="behavior-list"></div>
+
+        <div class="param-block" id="param-block" style="display:none;" data-info="Mueve este control para ajustar\nla intensidad o velocidad del\nefecto que elegiste arriba.">
+          <label><span id="param-label">Cantidad</span><span id="param-value">50</span></label>
+          <input type="range" min="0" max="100" value="50" id="param-slider">
+        </div>
+
+        <!-- Velocity / Rango CC -->
+        <div id="vel-block" style="display:none; margin-top:14px;">
+          <p id="vel-title" class="section-label" style="font-family:var(--font-mono); font-size:11px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.08em; margin:0 0 8px;">Fuerza del golpe (velocity)</p>
+          <!-- Sliders mode (random knob/fader) -->
+          <div id="vel-sliders-mode" style="display:none;">
+            <div class="param-block" style="margin-bottom:8px;">
+              <label style="font-family:var(--font-mono); font-size:11px; color:var(--text-dim);"><span id="vel-min-slider-label">Velocidad</span><span id="vel-min-slider-value" style="float:right;">0</span></label>
+              <input type="range" min="0" max="100" value="0" id="vel-min-slider">
+            </div>
+            <div class="param-block" style="margin-bottom:8px;">
+              <label style="font-family:var(--font-mono); font-size:11px; color:var(--text-dim);"><span id="vel-max-slider-label">Suavizado</span><span id="vel-max-slider-value" style="float:right;">0</span></label>
+              <input type="range" min="0" max="100" value="0" id="vel-max-slider">
+            </div>
+          </div>
+          <!-- Numbers mode (pads, CC range) -->
+          <div id="vel-numbers-mode" style="display:flex; align-items:flex-end; gap:8px; flex-wrap:wrap;">
+            <div id="vel-min-field" style="display:none; flex-direction:column; gap:4px;" data-info="El valor mínimo del rango.\nPara pads: la fuerza mínima al azar.\nPara knobs/fader: el CC mínimo de salida.">
+              <label style="font-size:11px; color:var(--text-dim); font-family:var(--font-mono);">Mínimo</label>
+              <input type="number" id="vel-min" min="0" max="127" value="0" style="width:60px;">
+            </div>
+            <div style="display:flex; flex-direction:column; gap:4px;" data-info="La fuerza máxima del golpe (pads)\no el valor máximo que puede enviar\nel knob/fader (CC).">
+              <label id="vel-max-label" style="font-size:11px; color:var(--text-dim); font-family:var(--font-mono);">Fuerza</label>
+              <input type="number" id="vel-max" min="0" max="127" value="127" style="width:60px;">
+            </div>
+            <button id="vel-random-btn" style="display:none; font-family:var(--font-mono); font-size:11px; background:var(--bg-control); color:var(--text-dim); border:1px solid var(--line); border-radius:6px; padding:6px 10px; cursor:pointer; white-space:nowrap; align-self:flex-end;" data-info="Cuando está activo, cada golpe\nelige al azar una fuerza dentro\ndel rango Mínimo → Máximo.">Aleatorio: Off</button>
+          </div>
+          <button id="apply-vel-all-btn" style="margin-top:8px; font-family:var(--font-mono); font-size:11px; background:var(--bg-control); color:var(--text-dim); border:1px solid var(--line); border-radius:6px; padding:5px 10px; cursor:pointer;" data-info="Aplica este rango a todos los controles\ndel mismo tipo en todos los bancos.">→ <span id="apply-vel-label">Aplicar a todos los pads</span></button>
+        </div>
+      </div>
+
+      <div id="shift-block" style="display:none; margin-top:24px;">
+        <p class="section-title">Funciones</p>
+        <div class="routing-card">
+          <div class="field-row">
+            <div class="field" data-info="Escoge que hace este pad cuando\nlo presionas junto con SHIFT:\nplay, stop, grabar, cuantizar, etc.">
+              <label>Comando al presionar SHIFT + este pad</label>
+              <select id="shift-action-select"></select>
+            </div>
+          </div>
+          <p id="shift-shortcut-preview" style="font-family:var(--font-mono); font-size:12px; color:var(--text-dim); margin:6px 0 0;"></p>
+          <div id="custom-key-row" style="display:none; margin-top:10px; flex-direction:column; gap:10px;">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <button id="capture-key-btn" class="setup-btn" type="button" data-info="Presiona la combinacion de teclas\nque quieres y quedara guardada.\nEl Beato la ejecutara con SHIFT+pad.">Asignar tecla</button>
+              <span id="custom-key-label" style="font-family:var(--font-mono); font-size:13px; color:var(--text);">Sin tecla asignada</span>
+            </div>
+            <div class="field">
+              <label>Nombre del atajo (para identificarlo facil)</label>
+              <input type="text" id="custom-key-name" placeholder="ej. Mi Macro, Toggle FX...">
+            </div>
+          </div>
+        </div>
+        <p style="font-family:var(--font-mono); font-size:11px; color:var(--text-dim); margin:8px 0 0; line-height:1.5;">
+          Mientras SHIFT esta presionado este pad ejecuta el comando en vez de su nota/CC normal. Al soltar SHIFT vuelve a su asignacion MIDI habitual. Este combo es el mismo en cualquier banco (A, B o C).
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<button id="midi-log-btn" data-info="Ver los mensajes que van y vienen\nentre tu controlador y el computador.\nUtil si algo no esta funcionando.">▶ Consola MIDI</button>
+
+<div id="log-panel">
+  <div id="log-panel-header">
+    <span>Consola MIDI</span>
+    <button id="log-panel-close">×</button>
+  </div>
+  <div class="log" id="log">
+    <p>// Esperando conexion Web MIDI...</p>
+  </div>
+</div>
+
+<script>
+const knobBehaviors = [
+  {id:'directo', name:'Directo', desc:'Sigue tu mano 1:1', icon:'→', info:'El knob hace exactamente lo que\ntu mano hace. Sin efectos ni trucos.\nLo que giras es lo que suena.'},
+  {id:'inercia', name:'Inercia', desc:'Suaviza y rebota', icon:'∿', info:'El sonido cambia suavemente,\ncomo si tuviera peso. Ideal para\ntransiciones elegantes y naturales.'},
+  {id:'espejo', name:'Espejo', desc:'Se mueve al contrario', icon:'⇄', info:'Funciona al reves: si subes el knob\nel sonido baja, y viceversa.\nUtil para efectos invertidos.'},
+  {id:'random', name:'Paso aleatorio', desc:'Salta a valores cercanos', icon:'⚂', info:'Cada movimiento salta a un punto\ndistinto cercano. Crea variaciones\nespontaneas e impredecibles.'},
+  {id:'oscila', name:'Oscilacion libre', desc:'Sigue moviendose solo', icon:'~', info:'El control se mueve solo sin que\ntoques nada. Crea un efecto\nautomatico de variacion continua.'}
+];
+const padBehaviors = [
+  {id:'directo', name:'Directo', desc:'Nota al presionar/soltar', icon:'→', info:'Funciona normal: suena cuando\nlo aprietas y para cuando sueltas.\nComo cualquier pad de bateria.'},
+  {id:'retrigger', name:'Retrigger', desc:'Repite la nota mientras presionas', icon:'⟳', info:'Mientras mantienes el pad apretado\nla nota se repite sola muy rapido.\nAjusta la velocidad con el slider.'},
+  {id:'rafaga', name:'Rafaga aleatoria', desc:'Dispara notas al azar', icon:'⚂', info:'Lanza notas de forma aleatoria\nmientras lo mantienes apretado.\nCrea efectos creativos e inesperados.'}
+];
+const paramLabels = {
+  inercia:'Velocidad de inercia', espejo:'Cantidad de inversion', random:'Rango de salto',
+  oscila:'Velocidad de oscilacion', retrigger:'Velocidad de repeticion', rafaga:'Densidad'
+};
+
+const banks = ['A','B','C'];
+let currentBank = 'A';
+let selected = null;
+let midiOutput = null;
+const lastIncomingVal = {};   // ultimo valor CC recibido por control
+const lastIncomingDelta = {}; // ultimo delta (rawVal - prevVal), para detectar tendencia direccional
+let midiInput = null;
+
+// SHIFT + PAD -> Acciones de DAW. El editor solo guarda el id logico de
+// la accion (ej. "quantize"); el host nativo simula la tecla real.
+const daws = [
+  {id:'ableton', name:'Ableton Live'},
+  {id:'logic', name:'Logic Pro'},
+  {id:'protools', name:'Pro Tools'},
+  {id:'flstudio', name:'FL Studio'},
+  {id:'cubase', name:'Cubase'},
+  {id:'reaper', name:'Reaper'},
+  {id:'bitwig', name:'Bitwig Studio'}
+];
+let currentDaw = 'ableton';
+
+// Atajo de fabrica por DAW y sistema operativo. null = sin atajo nativo de 1 tecla.
+const dawActions = [
+  { id:'play_stop', name:'Play / Stop', shortName:'Play', shortcuts:{
+    ableton:{mac:'Space', win:'Space'}, logic:{mac:'Space', win:'Space'},
+    protools:{mac:'Space', win:'Space'}, flstudio:{mac:'Space', win:'Space'},
+    cubase:{mac:'Space', win:'Space'}, reaper:{mac:'Space', win:'Space'},
+    bitwig:{mac:'Space', win:'Space'}
+  }},
+  { id:'record', name:'Record', shortName:'Rec', shortcuts:{
+    ableton:{mac:'F9', win:'F9'}, logic:{mac:'R', win:'R'},
+    protools:{mac:'Cmd+Space', win:'Ctrl+Space'}, flstudio:{mac:null, win:'Num 0'},
+    cubase:{mac:'*', win:'*'}, reaper:{mac:'Cmd+R', win:'Ctrl+R'},
+    bitwig:{mac:'Num *', win:'Num *'}
+  }},
+  { id:'quantize', name:'Quantize', shortName:'Quant', shortcuts:{
+    ableton:{mac:'Cmd+U', win:'Ctrl+U'}, logic:{mac:'Q', win:'Q'},
+    protools:{mac:'Cmd+U', win:'Ctrl+U'}, flstudio:{mac:'Cmd+Q', win:'Ctrl+Q'},
+    cubase:{mac:'Q', win:'Q'}, reaper:{mac:null, win:null},
+    bitwig:{mac:'Cmd+Shift+Q', win:'Ctrl+Shift+Q'}
+  }},
+  { id:'quantize_settings', name:'Quantize Settings / 50%', shortName:'Quant 50%', shortcuts:{
+    ableton:{mac:'Cmd+Shift+U', win:'Ctrl+Shift+U'}, logic:{mac:null, win:null},
+    protools:{mac:null, win:null}, flstudio:{mac:'Cmd+Alt+Q', win:'Ctrl+Alt+Q'},
+    cubase:{mac:null, win:null}, reaper:{mac:null, win:null},
+    bitwig:{mac:null, win:null}
+  }},
+  { id:'step_undo', name:'Step Undo', shortName:'St.Undo', shortcuts:{
+    ableton:{mac:null, win:null}, logic:{mac:null, win:null},
+    protools:{mac:null, win:null}, flstudio:{mac:'Cmd+Alt+Z', win:'Ctrl+Alt+Z'},
+    cubase:{mac:null, win:null}, reaper:{mac:null, win:null},
+    bitwig:{mac:null, win:null}
+  }},
+  { id:'step_redo', name:'Step Redo', shortName:'St.Redo', shortcuts:{
+    ableton:{mac:null, win:null}, logic:{mac:null, win:null},
+    protools:{mac:null, win:null}, flstudio:{mac:null, win:null},
+    cubase:{mac:null, win:null}, reaper:{mac:null, win:null},
+    bitwig:{mac:null, win:null}
+  }},
+  { id:'nudge_left', name:'Nudge Izquierda', shortName:'Nudge <', shortcuts:{
+    ableton:{mac:null, win:null}, logic:{mac:null, win:null},
+    protools:{mac:',', win:','}, flstudio:{mac:null, win:null},
+    cubase:{mac:null, win:null}, reaper:{mac:null, win:null},
+    bitwig:{mac:null, win:null}
+  }},
+  { id:'nudge_right', name:'Nudge Derecha', shortName:'Nudge >', shortcuts:{
+    ableton:{mac:null, win:null}, logic:{mac:null, win:null},
+    protools:{mac:'.', win:'.'}, flstudio:{mac:null, win:null},
+    cubase:{mac:null, win:null}, reaper:{mac:null, win:null},
+    bitwig:{mac:null, win:null}
+  }},
+  { id:'clear', name:'Clear / Delete Notes', shortName:'Clear', shortcuts:{
+    ableton:{mac:'Cmd+Backspace', win:'Ctrl+Backspace'}, logic:{mac:'Cmd+A then Delete', win:'Ctrl+A then Delete'},
+    protools:{mac:null, win:null}, flstudio:{mac:null, win:null},
+    cubase:{mac:null, win:null}, reaper:{mac:null, win:null},
+    bitwig:{mac:null, win:null}
+  }},
+  { id:'copy', name:'Copy', shortName:'Copy', shortcuts:{
+    ableton:{mac:'Cmd+C', win:'Ctrl+C'}, logic:{mac:'Cmd+C', win:'Ctrl+C'},
+    protools:{mac:'Cmd+C', win:'Ctrl+C'}, flstudio:{mac:'Cmd+C', win:'Ctrl+C'},
+    cubase:{mac:'Cmd+C', win:'Ctrl+C'}, reaper:{mac:'Cmd+C', win:'Ctrl+C'},
+    bitwig:{mac:'Cmd+C', win:'Ctrl+C'}
+  }},
+  { id:'paste', name:'Paste', shortName:'Paste', shortcuts:{
+    ableton:{mac:'Cmd+V', win:'Ctrl+V'}, logic:{mac:'Cmd+V', win:'Ctrl+V'},
+    protools:{mac:'Cmd+V', win:'Ctrl+V'}, flstudio:{mac:'Cmd+V', win:'Ctrl+V'},
+    cubase:{mac:'Cmd+V', win:'Ctrl+V'}, reaper:{mac:'Cmd+V', win:'Ctrl+V'},
+    bitwig:{mac:'Cmd+V', win:'Ctrl+V'}
+  }},
+  { id:'semitone_down', name:'Semitone -', shortName:'Semi -', shortcuts:{
+    ableton:{mac:'Alt+Down', win:'Alt+Down'}, logic:{mac:'Alt+Down', win:'Alt+Down'},
+    protools:{mac:null, win:null}, flstudio:{mac:null, win:null},
+    cubase:{mac:null, win:null}, reaper:{mac:null, win:null},
+    bitwig:{mac:null, win:null}
+  }},
+  { id:'semitone_up', name:'Semitone +', shortName:'Semi +', shortcuts:{
+    ableton:{mac:'Alt+Up', win:'Alt+Up'}, logic:{mac:'Alt+Up', win:'Alt+Up'},
+    protools:{mac:null, win:null}, flstudio:{mac:null, win:null},
+    cubase:{mac:null, win:null}, reaper:{mac:null, win:null},
+    bitwig:{mac:null, win:null}
+  }},
+  { id:'octave_down', name:'Octave -', shortName:'Oct -', shortcuts:{
+    ableton:{mac:'Shift+Alt+Down', win:'Shift+Alt+Down'}, logic:{mac:'Shift+Alt+Down', win:'Shift+Alt+Down'},
+    protools:{mac:null, win:null}, flstudio:{mac:null, win:null},
+    cubase:{mac:null, win:null}, reaper:{mac:null, win:null},
+    bitwig:{mac:null, win:null}
+  }},
+  { id:'octave_up', name:'Octave +', shortName:'Oct +', shortcuts:{
+    ableton:{mac:'Shift+Alt+Up', win:'Shift+Alt+Up'}, logic:{mac:'Shift+Alt+Up', win:'Shift+Alt+Up'},
+    protools:{mac:null, win:null}, flstudio:{mac:null, win:null},
+    cubase:{mac:null, win:null}, reaper:{mac:null, win:null},
+    bitwig:{mac:null, win:null}
+  }},
+  { id:'capture_midi', name:'Capture MIDI', shortName:'Capture', shortcuts:{
+    ableton:{mac:'Cmd+Shift+F8', win:'Ctrl+Shift+F8'}, logic:{mac:null, win:null},
+    protools:{mac:null, win:null}, flstudio:{mac:null, win:null},
+    cubase:{mac:null, win:null}, reaper:{mac:null, win:null},
+    bitwig:{mac:null, win:null}
+  }},
+  { id:'undo', name:'Undo', shortName:'Undo', shortcuts:{
+    ableton:{mac:'Cmd+Z', win:'Ctrl+Z'}, logic:{mac:'Cmd+Z', win:'Ctrl+Z'},
+    protools:{mac:'Cmd+Z', win:'Ctrl+Z'}, flstudio:{mac:'Cmd+Z', win:'Ctrl+Z'},
+    cubase:{mac:'Cmd+Z', win:'Ctrl+Z'}, reaper:{mac:'Cmd+Z', win:'Ctrl+Z'},
+    bitwig:{mac:'Cmd+Z', win:'Ctrl+Z'}
+  }},
+  { id:'redo', name:'Redo', shortName:'Redo', shortcuts:{
+    ableton:{mac:'Cmd+Shift+Z', win:'Ctrl+Shift+Z'}, logic:{mac:'Cmd+Shift+Z', win:'Ctrl+Shift+Z'},
+    protools:{mac:'Cmd+Shift+Z', win:'Ctrl+Shift+Z'}, flstudio:{mac:'Cmd+Shift+Z', win:'Ctrl+Shift+Z'},
+    cubase:{mac:'Cmd+Shift+Z', win:'Ctrl+Shift+Z'}, reaper:{mac:'Cmd+Shift+Z', win:'Ctrl+Shift+Z'},
+    bitwig:{mac:'Cmd+Shift+Z', win:'Ctrl+Shift+Z'}
+  }},
+  { id:'save', name:'Save', shortName:'Save', shortcuts:{
+    ableton:{mac:'Cmd+S', win:'Ctrl+S'}, logic:{mac:'Cmd+S', win:'Ctrl+S'},
+    protools:{mac:'Cmd+S', win:'Ctrl+S'}, flstudio:{mac:'Cmd+S', win:'Ctrl+S'},
+    cubase:{mac:'Cmd+S', win:'Ctrl+S'}, reaper:{mac:'Cmd+S', win:'Ctrl+S'},
+    bitwig:{mac:'Cmd+S', win:'Ctrl+S'}
+  }},
+  { id:'loop_toggle', name:'Loop Toggle', shortName:'Loop', shortcuts:{
+    ableton:{mac:'Cmd+L', win:'Ctrl+L'}, logic:{mac:'C', win:'C'},
+    protools:{mac:null, win:null}, flstudio:{mac:null, win:null},
+    cubase:{mac:'/', win:'/'}, reaper:{mac:null, win:null},
+    bitwig:{mac:null, win:null}
+  }},
+  { id:'metronome', name:'Metronome', shortName:'Metro', shortcuts:{
+    ableton:{mac:null, win:null}, logic:{mac:'K', win:'K'},
+    protools:{mac:'Cmd+7', win:'Ctrl+7'}, flstudio:{mac:null, win:null},
+    cubase:{mac:'C', win:'C'}, reaper:{mac:null, win:null},
+    bitwig:{mac:null, win:null}
+  }},
+  { id:'tap_tempo', name:'Tap Tempo', shortName:'Tap', shortcuts:{
+    ableton:{mac:null, win:null}, logic:{mac:null, win:null},
+    protools:{mac:null, win:null}, flstudio:{mac:null, win:null},
+    cubase:{mac:null, win:null}, reaper:{mac:null, win:null},
+    bitwig:{mac:null, win:null}
+  }},
+  { id:'overdub', name:'Overdub Toggle', shortName:'Overdub', shortcuts:{
+    ableton:{mac:null, win:null}, logic:{mac:null, win:null},
+    protools:{mac:'N', win:'N'}, flstudio:{mac:null, win:null},
+    cubase:{mac:null, win:null}, reaper:{mac:null, win:null},
+    bitwig:{mac:null, win:null}
+  }},
+  { id:'duplicate', name:'Duplicate', shortName:'Dup', shortcuts:{
+    ableton:{mac:'Cmd+D', win:'Ctrl+D'}, logic:{mac:'Cmd+D', win:'Ctrl+D'},
+    protools:{mac:'Cmd+D', win:'Ctrl+D'}, flstudio:{mac:'Cmd+D', win:'Ctrl+D'},
+    cubase:{mac:'Cmd+D', win:'Ctrl+D'}, reaper:{mac:'Cmd+D', win:'Ctrl+D'},
+    bitwig:{mac:'Cmd+D', win:'Ctrl+D'}
+  }},
+  { id:'follow', name:'Follow / Scroll Playhead', shortName:'Follow', shortcuts:{
+    ableton:{mac:'Shift+Tab', win:'Shift+Tab'}, logic:{mac:'Cmd+Shift+J', win:'Ctrl+Shift+J'},
+    protools:{mac:null, win:null}, flstudio:{mac:null, win:null},
+    cubase:{mac:null, win:null}, reaper:{mac:null, win:null},
+    bitwig:{mac:null, win:null}
+  }},
+  { id:'new_clip', name:'Insert / New Empty Clip', shortName:'New Clip', shortcuts:{
+    ableton:{mac:'Cmd+Shift+M', win:'Ctrl+Shift+M'}, logic:{mac:null, win:null},
+    protools:{mac:null, win:null}, flstudio:{mac:null, win:null},
+    cubase:{mac:null, win:null}, reaper:{mac:'Cmd+I', win:'Ctrl+I'},
+    bitwig:{mac:null, win:null}
+  }},
+  { id:'zoom_selection', name:'Zoom to Selection', shortName:'Zoom', shortcuts:{
+    ableton:{mac:'Cmd+Shift+E', win:'Ctrl+Shift+E'}, logic:{mac:'Cmd+Shift+Z', win:'Ctrl+Shift+Z'},
+    protools:{mac:null, win:null}, flstudio:{mac:null, win:null},
+    cubase:{mac:null, win:null}, reaper:{mac:null, win:null},
+    bitwig:{mac:null, win:null}
+  }},
+  { id:'custom', name:'Atajo personalizado', shortName:'Custom', shortcuts:{}, isCustom:true },
+  { id:'none', name:'Sin asignar', shortName:'', shortcuts:{} }
+];
+
+// Presets de shift+pad por DAW. pad1=Play/Stop y pad2=Record fijos en todos.
+const dawPresets = {
+  ableton: ['play_stop','record','quantize','quantize_settings','undo','redo','loop_toggle','clear','capture_midi','new_clip','duplicate','follow','copy','paste','zoom_selection','save'],
+  logic:   ['play_stop','record','quantize','metronome','undo','redo','loop_toggle','follow','duplicate','copy','paste','semitone_down','semitone_up','octave_down','octave_up','save'],
+  protools:['play_stop','record','quantize','overdub','undo','redo','nudge_left','nudge_right','metronome','copy','paste','duplicate','none','none','none','save'],
+  flstudio:['play_stop','record','quantize','quantize_settings','undo','step_undo','redo','none','copy','paste','duplicate','none','none','none','none','save'],
+  cubase:  ['play_stop','record','quantize','metronome','undo','redo','loop_toggle','copy','paste','duplicate','none','none','none','none','none','save'],
+  reaper:  ['play_stop','record','undo','redo','copy','paste','duplicate','new_clip','none','none','none','none','none','none','none','save'],
+  bitwig:  ['play_stop','record','quantize','undo','redo','copy','paste','duplicate','none','none','none','none','none','none','none','save']
+};
+
+function applyDawPreset(dawId){
+  const preset = dawPresets[dawId];
+  if(!preset) return;
+
+  // Ruteo MIDI de fabrica en los 3 bancos. Se reinicia tambien el engine
+  // para que no queden oscilaciones o inercias activas de una sesion anterior.
+  Object.keys(factoryState).forEach(id => {
+    banks.forEach(b => {
+      state[id][b] = {
+        ...factoryState[id][b],
+        engine: { value: 0, target: 0, phase: 0, lastStep: 0, retrigActive: false }
+      };
+    });
+  });
+
+  // Combos de shift del DAW elegido. Ningun preset usa 'custom', asi que
+  // se limpian teclas personalizadas previas para evitar datos huerfanos.
+  for(let i=0;i<16;i++) shiftActions['p'+i] = preset[i] || 'none';
+  Object.keys(customShiftKeys).forEach(id => delete customShiftKeys[id]);
+
+  logMsg('Configuracion inicial cargada: ' + daws.find(d=>d.id===dawId).name, true);
+  if(selected) selectControl(selected);
+}
+
+// Configuraciones guardadas por el usuario: ruteo MIDI + shift + DAW, en memoria.
+
+function captureCurrentConfig(){
+  return {
+    daw: currentDaw,
+    state: snapshotState(),
+    shiftActions: { ...shiftActions },
+    customShiftKeys: JSON.parse(JSON.stringify(customShiftKeys))
+  };
+}
+
+// Formato exportado para el Remote Script de Ableton. Es deliberadamente
+// mas explicito que captureCurrentConfig (sin abreviar nombres de campos,
+// sin estado de animacion en vivo) porque lo consume un proceso Python
+// externo, no el propio HTML.
+function exportConfigForAbleton(){
+  const controls = {};
+  Object.keys(state).forEach(id => {
+    controls[id] = {};
+    banks.forEach(b => {
+      const s = state[id][b];
+      controls[id][b] = {
+        type: s.type, num: s.num, channel: s.chan,
+        mode: s.mode, behavior: s.behavior, param: s.param
+      };
+    });
+  });
+
+  const shiftCombos = {};
+  for(let i=0;i<16;i++){
+    const padId = 'p'+i;
+    const action = shiftActions[padId] || 'none';
+    shiftCombos[padId] = { action };
+    if(action === 'custom' && customShiftKeys[padId]){
+      shiftCombos[padId].customLabel = customShiftKeys[padId].label || '';
+      shiftCombos[padId].customKey = customShiftKeys[padId].keyLabel || '';
+    }
+  }
+
+  return {
+    formatVersion: 1,
+    device: 'Beato 16',
+    exportedAt: new Date().toISOString(),
+    controls,
+    shiftCombos,
+    physicalMap: {
+      cc: physicalCC,
+      noteMux: physicalNoteMux,
+      noteArduino: physicalNoteArduino
+    }
+  };
+}
+
+function downloadJson(filename, dataObj){
+  const blob = new Blob([JSON.stringify(dataObj, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// ============================================================
+// PROTOCOLO SYSEX: guardar la configuracion actual EN EL HARDWARE
+// (no en el navegador, no en un archivo). Espejo exacto del
+// protocolo implementado en firmware/Beato16_v2.ino. Cualquier
+// cambio aqui debe reflejarse tambien alla, y viceversa.
+// ============================================================
+const MANUFACTURER_ID = 0x7D;   // ver ARQUITECTURA.md sec. 7.1 (provisional)
+const DEVICE_ID = 0x10;         // Beato 16
+
+const CMD_IDENTIFY_REQUEST  = 0x01;
+const CMD_IDENTIFY_RESPONSE = 0x02;
+const CMD_GET_ACTIVE_PRESET = 0x10;
+const CMD_PRESET_DATA_BEGIN = 0x20;
+const CMD_PRESET_DATA_CHUNK = 0x21;
+const CMD_PRESET_DATA_END   = 0x22;
+const CMD_ACK         = 0x30;
+const CMD_NACK        = 0x31;
+const CMD_WRITE_OK    = 0x32;
+const CMD_WRITE_FAILED= 0x33;
+
+const PRESET_MAGIC = 0xB1;
+const FORMAT_VERSION = 3; // sincronizado con FORMAT_VERSION del firmware (Beato16_v4.ino).
+                           // v3: PresetControl tiene 6 bytes (se agregaron velMin/velMax).
+const N_BANKS_FW = 3, N_PADS_FW = 16, N_ENCODERS_FW = 5;
+// Tamano exacto del struct Preset en el firmware: 2 (magic+version) +
+// 3 bancos x (16 pads + 5 encoders) x 6 bytes (number, packed, behavior,
+// param, velMin, velMax) + 16 (shiftActions) + 1 (checksum).
+const PRESET_BINARY_SIZE = 2 + N_BANKS_FW * (N_PADS_FW + N_ENCODERS_FW) * 6 + N_PADS_FW + 1;
+
+// CRC8 (polinomio 0x07), espejo exacto de crc8() en el firmware.
+function crc8(bytes){
+  let crc = 0x00;
+  for(const byte of bytes){
+    crc ^= byte;
+    for(let b = 0; b < 8; b++){
+      if(crc & 0x80) crc = ((crc << 1) ^ 0x07) & 0xFF;
+      else crc = (crc << 1) & 0xFF;
+    }
+  }
+  return crc;
+}
+
+// Empaqueta type/channel/mode en un solo byte, igual que
+// PresetControl::setType/setChannel/setMode en el firmware.
+function typeToNum(t){ return t === 'cc' ? 1 : t === 'pc' ? 2 : t === 'pb' ? 3 : 0; }
+function typeFromNum(n){ return n === 1 ? 'cc' : n === 2 ? 'pc' : n === 3 ? 'pb' : 'note'; }
+
+function packControlByte(type, channel, mode){
+  // type: 0=note, 1=cc, 2=pc  — bit7=LSB del tipo, bit0=MSB del tipo
+  const bit7 = (type & 0x01);
+  const bit0 = (type >> 1) & 0x01;
+  return (bit7 << 7) | ((channel & 0x0F) << 3) | ((mode & 0x01) << 2) | bit0;
+}
+
+// Mapeo de id de comportamiento (string, igual a knobBehaviors.id /
+// padBehaviors.id) a numero, EXACTAMENTE igual a las constantes
+// BEHAVIOR_* del firmware. Si se agrega un comportamiento nuevo en un
+// lado, agregarlo tambien en el otro.
+const BEHAVIOR_IDS = {
+  directo: 0, inercia: 1, espejo: 2, random: 3, oscila: 4,
+  retrigger: 5, rafaga: 6
+};
+
+// Serializa el estado actual del editor al formato binario EXACTO
+// que el firmware espera (no JSON). bankOrder define el orden real
+// en memoria: A, B, C (debe coincidir con N_BANKS del firmware).
+//
+// IMPORTANTE sobre canal: s.chan se guarda internamente como 0-15
+// (valor crudo que espera el firmware). La UI muestra chan+1 (1-16)
+// para coincidir con lo que muestran los DAWs. Al leer el input se
+// resta 1 antes de guardar en state.
+function serializePresetBinary(){
+  const bytes = [];
+  bytes.push(PRESET_MAGIC);
+  bytes.push(FORMAT_VERSION);
+
+  const bankOrder = ['A', 'B', 'C'];
+  for(const bank of bankOrder){
+    // 16 pads
+    for(let i = 0; i < 16; i++){
+      const s = state['p'+i][bank];
+      bytes.push(s.num & 0x7F);
+      bytes.push(packControlByte(typeToNum(s.type), s.chan - 1, s.mode === 'toggle' ? 1 : 0));
+      bytes.push(BEHAVIOR_IDS[s.behavior] !== undefined ? BEHAVIOR_IDS[s.behavior] : 0);
+      bytes.push(Math.max(0, Math.min(100, Math.round(s.param))));
+      bytes.push(Math.max(0, Math.min(127, Math.round(s.velMin ?? 127))));
+      bytes.push(Math.max(0, Math.min(127, Math.round(s.velMax ?? 127))));
+    }
+    // 4 knobs + 1 fader = 5 encoders, mismo orden que N_ENCODERS_TOTAL en firmware
+    for(let i = 0; i < 4; i++){
+      const s = state['k'+i][bank];
+      bytes.push(s.num & 0x7F);
+      bytes.push(packControlByte(typeToNum(s.type), s.chan - 1, s.mode === 'toggle' ? 1 : 0));
+      bytes.push(BEHAVIOR_IDS[s.behavior] !== undefined ? BEHAVIOR_IDS[s.behavior] : 0);
+      bytes.push(Math.max(0, Math.min(s.behavior === 'random' ? 127 : 100, Math.round(s.param))));
+      bytes.push(Math.max(0, Math.min(127, Math.round(s.velMin ?? 0))));
+      bytes.push(Math.max(0, Math.min(127, Math.round(s.velMax ?? 127))));
+    }
+    const f = state['f0'][bank];
+    bytes.push(f.num & 0x7F);
+    bytes.push(packControlByte(typeToNum(f.type), f.chan - 1, f.mode === 'toggle' ? 1 : 0));
+    bytes.push(BEHAVIOR_IDS[f.behavior] !== undefined ? BEHAVIOR_IDS[f.behavior] : 0);
+    bytes.push(Math.max(0, Math.min(f.behavior === 'random' ? 127 : 100, Math.round(f.param))));
+    bytes.push(Math.max(0, Math.min(127, Math.round(f.velMin ?? 0))));
+    bytes.push(Math.max(0, Math.min(127, Math.round(f.velMax ?? 127))));
+  }
+
+  // shiftActions: 16 bytes, un id numerico de accion por pad.
+  // 0 = none. El mapeo de id de accion (string) a numero debe
+  // coincidir con _action_table del firmware; por ahora el
+  // firmware v1 no interpreta estos ids salvo "ninguno" (0),
+  // se transmiten para que el hardware los tenga disponibles
+  // cuando esa parte del motor se implemente.
+  for(let i = 0; i < 16; i++){
+    const actionId = shiftActions['p'+i] || 'none';
+    bytes.push(SHIFT_ACTION_IDS[actionId] !== undefined ? SHIFT_ACTION_IDS[actionId] : 0);
+  }
+
+  const checksum = crc8(bytes);
+  bytes.push(checksum);
+
+  if(bytes.length !== PRESET_BINARY_SIZE){
+    throw new Error('Preset binario con tamano inesperado: ' + bytes.length + ' (esperado ' + PRESET_BINARY_SIZE + ')');
+  }
+  return bytes;
+}
+
+// Mapeo de id de accion (string, igual a dawActions.id) a numero
+// 0-255 transmitido al firmware. 0 esta reservado para "none".
+const SHIFT_ACTION_IDS = {
+  none: 0, play_stop: 1, record: 2, quantize: 3, quantize_settings: 4,
+  undo: 5, redo: 6, copy: 7, paste: 8, clear: 9, duplicate: 10, save: 11,
+  loop_toggle: 12, metronome: 13, tap_tempo: 14, overdub: 15, capture_midi: 16,
+  follow: 17, new_clip: 18, zoom_selection: 19, semitone_down: 20, semitone_up: 21,
+  octave_down: 22, octave_up: 23, step_undo: 24, step_redo: 25,
+  nudge_left: 26, nudge_right: 27, custom: 28
+};
+
+function sendSysexToDevice(commandByte, payloadBytes){
+  if(!midiOutput){
+    logMsg('No hay salida MIDI seleccionada; no se puede enviar al hardware.', true);
+    return false;
+  }
+  const msg = [0xF0, MANUFACTURER_ID, DEVICE_ID, commandByte, ...payloadBytes, 0xF7];
+  midiOutput.send(msg);
+  return true;
+}
+
+// Cola de espera de respuestas: cada envio que requiere ACK/NACK
+// registra un resolver aqui, y handleIncomingSysex lo resuelve.
+let pendingResponseResolve = null;
+let pendingResponseTimeout = null;
+
+function waitForResponse(timeoutMs = 1500){
+  return new Promise((resolve) => {
+    pendingResponseResolve = resolve;
+    pendingResponseTimeout = setTimeout(() => {
+      pendingResponseResolve = null;
+      resolve({ command: null, timedOut: true });
+    }, timeoutMs);
+  });
+}
+
+function handleIncomingSysex(data){
+  // data: Uint8Array completo, F0...F7
+  if(data[1] !== MANUFACTURER_ID || data[2] !== DEVICE_ID) return; // no es nuestro dispositivo
+  const command = data[3];
+  const payload = data.slice(4, data.length - 1); // sin F0,manuf,device,cmd,F7
+
+  logMsg('SysEx IN: cmd=0x' + command.toString(16) + ' payload=[' + Array.from(payload).join(',') + ']');
+
+  if(pendingResponseResolve){
+    const resolve = pendingResponseResolve;
+    pendingResponseResolve = null;
+    clearTimeout(pendingResponseTimeout);
+    resolve({ command, payload, timedOut: false });
+  }
+}
+
+// ------------------------------------------------------------
+// Flujo completo: PRESET_DATA_BEGIN -> chunks -> PRESET_DATA_END,
+// con reintento simple por chunk si llega NACK, y sin tocar la
+// EEPROM del hardware si algo falla a mitad de camino (eso lo
+// garantiza el propio firmware, no este codigo).
+// ------------------------------------------------------------
+async function saveConfigToDevice(){
+  const statusEl = document.getElementById('device-save-status');
+  const progressWrap = document.getElementById('save-progress-wrap');
+  const progressBar = document.getElementById('save-progress-bar');
+  const progressLabel = document.getElementById('save-progress-label');
+
+  const setStatus = (text, isError) => {
+    if(statusEl){ statusEl.textContent = text; statusEl.style.color = isError ? '#ff6b6b' : 'var(--text-dim)'; }
+  };
+  const setProgress = (pct, label) => {
+    progressBar.style.width = pct + '%';
+    progressLabel.textContent = label;
+  };
+  const endProgress = (ok) => {
+    progressBar.style.width = '100%';
+    progressBar.style.background = ok ? 'var(--accent)' : 'var(--warn)';
+    setTimeout(() => { progressWrap.style.display = 'none'; progressBar.style.background = 'var(--accent)'; }, 2000);
+  };
+
+  if(!midiOutput || !midiInput){
+    setStatus('Conecta el Beato 16 (entrada y salida MIDI) antes de guardar.', true);
+    return;
+  }
+
+  let presetBytes;
+  try{
+    presetBytes = serializePresetBinary();
+  } catch(e){
+    setStatus('Error preparando los datos: ' + e.message, true);
+    logMsg('Error serializando preset: ' + e.message, true);
+    return;
+  }
+
+  progressWrap.style.display = 'block';
+  setProgress(0, 'Iniciando...');
+  setStatus('Enviando configuracion al Beato 16...', false);
+  logMsg('Iniciando guardado (' + presetBytes.length + ' bytes, ' + Math.ceil(presetBytes.length/32) + ' bloques)', true);
+
+  // 1. BEGIN
+  const totalLen = presetBytes.length;
+  logMsg('→ BEGIN (total=' + totalLen + ')', false);
+  sendSysexToDevice(CMD_PRESET_DATA_BEGIN, [totalLen & 0x7F, (totalLen >> 7) & 0x7F]);
+  let resp = await waitForResponse();
+  if(resp.timedOut){ setStatus('Sin respuesta del dispositivo (timeout en BEGIN).', true); endProgress(false); return; }
+  if(resp.command === CMD_NACK){ setStatus('Dispositivo rechazo el inicio (NACK codigo ' + resp.payload[0] + ').', true); endProgress(false); return; }
+  if(resp.command !== CMD_ACK){ setStatus('Respuesta inesperada: 0x' + resp.command.toString(16), true); endProgress(false); return; }
+  logMsg('← ACK (BEGIN ok)', false);
+  setProgress(5, 'Handshake OK, enviando datos...');
+
+  // 2. CHUNKS
+  const CHUNK_SIZE = 32;
+  const totalChunks = Math.ceil(presetBytes.length / CHUNK_SIZE);
+  for(let offset = 0; offset < presetBytes.length; offset += CHUNK_SIZE){
+    const chunkIndex = offset / CHUNK_SIZE;
+    const chunkData = presetBytes.slice(offset, offset + CHUNK_SIZE);
+    // Codifica cada byte como dos nibbles (hi, lo) para que todos los
+    // valores del payload sean 0-15 (siempre < 128, validos en SysEx MIDI).
+    // El firmware decodifica con (hi << 4) | lo.
+    const encodedChunk = [];
+    for(const b of chunkData){ encodedChunk.push((b >> 4) & 0x0F); encodedChunk.push(b & 0x0F); }
+
+    let attempt = 0;
+    let chunkOk = false;
+    while(attempt < 3 && !chunkOk){
+      logMsg('→ CHUNK ' + chunkIndex + '/' + (totalChunks-1) + ' (intento ' + (attempt+1) + ')', false);
+      sendSysexToDevice(CMD_PRESET_DATA_CHUNK, [chunkIndex, ...encodedChunk]);
+      resp = await waitForResponse();
+      if(resp.timedOut){ logMsg('  timeout en chunk ' + chunkIndex, false); attempt++; continue; }
+      if(resp.command === CMD_ACK){ chunkOk = true; logMsg('← ACK chunk ' + chunkIndex, false); }
+      else { logMsg('← NACK/err chunk ' + chunkIndex + ' cmd=0x' + resp.command.toString(16), false); attempt++; }
+    }
+    if(!chunkOk){
+      setStatus('Fallo en bloque ' + chunkIndex + ' tras 3 intentos. El preset anterior no se modifico.', true);
+      logMsg('Guardado abortado en chunk ' + chunkIndex, true);
+      endProgress(false); return;
+    }
+    const pct = Math.round(5 + ((chunkIndex + 1) / totalChunks) * 90);
+    setProgress(pct, 'Bloque ' + (chunkIndex+1) + ' / ' + totalChunks);
+  }
+
+  // 3. END
+  logMsg('→ END', false);
+  setProgress(96, 'Verificando y escribiendo en memoria...');
+  sendSysexToDevice(CMD_PRESET_DATA_END, []);
+  resp = await waitForResponse(3000);
+  if(resp.timedOut){ setStatus('Sin confirmacion final (timeout en END).', true); endProgress(false); return; }
+  if(resp.command === CMD_WRITE_OK){
+    setStatus('Guardado en el Beato 16. Queda en el hardware aunque lo desconectes.', false);
+    logMsg('Preset escrito en EEPROM exitosamente.', true);
+    pendingSaveControls.clear();
+    endProgress(true);
+  } else if(resp.command === CMD_WRITE_FAILED || resp.command === CMD_NACK){
+    setStatus('El firmware no pudo validar el preset (codigo ' + (resp.payload ? resp.payload[0] : '?') + '). No se modifico nada.', true);
+    logMsg('Escritura rechazada por el firmware.', true);
+    endProgress(false);
+  } else {
+    setStatus('Respuesta inesperada al finalizar: 0x' + resp.command.toString(16), true);
+  }
+}
+
+function applyFullConfig(cfg){
+  if(!cfg || !cfg.state) return;
+  Object.keys(cfg.state).forEach(id => {
+    if(!state[id]) return;
+    banks.forEach(b => {
+      state[id][b] = {
+        ...cfg.state[id][b],
+        engine: { value: 0, target: 0, phase: 0, lastStep: 0, retrigActive: false }
+      };
+    });
+  });
+  Object.keys(shiftActions).forEach(id => { shiftActions[id] = 'none'; });
+  Object.keys(cfg.shiftActions || {}).forEach(id => { shiftActions[id] = cfg.shiftActions[id]; });
+  Object.keys(customShiftKeys).forEach(id => delete customShiftKeys[id]);
+  Object.assign(customShiftKeys, cfg.customShiftKeys || {});
+  if(cfg.daw){ currentDaw = cfg.daw; document.getElementById('daw-select').value = currentDaw; }
+  if(selected) selectControl(selected);
+}
+
+
+function isMac(){ return /Mac|iPhone|iPad|iPod/.test(navigator.platform || navigator.userAgent); }
+function shortcutLabel(actionId, dawId){
+  if(actionId === 'none') return '—';
+  const action = dawActions.find(a => a.id === actionId);
+  if(!action) return '—';
+  const sc = action.shortcuts[dawId];
+  if(!sc) return 'sin atajo nativo';
+  const val = isMac() ? sc.mac : sc.win;
+  return val || 'sin atajo nativo';
+}
+
+
+const state = {};
+function ensureState(id){
+  if(!state[id]) state[id] = {};
+  banks.forEach(b => {
+    if(!state[id][b]){
+      const isPad = id.startsWith('p') || id==='c3';
+      // Canales por defecto confirmados con MIDI Monitor en hardware real:
+      // pads/banco (via multiplexor) = canal 3; knobs/fader/shift (via
+      // Arduino directo) = canal 9. Ver Beato16_v2.ino para el detalle
+      // de por que el firmware real no coincide con el .ino compartido.
+      let num = 36, chan = 4; // 1-16 (igual que los DAWs)
+      if(id.startsWith('p')){
+        num = 36 + parseInt(id.slice(1)) + (b==='B'?16:b==='C'?32:0);
+      } else if(id.startsWith('k')){
+        num = 30 + parseInt(id.slice(1)) + (b==='B'?10:b==='C'?20:0);
+        chan = 10;
+      } else if(id.startsWith('f')){
+        num = 34 + (b==='B'?10:b==='C'?20:0);
+        chan = 10;
+      } else if(id==='c3'){
+        num = 63; chan = 9;
+      }
+      state[id][b] = {
+        type: isPad ? 'note' : 'cc',
+        num, chan,
+        mode:'momentary',
+        behavior: isPad ? padBehaviors[0].id : knobBehaviors[0].id,
+        param: 50,
+        velMin: isPad ? 127 : 0,
+        velMax: 127,
+        pcLabel: '',
+        engine: { value:0, target:0, phase:0, lastStep:0 }
+      };
+    }
+  });
+}
+['k0','k1','k2','k3','f0','c3','p0','p1','p2','p3','p4','p5','p6','p7','p8','p9','p10','p11','p12','p13','p14','p15'].forEach(ensureState);
+
+// Snapshot del ruteo MIDI de fabrica, sin el motor de animacion en vivo.
+function snapshotState(){
+  const snap = {};
+  Object.keys(state).forEach(id => {
+    snap[id] = {};
+    banks.forEach(b => {
+      const { engine, ...rest } = state[id][b];
+      snap[id][b] = { ...rest };
+    });
+  });
+  return snap;
+}
+const factoryState = snapshotState();
+
+// Combos de Shift: set global de 16 entradas, igual en banco A, B o C.
+const shiftActions = {};
+for(let i=0;i<16;i++) shiftActions['p'+i] = 'none';
+
+// Tecla capturada por pad cuando shiftActions[id] === 'custom'.
+// Formato: { keyLabel: 'Ctrl+Shift+K', code: 'KeyK', ctrlKey, shiftKey, altKey, metaKey }
+const customShiftKeys = {};
+
+function labelFor(id){
+  if(id.startsWith('k')) return 'Knob ' + (parseInt(id.slice(1))+1);
+  if(id==='c3') return 'Boton shift';
+  if(id.startsWith('f')) return 'Fader';
+  if(id.startsWith('p')) return 'Pad ' + (parseInt(id.slice(1))+1);
+  return id;
+}
+function isPadType(id){ return id.startsWith('p') || id==='c3'; }
+function behaviorsFor(id){ return isPadType(id) ? padBehaviors : knobBehaviors; }
+
+// Texto que muestra cada pad: numero normal, o nombre corto del comando
+// de shift mientras shift esta sostenido (vacio si no tiene nada asignado).
+function shiftShortLabel(padId){
+  const actionId = shiftActions[padId];
+  if(!actionId || actionId === 'none') return '';
+  if(actionId === 'custom'){
+    const captured = customShiftKeys[padId];
+    return captured && captured.label ? captured.label : 'Custom';
+  }
+  const action = dawActions.find(a => a.id === actionId);
+  return action ? (action.shortName || action.name) : '';
+}
+function updatePadLabels(){
+  for(let i=0;i<16;i++){
+    const id = 'p'+i;
+    const el = document.querySelector('.pad[data-id="'+id+'"]');
+    if(!el) continue;
+    if(shiftHeld){
+      el.innerHTML = shiftShortLabel(id);
+    } else {
+      const s = state[id]?.[currentBank];
+      if(s && s.type === 'pc' && s.pcLabel){
+        el.innerHTML = '<span style="font-size:9px;line-height:1.2;display:block;text-align:center;overflow:hidden;max-height:100%;">' + s.pcLabel + '</span>';
+      } else {
+        el.textContent = String(i+1);
+      }
+    }
+  }
+}
+
+function logMsg(text, hl){
+  const log = document.getElementById('log');
+  const p = document.createElement('p');
+  p.innerHTML = hl ? ('<span class="hl">' + text + '</span>') : text;
+  log.appendChild(p);
+  log.scrollTop = log.scrollHeight;
+  while(log.children.length > 40) log.removeChild(log.firstChild);
+}
+
+function sendMidi(id, rawValue){
+  sendMidiFromBank(id, currentBank, rawValue);
+}
+function sendMidiFromBank(id, bank, rawValue){
+  const s = state[id][bank];
+  if(!midiOutput) return;
+  if(s.type === 'pc'){
+    if(rawValue > 0) midiOutput.send([0xC0 | (s.chan - 1), s.num & 0x7F, 0]);
+  } else if(s.type === 'pb'){
+    const bend = Math.max(0, Math.min(127, Math.round(rawValue))) * 128;
+    midiOutput.send([0xE0 | (s.chan - 1), bend & 0x7F, (bend >> 7) & 0x7F]);
+  } else if(s.type === 'note'){
+    if(rawValue > 0){ midiOutput.send([0x90 | (s.chan - 1), s.num, 127]); }
+    else { midiOutput.send([0x80 | (s.chan - 1), s.num, 0]); }
+  } else {
+    midiOutput.send([0xB0 | (s.chan - 1), s.num, Math.max(0, Math.min(127, Math.round(rawValue)))]);
+  }
+}
+
+document.querySelectorAll('.bank-select').forEach(btn => {
+  btn.addEventListener('click', () => {
+    currentBank = btn.dataset.bankTarget;
+    document.querySelectorAll('.bank-select').forEach(c => c.classList.toggle('bank-active', c.dataset.bankTarget===currentBank));
+    if(selected) selectControl(selected);
+    logMsg('Banco activo: ' + currentBank, true);
+  });
+});
+document.querySelectorAll('.bank-select').forEach(c => {
+  c.classList.toggle('bank-active', c.dataset.bankTarget===currentBank);
+});
+
+const dawSelect = document.getElementById('daw-select');
+daws.forEach(d => {
+  const opt = document.createElement('option');
+  opt.value = d.id;
+  opt.textContent = d.name;
+  dawSelect.appendChild(opt);
+});
+dawSelect.value = currentDaw;
+dawSelect.addEventListener('change', () => {
+  currentDaw = dawSelect.value;
+  applyDawPreset(currentDaw);
+});
+
+
+document.getElementById('save-config-btn').addEventListener('click', async () => {
+  const data = JSON.stringify(captureCurrentConfig(), null, 2);
+  if(window.showSaveFilePicker){
+    try{
+      const handle = await window.showSaveFilePicker({
+        suggestedName: 'beato16_config.beato16',
+        types: [{ description: 'Configuracion Beato 16', accept: {'application/json': ['.beato16','.json']} }]
+      });
+      const writable = await handle.createWritable();
+      await writable.write(data);
+      await writable.close();
+      logMsg('Configuracion guardada: ' + handle.name, true);
+    } catch(e){ if(e.name !== 'AbortError') logMsg('Error al guardar: ' + e.message, true); }
+  } else {
+    // Fallback: descarga directa para browsers sin File System Access API
+    const blob = new Blob([data], {type:'application/json'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'beato16_config.beato16';
+    a.click();
+    logMsg('Configuracion descargada (guarda el archivo en un lugar seguro).', true);
+  }
+});
+
+document.getElementById('load-config-btn').addEventListener('click', async () => {
+  if(window.showOpenFilePicker){
+    try{
+      const [handle] = await window.showOpenFilePicker({
+        types: [{ description: 'Configuracion Beato 16', accept: {'application/json': ['.beato16','.json']} }]
+      });
+      const file = await handle.getFile();
+      const text = await file.text();
+      const cfg = JSON.parse(text);
+      applyFullConfig(cfg);
+      logMsg('Configuracion cargada: ' + handle.name, true);
+    } catch(e){ if(e.name !== 'AbortError') logMsg('Error al abrir: ' + e.message, true); }
+  } else {
+    const input = document.createElement('input');
+    input.type = 'file'; input.accept = '.beato16,.json';
+    input.onchange = async () => {
+      try{
+        const text = await input.files[0].text();
+        applyFullConfig(JSON.parse(text));
+        logMsg('Configuracion cargada desde archivo.', true);
+      } catch(e){ logMsg('Error al leer archivo: ' + e.message, true); }
+    };
+    input.click();
+  }
+});
+
+document.getElementById('export-json-btn').addEventListener('click', () => {
+  const data = exportConfigForAbleton();
+  downloadJson('beato16_config.json', data);
+  logMsg('Configuracion exportada: beato16_config.json', true);
+});
+
+document.getElementById('save-to-device-btn').addEventListener('click', () => {
+  saveConfigToDevice();
+});
+
+function midiPanic(){
+  // All Notes Off (CC 123) en todos los canales 1-16
+  if(midiOutput){
+    for(let ch = 0; ch < 16; ch++){
+      midiOutput.send([0xB0 | ch, 123, 0]); // All Notes Off
+      midiOutput.send([0xB0 | ch, 120, 0]); // All Sound Off (por si acaso)
+    }
+  }
+  // Apaga todos los pads visualmente en el editor
+  ['p0','p1','p2','p3','p4','p5','p6','p7','p8','p9','p10','p11','p12','p13','p14','p15'].forEach(id => setPadLit(id, false));
+  logMsg('PANIC: todas las notas apagadas.', true);
+}
+
+document.getElementById('factory-reset-btn').addEventListener('click', () => {
+  if(!confirm('¿Restablecer todos los valores de fábrica?\n\nEsto borrará toda tu configuración actual.\nEsta acción no se puede deshacer.')) return;
+
+  midiPanic();
+  localStorage.removeItem('beato16-state');
+  localStorage.removeItem('beato16-shiftActions');
+  localStorage.removeItem('beato16-version');
+  const statusEl = document.getElementById('device-save-status');
+  if(statusEl){ statusEl.textContent = ''; statusEl.style.color = 'var(--text-dim)'; }
+  document.getElementById('save-progress-wrap') && (document.getElementById('save-progress-wrap').style.display = 'none');
+  currentDaw = 'ableton';
+  document.getElementById('daw-select').value = 'ableton';
+  applyDawPreset('ableton');
+  selected = null;
+  document.getElementById('empty-state').style.display = 'block';
+  document.getElementById('config-content').style.display = 'none';
+  updatePadLabels();
+  logMsg('Valores de fábrica restablecidos.', true);
+});
+
+function selectControl(el){
+  if(selected) selected.classList.remove('selected');
+  selected = el;
+  el.classList.add('selected');
+  const id = el.dataset.id;
+  const s = state[id][currentBank];
+
+  document.getElementById('empty-state').style.display = 'none';
+  document.getElementById('config-content').style.display = 'block';
+  document.getElementById('control-name').textContent = labelFor(id);
+  document.getElementById('bank-tag').textContent = currentBank;
+  // Opciones de tipo según control
+  const msgTypeEl = document.getElementById('msg-type');
+  const existingPb = msgTypeEl.querySelector('option[value="pb"]');
+  const existingPc = msgTypeEl.querySelector('option[value="pc"]');
+  const isFader = id === 'f0';
+  const isPadCtrl = id.startsWith('p');
+  // Pitch Bend: solo fader
+  if(isFader){ if(!existingPb){ const o=document.createElement('option'); o.value='pb'; o.textContent='Pitch Bend'; msgTypeEl.appendChild(o); } }
+  else { if(existingPb) existingPb.remove(); if(s.type==='pb') s.type='cc'; }
+  // PC: pads (preset por golpe) + knobs/fader (selector de patch 0-127)
+  // No aplica solo para controles que no existen — por ahora disponible en todos
+  if(!existingPc){ const o=document.createElement('option'); o.value='pc'; o.textContent='PC'; msgTypeEl.insertBefore(o, msgTypeEl.querySelector('option[value="pb"]') || null); }
+
+  document.getElementById('msg-type').value = s.type;
+  document.getElementById('msg-num').value = s.num;
+  document.getElementById('msg-chan').value = s.chan;
+  const numLabels = { note: 'Nota', cc: 'CC', pc: 'Programa', pb: '—' };
+  document.getElementById('num-label').textContent = numLabels[s.type] || 'CC';
+  document.getElementById('msg-num').style.visibility = s.type === 'pb' ? 'hidden' : '';
+
+  const isPad = isPadType(id);
+  document.getElementById('mode-row').style.display = (isPad && s.type !== 'pc' && s.type !== 'pb') ? 'flex' : 'none';
+  if(isPad) document.getElementById('msg-mode').value = s.mode;
+
+  // Campo nombre de preset (solo pads con tipo PC)
+  const showPcLabel = isPad && s.type === 'pc';
+  document.getElementById('pc-label-row').style.display = showPcLabel ? 'block' : 'none';
+  if(showPcLabel) document.getElementById('pc-label-input').value = s.pcLabel || '';
+
+  // Velocity / Rango CC
+  const isEncoder = id.startsWith('k') || id.startsWith('f');
+  const hidePadVel = id.startsWith('p') && (s.type === 'pc' || s.type === 'pb');
+  document.getElementById('vel-block').style.display = hidePadVel ? 'none' : 'block';
+  document.getElementById('vel-max').value = s.velMax ?? (isEncoder ? 127 : 127);
+  document.getElementById('vel-min').value = s.velMin ?? (isEncoder ? 0 : 127);
+  if(hidePadVel){
+    // PC/PB en pads: sin velocity
+  } else if(id.startsWith('p')){
+    if(s.velRandom === undefined) s.velRandom = false;
+    document.getElementById('vel-title').textContent = 'Fuerza del golpe (velocity)';
+    document.getElementById('vel-sliders-mode').style.display = 'none';
+    document.getElementById('vel-numbers-mode').style.display = 'flex';
+    document.getElementById('vel-random-btn').style.display = '';
+    document.getElementById('apply-vel-label').textContent = 'Aplicar a todos los pads';
+    updateVelRandomUI(s.velRandom);
+  } else if(s.behavior === 'random'){
+    document.getElementById('vel-title').textContent = 'Configuración del salto';
+    document.getElementById('vel-sliders-mode').style.display = 'block';
+    document.getElementById('vel-numbers-mode').style.display = 'none';
+    const vMin = s.velMin ?? 0;
+    const vMax = s.velMax ?? 0;
+    document.getElementById('vel-min-slider').value = vMin;
+    document.getElementById('vel-min-slider-value').textContent = vMin;
+    document.getElementById('vel-max-slider').value = vMax;
+    document.getElementById('vel-max-slider-value').textContent = vMax;
+    document.getElementById('vel-min').value = vMin;
+    document.getElementById('vel-max').value = vMax;
+    document.getElementById('apply-vel-label').textContent = 'Aplicar a todos los knobs';
+  } else {
+    document.getElementById('vel-title').textContent = 'Rango de salida (CC)';
+    document.getElementById('vel-sliders-mode').style.display = 'none';
+    document.getElementById('vel-numbers-mode').style.display = 'flex';
+    document.getElementById('vel-random-btn').style.display = 'none';
+    document.getElementById('vel-min-field').style.display = 'flex';
+    document.getElementById('vel-min-field').querySelector('label').textContent = 'Mínimo';
+    document.getElementById('vel-max-label').textContent = 'Máximo';
+    document.getElementById('apply-vel-label').textContent = id.startsWith('k') ? 'Aplicar a todos los knobs' : 'Aplicar a todos los knobs y fader';
+  }
+
+  updateConfigPanelVisibility(id);
+  if(id.startsWith('p')) renderShiftConfig(id);
+  renderBehaviors(id);
+}
+
+// Pad + shift sostenido: solo "Funciones" (oculta Ruteo MIDI/Comportamiento).
+// Knob/fader + shift sostenido: Ruteo MIDI normal sin cambios (modo fino
+// pendiente: requiere firmware con valores relativos/delta, no posicion
+// absoluta como el potenciometro actual del Beato 16).
+// Nada de shift sostenido: Ruteo MIDI/Comportamiento normal, sin Funciones.
+function updateConfigPanelVisibility(id){
+  const isPad = id.startsWith('p');
+  const midiBlock = document.getElementById('midi-routing-block');
+  const shiftBlock = document.getElementById('shift-block');
+
+  if(isPad && (shiftHeld || shiftConfigSticky)){
+    midiBlock.style.display = 'none';
+    shiftBlock.style.display = 'block';
+  } else {
+    midiBlock.style.display = 'block';
+    shiftBlock.style.display = 'none';
+  }
+}
+
+function renderShiftConfig(id){
+  const select = document.getElementById('shift-action-select');
+  select.innerHTML = '';
+  const currentAction = shiftActions[id] || 'none';
+  const visibleActions = dawActions.filter(a =>
+    a.id === 'none' || a.id === 'custom' || a.id === currentAction || shortcutLabel(a.id, currentDaw) !== 'sin atajo nativo'
+  );
+  let matchIndex = 0;
+  visibleActions.forEach((a, idx) => {
+    const opt = document.createElement('option');
+    opt.value = a.id;
+    opt.textContent = a.isCustom || a.id === 'none' ? a.name : (a.name + ' (' + shortcutLabel(a.id, currentDaw) + ')');
+    select.appendChild(opt);
+    if(a.id === currentAction) matchIndex = idx;
+  });
+  // selectedIndex es mas confiable que .value tras reconstruir <option>.
+  select.selectedIndex = matchIndex;
+
+  const customRow = document.getElementById('custom-key-row');
+  if(currentAction === 'custom'){
+    customRow.style.display = 'flex';
+    const captured = customShiftKeys[id];
+    document.getElementById('custom-key-label').textContent = captured ? captured.keyLabel : 'Sin tecla asignada';
+    document.getElementById('custom-key-name').value = captured && captured.label ? captured.label : '';
+    document.getElementById('shift-shortcut-preview').textContent = '';
+  } else {
+    customRow.style.display = 'none';
+    document.getElementById('shift-shortcut-preview').textContent =
+      currentAction !== 'none'
+        ? ('Atajo nativo en ' + daws.find(d=>d.id===currentDaw).name + ': ' + shortcutLabel(currentAction, currentDaw))
+        : '';
+  }
+}
+
+function renderBehaviors(id){
+  const s = state[id][currentBank];
+  const list = document.getElementById('behavior-list');
+  list.innerHTML = '';
+  behaviorsFor(id).forEach(b => {
+    const btn = document.createElement('button');
+    btn.className = 'behavior-btn' + (b.id === s.behavior ? ' active' : '');
+    if(b.info) btn.dataset.info = b.info;
+    btn.innerHTML = '<div class="behavior-icon">'+b.icon+'</div><div><p class="behavior-name">'+b.name+'</p><p class="behavior-desc">'+b.desc+'</p></div>';
+    btn.onclick = () => {
+      s.behavior = b.id;
+      s.engine = { value: s.engine.target, target: s.engine.target, phase: 0, lastStep: 0, retrigActive: false };
+      // Reset velMin/velMax al cambiar de comportamiento
+      if(id.startsWith('k') || id.startsWith('f')){
+        if(b.id === 'random'){
+          s.velMin = 0;  // velocidad del salto: 0 = solo al mover pot
+          s.velMax = 0;  // suavizado: 0 = off
+        } else {
+          s.velMin = 0;   // CC min
+          s.velMax = 127; // CC max
+        }
+      }
+      renderBehaviors(id);
+      updateParamUI(id);
+      if(selected) selectControl(selected); // refresca vel-block con nuevas etiquetas
+      logMsg('Comportamiento de ' + labelFor(id) + ' (banco ' + currentBank + '): ' + b.name, true);
+    };
+    list.appendChild(btn);
+  });
+  updateParamUI(id);
+}
+
+function updateParamUI(id){
+  const s = state[id][currentBank];
+  const block = document.getElementById('param-block');
+  if(s.behavior === 'directo'){
+    block.style.display = 'none';
+  } else {
+    block.style.display = 'block';
+    document.getElementById('param-label').textContent = paramLabels[s.behavior] || 'Cantidad';
+    const isRandomEncoder = s.behavior === 'random' && (selected && (selected.dataset.id.startsWith('k') || selected.dataset.id.startsWith('f')));
+    document.getElementById('param-slider').max = isRandomEncoder ? 127 : 100;
+    document.getElementById('param-slider').value = s.param;
+    document.getElementById('param-value').textContent = s.param;
+  }
+}
+
+document.querySelectorAll('.knob, .pad, .fader-track, .cherry').forEach(el => {
+  el.addEventListener('click', () => {
+    if(el.classList.contains('pad') && shiftHeld) enterShiftStickyMode(el);
+    selectControl(el);
+  });
+});
+
+document.getElementById('msg-type').addEventListener('change', e => {
+  const s = state[selected.dataset.id][currentBank];
+  s.type = e.target.value;
+  const numLabels = { note: 'Nota', cc: 'CC', pc: 'Programa', pb: '—' };
+  document.getElementById('num-label').textContent = numLabels[s.type] || 'CC';
+  document.getElementById('msg-num').style.visibility = s.type === 'pb' ? 'hidden' : '';
+  const isPadSel = selected.dataset.id.startsWith('p');
+  document.getElementById('mode-row').style.display = (isPadSel && s.type !== 'pc' && s.type !== 'pb') ? 'flex' : 'none';
+  const showPcLabel = isPadSel && s.type === 'pc';
+  document.getElementById('pc-label-row').style.display = showPcLabel ? 'block' : 'none';
+  if(showPcLabel) document.getElementById('pc-label-input').value = s.pcLabel || '';
+  updatePadLabels();
+});
+document.getElementById('msg-num').addEventListener('input', e => {
+  state[selected.dataset.id][currentBank].num = parseInt(e.target.value || 0);
+});
+document.getElementById('msg-chan').addEventListener('input', e => {
+  state[selected.dataset.id][currentBank].chan = Math.max(1, Math.min(16, parseInt(e.target.value) || 1));
+});
+document.getElementById('msg-mode').addEventListener('change', e => {
+  state[selected.dataset.id][currentBank].mode = e.target.value;
+});
+
+
+document.getElementById('param-slider').addEventListener('input', e => {
+  const s = state[selected.dataset.id][currentBank];
+  s.param = parseInt(e.target.value);
+  document.getElementById('param-value').textContent = s.param;
+});
+
+// Velocity listeners
+function clampVel(v){ return Math.max(0, Math.min(127, parseInt(v) || 0)); }
+
+function updateVelRandomUI(isRandom){
+  document.getElementById('vel-min-field').style.display = isRandom ? 'flex' : 'none';
+  document.getElementById('vel-max-label').textContent = isRandom ? 'Máximo' : 'Fuerza';
+  document.getElementById('vel-random-btn').textContent = 'Aleatorio: ' + (isRandom ? 'On' : 'Off');
+  document.getElementById('vel-random-btn').style.borderColor = isRandom ? 'var(--accent)' : 'var(--line)';
+  document.getElementById('vel-random-btn').style.color = isRandom ? 'var(--accent)' : 'var(--text-dim)';
+}
+
+document.getElementById('vel-random-btn').addEventListener('click', () => {
+  if(!selected) return;
+  const s = state[selected.dataset.id][currentBank];
+  s.velRandom = !s.velRandom;
+  if(!s.velRandom){ s.velMin = s.velMax; document.getElementById('vel-min').value = s.velMin; }
+  updateVelRandomUI(s.velRandom);
+});
+document.getElementById('pc-label-input').addEventListener('input', e => {
+  if(!selected) return;
+  const s = state[selected.dataset.id][currentBank];
+  s.pcLabel = e.target.value;
+  updatePadLabels();
+});
+document.getElementById('vel-min-slider').addEventListener('input', e => {
+  if(!selected) return;
+  const s = state[selected.dataset.id][currentBank];
+  s.velMin = parseInt(e.target.value);
+  document.getElementById('vel-min-slider-value').textContent = s.velMin;
+  document.getElementById('vel-min').value = s.velMin;
+});
+document.getElementById('vel-max-slider').addEventListener('input', e => {
+  if(!selected) return;
+  const s = state[selected.dataset.id][currentBank];
+  s.velMax = parseInt(e.target.value);
+  document.getElementById('vel-max-slider-value').textContent = s.velMax;
+  document.getElementById('vel-max').value = s.velMax;
+});
+document.getElementById('vel-min').addEventListener('blur', e => {
+  if(!selected) return;
+  const s = state[selected.dataset.id][currentBank];
+  s.velMin = clampVel(e.target.value);
+  if(s.velMin > s.velMax){ s.velMin = s.velMax; }
+  e.target.value = s.velMin;
+});
+document.getElementById('vel-max').addEventListener('blur', e => {
+  if(!selected) return;
+  const id = selected.dataset.id;
+  const s = state[id][currentBank];
+  s.velMax = clampVel(e.target.value);
+  if(s.velMax < s.velMin){ s.velMax = s.velMin; }
+  // Solo en pads sin aleatorio: fuerza min=max (velocidad fija)
+  if(id.startsWith('p') && !s.velRandom) s.velMin = s.velMax;
+  e.target.value = s.velMax;
+  document.getElementById('vel-min').value = s.velMin;
+});
+document.getElementById('apply-vel-all-btn').addEventListener('click', () => {
+  if(!selected) return;
+  const id = selected.dataset.id;
+  const src = state[id][currentBank];
+  const { velMin, velMax, velRandom } = src;
+  const isPadSel = id.startsWith('p');
+  const targets = isPadSel
+    ? Object.keys(state).filter(k => k.startsWith('p'))
+    : Object.keys(state).filter(k => k.startsWith('k') || k.startsWith('f'));
+  targets.forEach(tid => banks.forEach(b => {
+    state[tid][b].velMin = velMin;
+    state[tid][b].velMax = velMax;
+    if(isPadSel) state[tid][b].velRandom = velRandom;
+  }));
+  logMsg('Rango aplicado (min:' + velMin + ' max:' + velMax + ')', true);
+});
+document.getElementById('shift-action-select').addEventListener('change', e => {
+  const id = selected.dataset.id;
+  shiftActions[id] = e.target.value;
+  renderShiftConfig(id);
+  updatePadLabels();
+  logMsg(labelFor(id) + ' + Shift (todos los bancos) -> ' + dawActions.find(a=>a.id===shiftActions[id]).name, true);
+});
+
+// Captura de tecla personalizada: acepta CUALQUIER tecla del teclado,
+// sin lista blanca. Se activa con un click y se resuelve con el
+// siguiente keydown real del usuario.
+let capturingKeyForPad = null;
+document.getElementById('capture-key-btn').addEventListener('click', () => {
+  capturingKeyForPad = selected.dataset.id;
+  document.getElementById('custom-key-label').textContent = 'Presiona una tecla...';
+});
+document.addEventListener('keydown', e => {
+  if(!capturingKeyForPad) return;
+  e.preventDefault();
+  // Ignora la pulsacion de un modificador solo (esperamos a la tecla final).
+  if(['Control','Shift','Alt','Meta'].includes(e.key)) return;
+
+  const parts = [];
+  if(e.ctrlKey) parts.push('Ctrl');
+  if(e.metaKey) parts.push('Cmd');
+  if(e.altKey) parts.push('Alt');
+  if(e.shiftKey) parts.push('Shift');
+  parts.push(e.key.length === 1 ? e.key.toUpperCase() : e.key);
+  const keyLabel = parts.join('+');
+
+  const existingLabel = customShiftKeys[capturingKeyForPad] ? customShiftKeys[capturingKeyForPad].label : '';
+  customShiftKeys[capturingKeyForPad] = {
+    keyLabel, code: e.code, label: existingLabel,
+    ctrlKey: e.ctrlKey, shiftKey: e.shiftKey, altKey: e.altKey, metaKey: e.metaKey
+  };
+  document.getElementById('custom-key-label').textContent = keyLabel;
+  logMsg(labelFor(capturingKeyForPad) + ' + Shift -> tecla personalizada: ' + keyLabel, true);
+  capturingKeyForPad = null;
+});
+
+document.getElementById('custom-key-name').addEventListener('input', e => {
+  const id = selected.dataset.id;
+  if(!customShiftKeys[id]) customShiftKeys[id] = { keyLabel:'', code:'', label:'' };
+  customShiftKeys[id].label = e.target.value;
+  updatePadLabels();
+});
+
+function setKnobVisual(id, value){
+  const el = document.querySelector('.knob[data-id="'+id+'"]');
+  if(!el) return;
+  const angle = -135 + (value/127) * 270;
+  el.style.setProperty('--angle', angle + 'deg');
+  if(!el.dataset.styled){
+    const styleTag = document.createElement('style');
+    styleTag.textContent = '.knob[data-id="'+id+'"]::after{ transform: translateX(-50%) rotate(var(--angle, 0deg)); }';
+    document.head.appendChild(styleTag);
+    el.dataset.styled = '1';
+  }
+}
+
+function setPadLit(id, on){
+  const el = document.querySelector('.pad[data-id="'+id+'"], .cherry[data-id="'+id+'"]');
+  if(!el) return;
+  el.classList.toggle('lit', on);
+}
+
+function setFaderHeight(pct){
+  document.getElementById('fader-fill').style.height = pct + '%';
+}
+
+// Controles cuyo comportamiento fue cambiado en el HTML pero aun no guardado en el hardware.
+// Mientras esten aqui, el HTML ignora los valores MIDI entrantes del hardware para ese
+// control (evita que un knob en oscilacion siga moviendose visualmente despues de
+// que el usuario selecciono "Directo" en el editor).
+const pendingSaveControls = new Set();
+
+// Timestamp hasta el que la seleccion de panel esta bloqueada por un note-on de pad.
+// Evita que los CC continuos de un knob oscilante roben el foco del panel.
+let selectionLockUntil = 0;
+
+// Interceptor de teclado activo mientras shift del Beato 16 esta sostenido.
+// Evita que los atajos que ejecuta el Arduino (Space, Cmd+U, etc.) afecten
+// la pagina HTML mientras el usuario solo quiere ver la config del pad.
+let _shiftKeyBlock = null;
+
+// Mapeo real del Beato 16 (verificado con hardware fisico).
+// Preset de fabrica: bancoA=CC30-34/nota36-51, bancoB=CC40-44/nota52-67, bancoC=CC50-54/nota68-83.
+// El HTML detecta el banco activo a partir del rango del numero de nota/CC recibido,
+// sin depender de mensajes especiales de los botones de banco del hardware.
+// Notas 120-123: reservadas para cuando el firmware mande senales de banco/shift.
+// Se usan notas fuera del rango de pads (max=83 banco C) para evitar colisiones.
+const physicalNoteArduino = { 120:'c0', 121:'c1', 122:'c2', 123:'c3' };
+
+function switchBankIfNeeded(bank){
+  if(bank !== currentBank){
+    document.querySelector('.bank-select[data-bank-target="'+bank+'"]').click();
+  }
+}
+
+function processIncoming(rawType, rawNum, rawVal){
+  let originId = null;
+  let originBank = currentBank;
+
+  if(rawType === 'cc'){
+    // Botones banco/shift: CC 116=A, 117=B, 118=C, 119=Shift
+    // Se usa CC en vez de Note para no activar celdas del drum rack de Ableton.
+    if(rawNum >= 116 && rawNum <= 119){
+      const idMap = {116:'c0', 117:'c1', 118:'c2', 119:'c3'};
+      originId = idMap[rawNum];
+    }
+    // CC 100-115: shift+pad indicator (firmware lo envia para que el editor
+    // sepa cual pad fue tocado en modo shift, sin enviar notes que disparen drums).
+    else if(rawNum >= 100 && rawNum <= 115 && rawVal > 0){
+      const padId = 'p' + (rawNum - 100);
+      const padEl = document.querySelector('.pad[data-id="'+padId+'"]');
+      if(padEl){
+        _padDuringShift = true;
+        enterShiftStickyMode(padEl);
+        selectControl(padEl);
+      }
+      return;
+    }
+    // CC 80-84: encoder tocado físicamente en modo oscila/inercia (señal interna del firmware).
+    else if(rawNum >= 80 && rawNum <= 84){
+      const ids = ['k0','k1','k2','k3','f0'];
+      const el = document.querySelector('[data-id="'+ids[rawNum-80]+'"]');
+      if(el) selectControl(el);
+      return;
+    }
+    // Banco A: CC 30-34  |  Banco B: CC 40-44  |  Banco C: CC 50-54
+    // Los knobs/fader NO cambian currentBank — solo registran el evento en
+    // su banco de origen. El usuario controla el banco visible manualmente.
+    else if(rawNum >= 30 && rawNum <= 34){
+      const map = {30:'k0',31:'k1',32:'k2',33:'k3',34:'f0'};
+      originId = map[rawNum]; originBank = 'A';
+    } else if(rawNum >= 40 && rawNum <= 44){
+      const map = {40:'k0',41:'k1',42:'k2',43:'k3',44:'f0'};
+      originId = map[rawNum]; originBank = 'B';
+    } else if(rawNum >= 50 && rawNum <= 54){
+      const map = {50:'k0',51:'k1',52:'k2',53:'k3',54:'f0'};
+      originId = map[rawNum]; originBank = 'C';
+    }
+  } else if(rawType === 'note'){
+    if(physicalNoteArduino[rawNum] !== undefined){
+      originId = physicalNoteArduino[rawNum]; originBank = currentBank;
+    } else if(rawNum >= 36 && rawNum <= 51){
+      originId = 'p' + (rawNum - 36); originBank = 'A';
+    } else if(rawNum >= 52 && rawNum <= 67){
+      originId = 'p' + (rawNum - 52); originBank = 'B';
+    } else if(rawNum >= 68 && rawNum <= 83){
+      originId = 'p' + (rawNum - 68); originBank = 'C';
+    }
+  }
+
+  if(!originId) return;
+
+  // c0/c1/c2 cambian de banco; no tienen entrada en `state`.
+  if((originId==='c0' || originId==='c1' || originId==='c2')){
+    if(rawVal > 0){
+      const bankMap = {c0:'A', c1:'B', c2:'C'};
+      const targetBank = bankMap[originId];
+      document.querySelector('.bank-select[data-bank-target="'+targetBank+'"]').click();
+    }
+    return;
+  }
+
+  // Shift (c3): modificador momentaneo, combos globales via `shiftActions`.
+  if(originId === 'c3'){
+    shiftHeld = rawVal > 0;
+    if(shiftHeld){
+      _padDuringShift = false; // nuevo ciclo de shift
+    } else {
+      // Shift soltado sin pad → salir del modo shift-config
+      if(!_padDuringShift && shiftConfigSticky){
+        exitShiftStickyMode();
+        if(selected) updateConfigPanelVisibility(selected.dataset.id);
+      }
+      _padDuringShift = false;
+    }
+    const shEl = document.querySelector('.cherry[data-id="c3"]');
+    if(shEl) shEl.classList.toggle('shift-active', shiftHeld);
+    document.querySelectorAll('.pad').forEach(p => p.classList.toggle('shift-armed', shiftHeld));
+    updatePadLabels();
+    if(selected) updateConfigPanelVisibility(selected.dataset.id);
+    logMsg('Shift ' + (shiftHeld ? 'presionado' : 'liberado'), true);
+    // Bloquea atajos de teclado del navegador mientras shift esta armado.
+    if(shiftHeld && !_shiftKeyBlock){
+      _shiftKeyBlock = e => e.preventDefault();
+      window.addEventListener('keydown', _shiftKeyBlock, true);
+    } else if(!shiftHeld && _shiftKeyBlock){
+      window.removeEventListener('keydown', _shiftKeyBlock, true);
+      _shiftKeyBlock = null;
+    }
+    return;
+  }
+
+  if(shiftHeld && originId.startsWith('p')){
+    // Sincroniza el editor con el pad tocado fisicamente (solo si el banco coincide).
+    if(originBank === currentBank){
+      const padEl = document.querySelector('.pad[data-id="'+originId+'"]');
+      if(padEl && selected !== padEl) selectControl(padEl);
+    }
+    const action = shiftActions[originId];
+    if(action && action !== 'none'){
+      if(rawVal > 0) triggerShiftAction(originId, action);
+      return;
+    }
+    // Pad sin shiftAction asignado: cae al comportamiento MIDI normal de abajo.
+  }
+
+  // Auto-selecciona el control en el panel si corresponde al banco visible.
+  if(originBank === currentBank){
+    const originEl = document.querySelector('[data-id="'+originId+'"]');
+    if(originEl && selected !== originEl){
+      const originBehavior = state[originId]?.[currentBank]?.behavior;
+      if(originBehavior !== 'oscila'){
+        // Control normal: siempre auto-selecciona al recibir MIDI.
+        selectControl(originEl);
+      } else {
+        // Oscila: detecta movimiento físico por tendencia direccional.
+        // La oscilación sube y baja (los deltas cambian de signo cada ~0.5s).
+        // Mover el knob físicamente produce 2+ deltas consecutivos en la misma dirección.
+        const prevVal = lastIncomingVal[originId];
+        const currentDelta = prevVal !== undefined ? rawVal - prevVal : 0;
+        const prevDelta = lastIncomingDelta[originId] || 0;
+        const isPhysical = Math.abs(currentDelta) > 1 && Math.abs(prevDelta) > 1
+                        && Math.sign(currentDelta) === Math.sign(prevDelta);
+        if(isPhysical) selectControl(originEl);
+        lastIncomingDelta[originId] = currentDelta;
+      }
+    }
+  }
+  lastIncomingVal[originId] = rawVal;
+
+  // Agrupa por type+num+chan dentro del banco de origen.
+  const originState = state[originId][originBank];
+  const groupIds = Object.keys(state).filter(otherId => {
+    const st = state[otherId][originBank];
+    return st && st.type === originState.type && st.num === originState.num && st.chan === originState.chan;
+  });
+
+  groupIds.forEach(id => applyControlEvent(id, rawVal, originBank));
+}
+
+// Estado momentaneo de la tecla shift fisica.
+let shiftHeld = false;
+let shiftConfigSticky = false;
+let _padDuringShift = false;
+let _stickyPadEl = null; // pad actualmente en modo shift-sticky
+
+function enterShiftStickyMode(padEl){
+  exitShiftStickyMode();
+  shiftConfigSticky = true;
+  _stickyPadEl = padEl;
+  padEl.classList.add('shift-sticky', 'shift-blinking');
+  const shEl = document.querySelector('.cherry[data-id="c3"]');
+  if(shEl) shEl.classList.add('shift-sticky-active', 'shift-blinking');
+}
+
+function exitShiftStickyMode(){
+  shiftConfigSticky = false;
+  if(_stickyPadEl){
+    _stickyPadEl.classList.remove('shift-sticky', 'shift-blinking');
+    _stickyPadEl = null;
+  }
+  const shEl = document.querySelector('.cherry[data-id="c3"]');
+  if(shEl) shEl.classList.remove('shift-sticky-active', 'shift-blinking');
+}
+
+function triggerShiftAction(padId, actionId){
+  const action = dawActions.find(a => a.id === actionId);
+  const captured = customShiftKeys[padId];
+  const label = actionId === 'custom'
+    ? (captured ? captured.keyLabel : 'sin tecla asignada')
+    : shortcutLabel(actionId, currentDaw);
+  const actionName = actionId === 'custom' && captured && captured.label ? captured.label : action.name;
+  const padEl = document.querySelector('.pad[data-id="'+padId+'"]');
+  if(padEl){
+    padEl.classList.add('shift-fired');
+    setTimeout(() => padEl.classList.remove('shift-fired'), 150);
+  }
+  // El host nativo (VST/AU, app de escritorio o movil) simula la tecla real.
+  logMsg('SHIFT + ' + labelFor(padId) + ' -> [' + daws.find(d=>d.id===currentDaw).name + '] ' + actionName + ' (' + label + ')', true);
+}
+
+function applyControlEvent(id, rawVal, bank){
+  if(!bank) bank = currentBank;
+  const s = state[id][bank];
+  const isVisible = bank === currentBank;
+
+  if(id.startsWith('k') || id.startsWith('f')){
+    let outVal = rawVal;
+    switch(s.behavior){
+      case 'directo': outVal = rawVal; break;
+      case 'espejo': outVal = 127 - rawVal; break;
+      case 'inercia':
+        s.engine.target = rawVal;
+        outVal = rawVal;
+        break;
+      case 'random':
+        outVal = Math.max(0, Math.min(127, rawVal + (Math.random()-0.5)*2*s.param));
+        break;
+      case 'oscila':
+        s.engine.target = rawVal;
+        outVal = rawVal;
+        break;
+    }
+    if(isVisible){
+      if(id.startsWith('k')) setKnobVisual(id, outVal);
+      if(id.startsWith('f')) setFaderHeight((outVal/127)*100);
+    }
+    sendMidiFromBank(id, bank, outVal);
+    logMsg(labelFor(id)+' ('+s.behavior+') banco'+bank+' -> '+(s.type==='cc'?'CC'+s.num:'Note'+s.num)+' val='+Math.round(outVal));
+  } else {
+    const isOn = rawVal > 0;
+
+    switch(s.behavior){
+      case 'directo':
+        if(isVisible) setPadLit(id, isOn);
+        sendMidiFromBank(id, bank, isOn ? 127 : 0);
+        break;
+      case 'retrigger':
+        if(isVisible) setPadLit(id, isOn);
+        if(isOn){
+          s.engine.retrigActive = true;
+        } else {
+          s.engine.retrigActive = false;
+          sendMidiFromBank(id, bank, 0);
+        }
+        break;
+      case 'rafaga':
+        if(isOn){
+          if(isVisible) setPadLit(id, true);
+          for(let i=0;i<3;i++){
+            setTimeout(() => {
+              if(Math.random() < 0.7) sendMidiFromBank(id, bank, 127);
+            }, i*80);
+          }
+          if(isVisible) setTimeout(() => setPadLit(id,false), 200);
+        }
+        break;
+    }
+    logMsg(labelFor(id)+' ('+s.behavior+') -> '+(isOn?'ON':'OFF'));
+  }
+}
+
+
+
+let lastTime = performance.now();
+function animate(now){
+  const dt = Math.min(0.05, (now-lastTime)/1000);
+  lastTime = now;
+
+  ['k0','k1','k2','k3','f0'].forEach(id => {
+    ['A','B','C'].forEach(bank => {
+      const s = state[id][bank];
+      let outVal = null;
+      if(s.behavior === 'inercia'){
+        const speed = 0.5 + (s.param/100)*9.5;
+        s.engine.value += (s.engine.target - s.engine.value) * Math.min(1, speed*dt);
+        if(Math.abs(s.engine.value - s.engine.target) > 0.4) outVal = s.engine.value;
+      } else if(s.behavior === 'oscila'){
+        const speed = 0.2 + (s.param/100)*4;
+        s.engine.phase += dt * speed;
+        const range = (s.engine.target / 127) * 63;
+        const center = 64;
+        outVal = Math.max(0, Math.min(127, center + Math.sin(s.engine.phase)*range));
+      }
+      if(outVal !== null){
+        // Enviar MIDI siempre, visual solo si el banco está activo.
+        sendMidiFromBank(id, bank, outVal);
+        if(bank === currentBank){
+          if(id.startsWith('k')) setKnobVisual(id, outVal);
+          if(id.startsWith('f')) setFaderHeight((outVal/127)*100);
+        }
+      }
+    });
+  });
+
+  for(let i=0;i<16;i++){
+    const id = 'p'+i;
+    ['A','B','C'].forEach(bank => {
+      const s = state[id][bank];
+      if(s.behavior === 'retrigger' && s.engine.retrigActive){
+        const interval = 0.6 - (s.param/100)*0.55;
+        s.engine.phase += dt;
+        if(s.engine.phase >= interval){
+          s.engine.phase = 0;
+          sendMidiFromBank(id, bank, 127);
+          if(bank === currentBank){
+            const el = document.querySelector('.pad[data-id="'+id+'"]');
+            if(el){
+              el.classList.add('lit');
+              setTimeout(()=>el.classList.remove('lit'), 60);
+            }
+          }
+        }
+      }
+    });
+  }
+
+  requestAnimationFrame(animate);
+}
+requestAnimationFrame(animate);
+
+function isCrartDevice(name){ return /beato|creart|arduino/i.test(name); }
+
+function setupMidiPorts(access){
+  const allInputs  = Array.from(access.inputs.values());
+  const allOutputs = Array.from(access.outputs.values());
+
+  // Si no hay Creart/Arduino reconocido, usar el primer puerto disponible.
+  const crartInputs  = allInputs.filter(i => isCrartDevice(i.name));
+  const crartOutputs = allOutputs.filter(o => isCrartDevice(o.name));
+  const inputs  = crartInputs.length  ? crartInputs  : allInputs;
+  const outputs = crartOutputs.length ? crartOutputs : allOutputs;
+
+  logMsg('Entradas MIDI detectadas: ' + (allInputs.map(i => '"'+i.name+'"').join(', ') || 'ninguna'), true);
+  logMsg('Salidas MIDI detectadas: ' + (allOutputs.map(o => '"'+o.name+'"').join(', ') || 'ninguna'), true);
+
+  const beatoIn = inputs[0];
+  if(beatoIn){
+    midiInput = beatoIn;
+    midiInput.onmidimessage = (msg) => {
+      const data = msg.data;
+      if(data[0] === 0xF0){
+        handleIncomingSysex(data);
+        return;
+      }
+      const [statusByte, d1, d2] = data;
+      const channel = (statusByte & 0x0F) + 1;
+      const type = statusByte & 0xF0;
+      const typeName = type===0x90 ? 'NoteOn' : type===0x80 ? 'NoteOff' : type===0xB0 ? 'CC' : ('0x'+type.toString(16));
+      logMsg('IN raw: ' + typeName + ' ch' + channel + ' num=' + d1 + ' val=' + d2);
+      if(type === 0x90 && d2 > 0){
+        processIncoming('note', d1, 1);
+      } else if(type === 0x80 || (type===0x90 && d2===0)){
+        processIncoming('note', d1, 0);
+      } else if(type === 0xB0){
+        processIncoming('cc', d1, d2);
+      }
+    };
+    document.getElementById('status-dot').classList.add('connected');
+    document.getElementById('status-text').textContent = 'Conectado: ' + beatoIn.name;
+    logMsg('Conectado a entrada: ' + beatoIn.name, true);
+  } else {
+    midiInput = null;
+    document.getElementById('status-dot').classList.remove('connected');
+    const nombres = allInputs.map(i => i.name).join(', ');
+    document.getElementById('status-text').textContent = nombres
+      ? 'No reconocido. Entradas: ' + nombres
+      : 'Sin dispositivos MIDI. Conecta el Beato 16.';
+  }
+
+  const select = document.getElementById('midi-out-select');
+  const prevVal = select.value;
+  select.innerHTML = '<option value="">Salida MIDI: ninguna (solo simulacion)</option>';
+  outputs.forEach((o, idx) => {
+    const opt = document.createElement('option');
+    opt.value = idx;
+    opt.textContent = 'Salida: ' + o.name;
+    select.appendChild(opt);
+  });
+  // Restaura seleccion anterior o auto-selecciona Beato 16
+  if(prevVal && select.querySelector('option[value="'+prevVal+'"]')){
+    select.value = prevVal;
+    midiOutput = outputs[parseInt(prevVal)];
+  } else {
+    const beatoOutIdx = outputs.findIndex(o => /beat/i.test(o.name));
+    if(beatoOutIdx >= 0){
+      select.value = beatoOutIdx;
+      midiOutput = outputs[beatoOutIdx];
+    }
+  }
+}
+
+async function initMidi(){
+  if(!navigator.requestMIDIAccess){
+    document.getElementById('status-text').textContent = 'Web MIDI no soportado en este navegador (usa Chrome/Edge)';
+    logMsg('Web MIDI API no disponible. Usa Google Chrome o Microsoft Edge.', true);
+    return;
+  }
+  try{
+    document.getElementById('status-text').textContent = 'Solicitando permiso MIDI...';
+    const access = await navigator.requestMIDIAccess({sysex:true});
+    window._midiAccess = access;
+    setupMidiPorts(access);
+    // Reintenta a los 500ms y 2s por si el dispositivo tarda en aparecer
+    setTimeout(() => setupMidiPorts(access), 500);
+    setTimeout(() => setupMidiPorts(access), 2000);
+    access.onstatechange = (e) => {
+      // Pequeño delay para que el browser tenga el puerto listo antes de escanear
+      setTimeout(() => setupMidiPorts(access), 150);
+    };
+  } catch(err){
+    const isPermission = err.name === 'SecurityError' || /denied|permission/i.test(err.message);
+    const msg = isPermission
+      ? 'Permiso MIDI bloqueado. Click en el candado de la URL → MIDI → Permitir → Recargar.'
+      : 'Error MIDI: ' + err.message;
+    document.getElementById('status-text').textContent = msg;
+    logMsg('Error MIDI: ' + err.name + ' – ' + err.message, true);
+  }
+}
+
+document.getElementById('midi-out-select').addEventListener('change', function(){
+  const outputs = Array.from(
+    (window._midiAccess ? window._midiAccess.outputs.values() : [])
+  ).filter(o => isCrartDevice(o.name));
+  midiOutput = this.value === '' ? null : outputs[parseInt(this.value)];
+  logMsg('Salida MIDI seleccionada: ' + (midiOutput ? midiOutput.name : 'ninguna'), true);
+});
+
+// Info mode toggle
+document.getElementById('info-toggle-btn').addEventListener('click', function(){
+  const active = document.body.classList.toggle('info-mode');
+  this.classList.toggle('active', active);
+});
+
+// Setup panel toggle
+const setupToggleBtn = document.getElementById('setup-toggle-btn');
+const setupPanel = document.getElementById('setup-panel');
+setupToggleBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  const open = setupPanel.classList.toggle('open');
+  setupToggleBtn.classList.toggle('open', open);
+});
+document.addEventListener('click', (e) => {
+  if(!setupPanel.contains(e.target) && e.target !== setupToggleBtn){
+    setupPanel.classList.remove('open');
+    setupToggleBtn.classList.remove('open');
+  }
+});
+
+// Consola MIDI flotante
+const logPanel = document.getElementById('log-panel');
+document.getElementById('log-panel-close').addEventListener('click', () => logPanel.classList.remove('open'));
+document.getElementById('midi-log-btn').addEventListener('click', () => logPanel.classList.toggle('open'));
+
+const STORAGE_VERSION = '2'; // incrementar cuando cambie el formato de state
+
+function saveStateToLocalStorage(){
+  try {
+    const snap = snapshotState();
+    localStorage.setItem('beato16-state', JSON.stringify(snap));
+    localStorage.setItem('beato16-shiftActions', JSON.stringify(shiftActions));
+    localStorage.setItem('beato16-daw', currentDaw);
+    localStorage.setItem('beato16-version', STORAGE_VERSION);
+  } catch(e) {}
+}
+
+function restoreStateFromLocalStorage(){
+  try {
+    if(localStorage.getItem('beato16-version') !== STORAGE_VERSION){
+      localStorage.removeItem('beato16-state');
+      localStorage.removeItem('beato16-shiftActions');
+      localStorage.removeItem('beato16-version');
+      return false;
+    }
+    const savedState = localStorage.getItem('beato16-state');
+    if(savedState){
+      const parsed = JSON.parse(savedState);
+      Object.keys(parsed).forEach(id => {
+        if(!state[id]) return;
+        banks.forEach(b => {
+          if(parsed[id]?.[b]){
+            const eng = state[id][b].engine;
+            state[id][b] = { ...state[id][b], ...parsed[id][b], engine: eng };
+          }
+        });
+      });
+    }
+    const savedShift = localStorage.getItem('beato16-shiftActions');
+    if(savedShift) Object.assign(shiftActions, JSON.parse(savedShift));
+    return !!savedState;
+  } catch(e) { return false; }
+}
+
+// Auto-guarda el estado cada 2 segundos en segundo plano
+setInterval(saveStateToLocalStorage, 2000);
+
+initMidi();
+document.getElementById('refresh-midi-btn').addEventListener('click', initMidi);
+applyDawPreset(currentDaw);
+restoreStateFromLocalStorage(); // restaura comportamientos, vel, CC después del reset de fábrica
+selectControl(document.querySelector('.pad[data-id="p0"]'));
+
+// ── THREE.JS 3D DEVICE PANEL (desactivado) ──
+if(false)(function(){
+  if(typeof THREE === 'undefined' || !window.BEATO16_B64){ return; }
+
+  const panel = document.getElementById('device-panel');
+  const canvas = document.getElementById('beato3d');
+
+  const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+  const scene = new THREE.Scene();
+
+  const camera = new THREE.PerspectiveCamera(42, 1, 0.01, 200);
+
+  // Lights
+  const ambient = new THREE.AmbientLight(0xffffff, 0.7);
+  scene.add(ambient);
+  const keyLight = new THREE.DirectionalLight(0xffffff, 2.2);
+  keyLight.position.set(2, 6, 4);
+  keyLight.castShadow = true;
+  scene.add(keyLight);
+  const fillLight = new THREE.DirectionalLight(0xaabbff, 0.5);
+  fillLight.position.set(-3, 3, -2);
+  scene.add(fillLight);
+  const rimLight = new THREE.DirectionalLight(0xffffff, 0.3);
+  rimLight.position.set(0, -2, -4);
+  scene.add(rimLight);
+
+  // Object maps
+  const namedNodes = {};
+  const padMeshes  = {};  // padId  → Object3D
+  const knobMeshes = {};  // knobId → Object3D
+  const teclaMeshes= {};  // cherryId → Object3D
+  let   faderMesh  = null;
+  const origPosY   = {};  // id → original Y
+  const pressAnims = {};  // id → {obj, origY, target}
+
+  // ── Material helper: enable emissive on every mesh in subtree ──
+  function enableEmissive(obj){
+    obj.traverse(n => {
+      if(!n.isMesh) return;
+      if(Array.isArray(n.material)){
+        n.material = n.material.map(m => { const c = m.clone(); c.emissive = new THREE.Color(0,0,0); c.emissiveIntensity = 0; return c; });
+      } else if(n.material){
+        n.material = n.material.clone();
+        n.material.emissive = new THREE.Color(0,0,0);
+        n.material.emissiveIntensity = 0;
+      }
+    });
+  }
+
+  function setEmissive(obj, hex, intensity){
+    obj.traverse(n => {
+      if(!n.isMesh) return;
+      const mats = Array.isArray(n.material) ? n.material : [n.material];
+      mats.forEach(m => { if(m && m.emissive){ m.emissive.set(hex); m.emissiveIntensity = intensity; } });
+    });
+  }
+
+  // ── Load GLB from embedded base64 ──
+  const binary = atob(window.BEATO16_B64);
+  const bytes  = new Uint8Array(binary.length);
+  for(let i=0;i<binary.length;i++) bytes[i] = binary.charCodeAt(i);
+  const blob   = new Blob([bytes], {type:'model/gltf-binary'});
+  const blobURL= URL.createObjectURL(blob);
+
+  document.getElementById('load-fill').style.width = '30%';
+
+  const loader = new THREE.GLTFLoader();
+  loader.load(blobURL, gltf => {
+    URL.revokeObjectURL(blobURL);
+    scene.add(gltf.scene);
+
+    // Collect all named nodes
+    gltf.scene.traverse(n => { if(n.name) namedNodes[n.name] = n; });
+
+    // Map pads: Boton1→p0 … Boton16→p15
+    for(let i=1;i<=16;i++){
+      const obj = namedNodes['Boton'+i];
+      if(!obj) continue;
+      const id = 'p'+(i-1);
+      padMeshes[id] = obj;
+      origPosY[id]  = obj.position.y;
+      enableEmissive(obj);
+    }
+
+    // Map knobs: knob1→k0 … knob4→k3
+    for(let i=1;i<=4;i++){
+      const obj = namedNodes['knob'+i];
+      if(!obj) continue;
+      const id = 'k'+(i-1);
+      knobMeshes[id] = obj;
+    }
+
+    // Map teclas: tecla1→c0 … tecla4→c3
+    for(let i=1;i<=4;i++){
+      const obj = namedNodes['tecla'+i];
+      if(!obj) continue;
+      const id = 'c'+(i-1);
+      teclaMeshes[id] = obj;
+      origPosY[id]    = obj.position.y;
+      enableEmissive(obj);
+    }
+
+    // Fader
+    faderMesh = namedNodes['fader1'];
+    if(faderMesh){ origPosY['f0'] = faderMesh.position.y; enableEmissive(faderMesh); }
+
+    // Auto-fit camera to bounding box
+    const box    = new THREE.Box3().setFromObject(gltf.scene);
+    const center = box.getCenter(new THREE.Vector3());
+    const size   = box.getSize(new THREE.Vector3());
+    const maxDim = Math.max(size.x, size.z);
+    camera.position.set(center.x, center.y + maxDim * 1.05, center.z + maxDim * 0.65);
+    camera.lookAt(center);
+    cameraTarget.copy(center);
+
+    document.getElementById('threed-loading').style.display = 'none';
+
+    // Sync initial bank state
+    document.querySelectorAll('.cherry').forEach(el => syncTecla3D(el));
+    // Sync initial pad states
+    document.querySelectorAll('.pad').forEach(el => syncPad3D(el));
+
+  }, xhr => {
+    if(xhr.total) document.getElementById('load-fill').style.width = (30 + (xhr.loaded/xhr.total)*70)+'%';
+  }, err => {
+    document.getElementById('threed-loading').textContent = 'Error cargando modelo 3D';
+    console.error(err);
+  });
+
+  // ── Camera target for lookAt ──
+  const cameraTarget = new THREE.Vector3();
+
+  // ── Resize ──
+  function resize(){
+    const w = panel.clientWidth  || 400;
+    const h = panel.clientHeight || 440;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  }
+  resize();
+  new ResizeObserver(resize).observe(panel);
+
+  // ── Raycasting ──
+  const raycaster = new THREE.Raycaster();
+  const mouse2    = new THREE.Vector2();
+
+  function ndcFromEvent(e){
+    const r = canvas.getBoundingClientRect();
+    mouse2.x =  ((e.clientX - r.left)  / r.width)  * 2 - 1;
+    mouse2.y = -((e.clientY - r.top)   / r.height)  * 2 + 1;
+  }
+
+  function findControl(hitObj){
+    let obj = hitObj;
+    while(obj){
+      for(const [id, mesh] of Object.entries(padMeshes))  if(isAncestor(mesh, obj)) return {type:'pad',   id, mesh};
+      for(const [id, mesh] of Object.entries(knobMeshes)) if(isAncestor(mesh, obj)) return {type:'knob',  id, mesh};
+      for(const [id, mesh] of Object.entries(teclaMeshes))if(isAncestor(mesh, obj)) return {type:'tecla', id, mesh};
+      if(faderMesh && isAncestor(faderMesh, obj))                                   return {type:'fader', id:'f0', mesh:faderMesh};
+      obj = obj.parent;
+    }
+    return null;
+  }
+
+  function isAncestor(ancestor, node){
+    let n = node;
+    while(n){ if(n===ancestor) return true; n=n.parent; }
+    return false;
+  }
+
+  // ── Press animation ──
+  function press(id, obj){
+    if(origPosY[id] === undefined) return;
+    pressAnims[id] = {obj, origY: origPosY[id], target: origPosY[id] - 0.04};
+  }
+
+  // ── Click handler ──
+  canvas.addEventListener('pointerdown', e => {
+    ndcFromEvent(e);
+    raycaster.setFromCamera(mouse2, camera);
+    const hits = raycaster.intersectObjects(scene.children, true);
+    if(!hits.length) return;
+    const ctrl = findControl(hits[0].object);
+    if(!ctrl) return;
+
+    if(ctrl.type === 'pad'){
+      press(ctrl.id, ctrl.mesh);
+      const dom = document.querySelector('.pad[data-id="'+ctrl.id+'"]');
+      if(dom) selectControl(dom);
+    } else if(ctrl.type === 'knob'){
+      press(ctrl.id, ctrl.mesh);
+      const dom = document.querySelector('.knob[data-id="'+ctrl.id+'"]');
+      if(dom) selectControl(dom);
+    } else if(ctrl.type === 'tecla'){
+      press(ctrl.id, ctrl.mesh);
+      const dom = document.querySelector('.cherry[data-id="'+ctrl.id+'"]');
+      if(dom) dom.click();
+    } else if(ctrl.type === 'fader'){
+      const dom = document.querySelector('.fader-track[data-id="f0"]');
+      if(dom) selectControl(dom);
+    }
+  });
+
+  // ── Drag fader ──
+  let faderDrag = null;
+  canvas.addEventListener('pointerdown', e => {
+    ndcFromEvent(e);
+    raycaster.setFromCamera(mouse2, camera);
+    const hits = raycaster.intersectObjects(scene.children, true);
+    if(!hits.length) return;
+    const ctrl = findControl(hits[0].object);
+    if(ctrl && ctrl.type === 'fader'){
+      faderDrag = {startY: e.clientY, startPct: currentFaderPct};
+      canvas.setPointerCapture(e.pointerId);
+    }
+  });
+  let currentFaderPct = 40;
+  canvas.addEventListener('pointermove', e => {
+    if(!faderDrag) return;
+    const dy = faderDrag.startY - e.clientY;
+    currentFaderPct = Math.max(0, Math.min(100, faderDrag.startPct + dy * 0.8));
+    setFaderHeight(currentFaderPct);
+    // Send MIDI
+    const rawVal = Math.round((currentFaderPct/100)*127);
+    sendMidi('f0', rawVal);
+  });
+  canvas.addEventListener('pointerup', () => { faderDrag = null; });
+
+  // ── Knob drag ──
+  let knobDrag = null;
+  canvas.addEventListener('pointerdown', e => {
+    ndcFromEvent(e);
+    raycaster.setFromCamera(mouse2, camera);
+    const hits = raycaster.intersectObjects(scene.children, true);
+    if(!hits.length) return;
+    const ctrl = findControl(hits[0].object);
+    if(ctrl && ctrl.type === 'knob'){
+      knobDrag = {id: ctrl.id, startY: e.clientY, startVal: knobValues[ctrl.id] || 64};
+      canvas.setPointerCapture(e.pointerId);
+    }
+  });
+  const knobValues = {k0:64, k1:64, k2:64, k3:64};
+  canvas.addEventListener('pointermove', e => {
+    if(!knobDrag) return;
+    const dy = knobDrag.startY - e.clientY;
+    const newVal = Math.max(0, Math.min(127, knobDrag.startVal + Math.round(dy * 1.2)));
+    knobValues[knobDrag.id] = newVal;
+    setKnobVisual(knobDrag.id, newVal);
+    sendMidi(knobDrag.id, newVal);
+  });
+  canvas.addEventListener('pointerup', () => { knobDrag = null; });
+
+  // ── Sync 3D knob rotation from MIDI ──
+  const _origSetKnobVisual = setKnobVisual;
+  setKnobVisual = function(id, value){
+    _origSetKnobVisual(id, value);
+    knobValues[id] = value;
+    const mesh = knobMeshes[id];
+    if(!mesh) return;
+    // Map 0-127 to -140°..+140° rotation on Y
+    mesh.rotation.y = (-140 + (value/127)*280) * (Math.PI/180);
+  };
+
+  // ── Sync 3D pad emissive from MIDI ──
+  const _origSetPadLit = setPadLit;
+  setPadLit = function(id, on){
+    _origSetPadLit(id, on);
+    const mesh = padMeshes[id];
+    if(mesh) setEmissive(mesh, on ? 0xc8ff4d : 0x000000, on ? 0.9 : 0);
+  };
+
+  // ── Sync fader position ──
+  const _origSetFaderHeight = setFaderHeight;
+  setFaderHeight = function(pct){
+    _origSetFaderHeight(pct);
+    currentFaderPct = pct;
+    if(!faderMesh) return;
+    const range = 0.3;
+    faderMesh.position.y = origPosY['f0'] + (pct/100 - 0.5) * range;
+  };
+
+  // ── Sync tecla 3D from DOM class changes ──
+  function syncTecla3D(el){
+    const id = el.dataset.id;
+    const mesh = teclaMeshes[id];
+    if(!mesh) return;
+    if(el.classList.contains('bank-active'))       setEmissive(mesh, 0xc8ff4d, 1.2);
+    else if(el.classList.contains('shift-active') ||
+            el.classList.contains('shift-sticky-active')) setEmissive(mesh, 0xff6b57, 1.2);
+    else                                           setEmissive(mesh, 0x000000, 0);
+  }
+
+  function syncPad3D(el){
+    const id  = el.dataset.id;
+    const mesh= padMeshes[id];
+    if(!mesh) return;
+    if(el.classList.contains('lit') || el.classList.contains('shift-fired') || el.classList.contains('shift-sticky'))
+      setEmissive(mesh, 0xc8ff4d, 0.9);
+    else if(el.classList.contains('shift-armed'))
+      setEmissive(mesh, 0xff6b57, 0.6);
+    else
+      setEmissive(mesh, 0x000000, 0);
+  }
+
+  // MutationObservers for DOM → 3D sync
+  document.querySelectorAll('.cherry').forEach(el => {
+    new MutationObserver(() => syncTecla3D(el))
+      .observe(el, {attributes:true, attributeFilter:['class']});
+  });
+  document.querySelectorAll('.pad').forEach(el => {
+    new MutationObserver(() => syncPad3D(el))
+      .observe(el, {attributes:true, attributeFilter:['class']});
+  });
+
+  // ── Render loop ──
+  function loop(){
+    requestAnimationFrame(loop);
+    // Spring animations (pad/tecla press)
+    for(const [id, anim] of Object.entries(pressAnims)){
+      anim.obj.position.y += (anim.target - anim.obj.position.y) * 0.25;
+      if(Math.abs(anim.obj.position.y - anim.target) < 0.001){
+        // Bounce back
+        anim.target = anim.origY;
+        if(Math.abs(anim.obj.position.y - anim.origY) < 0.0005){
+          anim.obj.position.y = anim.origY;
+          delete pressAnims[id];
+        }
+      }
+    }
+    renderer.render(scene, camera);
+  }
+  loop();
+})();
+</script>
+
+</div>
+</body>
+</html>
