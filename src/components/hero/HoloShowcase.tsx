@@ -111,12 +111,12 @@ const HoloShowcase: React.FC = () => {
 
     // ── Iluminación de estudio (match con configurador) ──
 
-    // Ambient light
-    const ambientLight = new THREE.AmbientLight(0xffffff, 1.4)
+    // Ambient light — reduce for less overall brightness
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.9)
     scene.add(ambientLight)
 
-    // Main light — principal desde arriba-derecha
-    const mainLight = new THREE.DirectionalLight(0xffffff, 3.5)
+    // Main light — reduce intensity
+    const mainLight = new THREE.DirectionalLight(0xffffff, 2.0)
     mainLight.position.set(5, 4, 1)
     mainLight.castShadow = true
     mainLight.shadow.mapSize.set(1024, 1024)
@@ -124,12 +124,12 @@ const HoloShowcase: React.FC = () => {
     scene.add(mainLight)
 
     // Fill light — suave, rellena sombras
-    const fillLight = new THREE.DirectionalLight(0x99ccff, 0.5)
+    const fillLight = new THREE.DirectionalLight(0x99ccff, 0.3)
     fillLight.position.set(-8, 5, -5)
     scene.add(fillLight)
 
     // Point light para brillos
-    const pointLight = new THREE.PointLight(0xffffff, 0.7, 20)
+    const pointLight = new THREE.PointLight(0xffffff, 0.4, 20)
     pointLight.position.set(0, 5, 5)
     scene.add(pointLight)
 
@@ -175,7 +175,7 @@ const HoloShowcase: React.FC = () => {
             obj.castShadow = true
             obj.receiveShadow = true
             if (obj.material instanceof THREE.MeshStandardMaterial) {
-              obj.material.envMapIntensity = 0.8
+              obj.material.envMapIntensity = 0.3
             }
           })
 
