@@ -109,58 +109,29 @@ const HoloShowcase: React.FC = () => {
     renderer.shadowMap.type = THREE.PCFSoftShadowMap
     mount.appendChild(renderer.domElement)
 
-    // ── Iluminación de estudio premium ──
+    // ── Iluminación de estudio (match con configurador) ──
 
-    // Hemisférica: techo blanco frío + suelo oscuro
-    const hemi = new THREE.HemisphereLight(0xf0f4ff, 0x080a12, 0.8)
-    scene.add(hemi)
+    // Ambient light
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1.4)
+    scene.add(ambientLight)
 
-    // Key light — principal desde arriba-derecha, sombras definidas
-    const key = new THREE.DirectionalLight(0xffffff, 3.5)
-    key.position.set(3, 7, 4)
-    key.castShadow = true
-    key.shadow.mapSize.set(1024, 1024)
-    key.shadow.bias = -0.001
-    key.shadow.camera.near = 0.5
-    key.shadow.camera.far = 20
-    scene.add(key)
+    // Main light — principal desde arriba-derecha
+    const mainLight = new THREE.DirectionalLight(0xffffff, 3.5)
+    mainLight.position.set(5, 4, 1)
+    mainLight.castShadow = true
+    mainLight.shadow.mapSize.set(1024, 1024)
+    mainLight.shadow.bias = -0.001
+    scene.add(mainLight)
 
-    // Fill frontal — suave, elimina sombras duras en la cara del producto
-    const fill = new THREE.DirectionalLight(0xe0e8f0, 1.4)
-    fill.position.set(-1.5, 2, 6)
-    scene.add(fill)
+    // Fill light — suave, rellena sombras
+    const fillLight = new THREE.DirectionalLight(0x99ccff, 0.5)
+    fillLight.position.set(-8, 5, -5)
+    scene.add(fillLight)
 
-    // Fill lateral izquierdo — rellena el lado opuesto a la key
-    const fillLeft = new THREE.DirectionalLight(0xd0dae8, 0.7)
-    fillLeft.position.set(-5, 2, 0)
-    scene.add(fillLeft)
-
-    // Back/rim light — contorno trasero para separar del fondo
-    const back = new THREE.DirectionalLight(0xc0d0e8, 1.0)
-    back.position.set(-3, 4, -5)
-    scene.add(back)
-
-    // Rim cian — acento de marca, borde izquierdo
-    const rimCyan = new THREE.PointLight(0x00e5ff, 3.0, 16)
-    rimCyan.position.set(-4, 1, -2)
-    scene.add(rimCyan)
-
-    // Acento cálido desde abajo-derecha
-    const warmAccent = new THREE.PointLight(0xff9f43, 0.8, 12)
-    warmAccent.position.set(3, -0.5, 1.5)
-    scene.add(warmAccent)
-
-    // Spot cenital — disco de luz concentrada sobre el modelo
-    const spot = new THREE.SpotLight(0xffffff, 2.2, 14, Math.PI / 5.5, 0.6, 1)
-    spot.position.set(0, 8, 2)
-    spot.target.position.set(0, 0, 0)
-    scene.add(spot)
-    scene.add(spot.target)
-
-    // Luz inferior sutil — levanta las sombras del fondo
-    const bottomFill = new THREE.PointLight(0xd0e0f0, 0.5, 10)
-    bottomFill.position.set(0, -2, 2)
-    scene.add(bottomFill)
+    // Point light para brillos
+    const pointLight = new THREE.PointLight(0xffffff, 0.7, 20)
+    pointLight.position.set(0, 5, 5)
+    scene.add(pointLight)
 
     // Environment map para reflejos PBR
     let envMap: THREE.Texture | null = null
@@ -204,7 +175,7 @@ const HoloShowcase: React.FC = () => {
             obj.castShadow = true
             obj.receiveShadow = true
             if (obj.material instanceof THREE.MeshStandardMaterial) {
-              obj.material.envMapIntensity = 1.4
+              obj.material.envMapIntensity = 0.8
             }
           })
 
@@ -309,9 +280,6 @@ const HoloShowcase: React.FC = () => {
         incomingModel.rotation.x = 0.28 * easeInOutCubic(transitionProgress) + Math.sin(t * 0.5) * 0.02
       }
 
-      // ── Rim light sigue el color del acento ──
-      const tintColor = new THREE.Color(SLIDES[activeRef.current]?.tint || '#00e5ff')
-      rimCyan.color.lerp(tintColor, 0.03)
 
       renderer.render(scene, camera)
       frameId = requestAnimationFrame(tick)
