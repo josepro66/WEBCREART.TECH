@@ -42,7 +42,7 @@ export default function ProductRail() {
       <div ref={ref} className="relative overflow-hidden">
         <div ref={trackRef} className="flex gap-6 px-6">
           {items.map((it) => (
-            <motion.div key={it.title} whileHover={{ y: -6 }} className="min-w-[70vw] sm:min-w-[50vw] lg:min-w-[40vw]">
+            <motion.div key={it.title} whileHover={{ y: -6 }} className="min-w-[calc(100vw-2rem)] sm:min-w-[45vw] md:min-w-[35vw] lg:min-w-[28vw]">
               <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-md">
                 <img src={it.img} alt={it.title} className="h-64 w-full rounded-xl object-contain bg-black/40" />
                 <div className="mt-4 flex items-center justify-between">
