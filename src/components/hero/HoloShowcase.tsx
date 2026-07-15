@@ -191,6 +191,7 @@ const HoloShowcase: React.FC = () => {
 
           model.visible = false
           model.userData.baseScale = scale
+          model.userData.basePosition = model.position.clone()
           modelsRef.current[s.id] = model
           scene.add(model)
           resolve()
@@ -268,7 +269,8 @@ const HoloShowcase: React.FC = () => {
           const bs = incomingModel.userData.baseScale || 1
           incomingModel.scale.setScalar(bs * (0.6 + ease * 0.4))
           setModelOpacity(incomingModel, ease)
-          incomingModel.position.y = (1 - ease) * 0.5
+          const basePos = incomingModel.userData.basePosition as THREE.Vector3
+          incomingModel.position.y = basePos.y + (1 - ease) * 0.5
 
           if (transitionProgress >= 1) {
             incomingModel.scale.setScalar(bs)
@@ -282,8 +284,9 @@ const HoloShowcase: React.FC = () => {
       // ── Animar modelo activo (flotar suave) ──
       const activeModel = modelsRef.current[SLIDES[activeRef.current]?.id]
       if (activeModel && transitionProgress >= 1) {
+        const bp = activeModel.userData.basePosition as THREE.Vector3
         activeModel.rotation.y = -0.55 + Math.sin(t * 0.35) * 0.22 + t * 0.12
-        activeModel.position.y = Math.sin(t * 0.7) * 0.05
+        activeModel.position.y = bp.y + Math.sin(t * 0.7) * 0.05
         activeModel.rotation.x = 0.28 + Math.sin(t * 0.5) * 0.02
       } else if (incomingModel && transitionProgress < 1) {
         incomingModel.rotation.y = -0.55 + Math.sin(t * 0.35) * 0.22 + t * 0.12
