@@ -181,17 +181,6 @@ function WavoHero() {
   return <div ref={mountRef} style={{ width: '100%', height: '100%' }} />
 }
 
-const STATS = [
-  { value: '7', label: 'Modelos' },
-  { value: '3+', label: 'Años' },
-  { value: 'BOG', label: 'Colombia' },
-]
-
-const MARQUEE_TAGS = [
-  'USB-C', 'MIDI CC', 'KNOBS RGB', 'ARCADE', 'PERSONALIZABLE',
-  'BOGOTÁ', 'COLOMBIA', 'HANDCRAFTED', 'METAL', 'SINTETIZADOR',
-  'CONTROLADOR', 'ABLETON LIVE',
-]
 
 const Hero: React.FC = () => {
   const navigate = useNavigate()
@@ -251,18 +240,6 @@ const Hero: React.FC = () => {
           {/* ── Columna texto ── */}
           <div className="flex-1 flex flex-col justify-center lg:pr-12 text-center lg:text-left">
 
-            {/* Eyebrow técnico */}
-            <motion.div
-              className="inline-flex items-center gap-2.5 w-fit mb-8 mx-auto lg:mx-0"
-              initial={{ opacity: 0, y: -8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.1, ease: 'easeOut' }}
-            >
-              <span className="w-2 h-2 rounded-[2px] bg-neon-cyan shadow-[0_0_8px_rgba(0,229,255,0.5)] animate-pulse" />
-              <span className="text-[10px] font-plexmono tracking-[0.28em] text-gray-500 uppercase">
-                Ecosistema · Bogotá / Colombia · <span className="text-neon-cyan">Live</span>
-              </span>
-            </motion.div>
 
             {/* Headline: grotesca técnica, tracking cerrado */}
             <motion.h1
@@ -316,24 +293,6 @@ const Hero: React.FC = () => {
               </motion.button>
             </motion.div>
 
-            {/* Spec strip: ficha técnica */}
-            <motion.div
-              className="flex items-center gap-8 justify-center lg:justify-start border-t border-white/[0.07] pt-6"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 1, delay: 0.7 }}
-            >
-              {STATS.map(({ value, label }) => (
-                <div key={label}>
-                  <div className="text-2xl font-grotesk font-bold text-white leading-none">{value}</div>
-                  <div className="text-[9px] font-plexmono text-gray-600 tracking-[0.22em] uppercase mt-1.5">{label}</div>
-                </div>
-              ))}
-              <div className="hidden sm:block h-8 w-px bg-white/[0.07]" />
-              <span className="hidden sm:block text-[9px] font-plexmono text-gray-600 tracking-[0.2em] uppercase leading-relaxed">
-                MIDI · USB-C<br />ARCADE · RGB
-              </span>
-            </motion.div>
           </div>
 
           {/* ── Columna 3D (desktop) — Showcase cinematográfico ── */}
@@ -375,25 +334,6 @@ const Hero: React.FC = () => {
         </div>
       </div>
 
-      {/* Marquee ticker */}
-      <motion.div
-        className="absolute bottom-16 left-0 right-0 overflow-hidden pointer-events-none z-20"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 1.2, delay: 1.2 }}
-      >
-        <div className="flex animate-marquee whitespace-nowrap">
-          {[...MARQUEE_TAGS, ...MARQUEE_TAGS].map((tag, i) => (
-            <span
-              key={i}
-              className="inline-flex items-center gap-3 px-4 text-[10px] font-plexmono tracking-[0.24em] text-white/[0.09] uppercase"
-            >
-              {tag}
-              <span className="text-white/[0.06]">/</span>
-            </span>
-          ))}
-        </div>
-      </motion.div>
 
       {/* Scroll indicator */}
       <motion.div
