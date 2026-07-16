@@ -38,7 +38,6 @@ const ParallaxBackground: React.FC = () => {
             border-radius: 50%;
             left: ${Math.random() * 100}%;
             top: ${Math.random() * 100}%;
-            box-shadow: 0 0 10px ${layer.color};
             animation: float ${3 + Math.random() * 2}s ease-in-out infinite;
             animation-delay: ${Math.random() * 2}s;
           `;

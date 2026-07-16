@@ -426,7 +426,21 @@ const Beato16Configurator: React.FC<Beato16ConfiguratorProps> = ({ currentUser, 
       else if (meshName.includes('tecla')) {
         const savedName = initialChosen.teclas[child.name];
         const defaultColor = savedName && PALETTES.teclas[savedName] ? savedName : 'Negro';
-        child.material = new THREE.MeshPhysicalMaterial({ color: PALETTES.teclas[defaultColor].hex, metalness: 0.4, roughness: 0.68, clearcoat: 0.85, clearcoatRoughness: 0.08, reflectivity: 0.3, sheen: 0.5, sheenColor: 0x1C1C1C });
+        child.material = new THREE.MeshPhysicalMaterial({
+          color: PALETTES.teclas[defaultColor].hex,
+          metalness: 0.0,
+          roughness: 0.08,
+          transmission: 0.3,
+          thickness: 1.5,
+          ior: 1.52,
+          clearcoat: 1.0,
+          clearcoatRoughness: 0.01,
+          transparent: true,
+          opacity: 0.92,
+          reflectivity: 0.9,
+          attenuationColor: new THREE.Color(PALETTES.teclas[defaultColor].hex),
+          attenuationDistance: 0.5,
+        });
         newSelectable.teclas.push(child);
         initialChosen.teclas[child.name] = defaultColor;
       }
@@ -898,7 +912,11 @@ const Beato16Configurator: React.FC<Beato16ConfiguratorProps> = ({ currentUser, 
     const applyToGroup = (items: THREE.Mesh[], partType: keyof Omit<ChosenColors, 'type'|'chasis'>, setter: React.Dispatch<React.SetStateAction<THREE.Mesh[]>>) => {
         const newColors = { ...chosenColors, [partType]: { ...chosenColors[partType] } };
         items.forEach(item => {
-            (item.material as THREE.MeshStandardMaterial).color.set(colorData.hex);
+            const mat = item.material as THREE.MeshPhysicalMaterial;
+            mat.color.set(colorData.hex);
+            if (partType === 'teclas' && mat.attenuationColor) {
+              mat.attenuationColor.set(colorData.hex);
+            }
             newColors[partType][item.name] = colorName;
         });
         setChosenColors(newColors);
@@ -918,14 +936,18 @@ const Beato16Configurator: React.FC<Beato16ConfiguratorProps> = ({ currentUser, 
     if (currentView === 'faders' && selectedFaders.length > 0) return applyToGroup(selectedFaders, 'faders', setSelectedFaders);
 
     if (selectedForColoring) {
-        (selectedForColoring.material as THREE.MeshStandardMaterial).color.set(colorData.hex);
+        const mat = selectedForColoring.material as THREE.MeshPhysicalMaterial;
+        mat.color.set(colorData.hex);
         const selectedName = selectedForColoring.name;
         let partType: keyof Omit<ChosenColors, 'type'|'chasis'> | undefined;
         if (selectable.buttons.includes(selectedForColoring)) partType = 'buttons';
         else if (selectable.knobs.includes(selectedForColoring)) partType = 'knobs';
-        else if (selectable.teclas.includes(selectedForColoring)) partType = 'teclas';
+        else if (selectable.teclas.includes(selectedForColoring)) {
+          partType = 'teclas';
+          if (mat.attenuationColor) mat.attenuationColor.set(colorData.hex);
+        }
         else if (selectable.faders.includes(selectedForColoring)) partType = 'faders';
-        
+
         if(partType) {
             setChosenColors(prev => ({ ...prev, [partType]: { ...prev[partType], [selectedName]: colorName } }));
         }
@@ -1160,7 +1182,7 @@ const Beato16Configurator: React.FC<Beato16ConfiguratorProps> = ({ currentUser, 
         </div>
 
         <div className="absolute top-6 left-1/2 transform -translate-x-1/2 z-10 flex items-center gap-3">
-          <h1 className="text-2xl font-bold leading-none m-0" style={{ fontFamily: 'Gotham Black, Arial, sans-serif', color: '#fff', textShadow: '0 0 12px #a259ff, 0 0 24px #0ff, 0 0 2px #fff', letterSpacing: '0.04em' }}>BEATO16</h1>
+          <h1 className="text-2xl font-bold leading-none m-0" style={{ fontFamily: 'Gotham Black, Arial, sans-serif', color: '#fff', letterSpacing: '0.04em' }}>BEATO16</h1>
         </div>
 
         <main className="flex w-full h-full" style={{ minHeight: "100vh", height: "100vh", position: "relative", zIndex: 1, overflow: "hidden", background: "transparent" }}>

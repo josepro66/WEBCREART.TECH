@@ -75,7 +75,7 @@ const Footer: React.FC = () => {
               Fábrica de tecnología musical.
             </p>
             <p className="text-gray-500 text-xs font-inter flex items-center gap-1.5 mb-5">
-              <span className="inline-block h-1.5 w-1.5 rounded-full bg-cyan-400 shadow-[0_0_6px_rgba(0,245,255,0.8)]" />
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-cyan-400" />
               Bogotá D.C, Colombia
             </p>
             {/* Redes sociales */}

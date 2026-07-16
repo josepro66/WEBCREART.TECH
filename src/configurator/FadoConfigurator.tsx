@@ -962,7 +962,6 @@ const FadoConfigurator: React.FC<{ onProductChange?: (product: 'beato' | 'knobo'
             style={{ 
               fontFamily: 'Gotham Black, Arial, sans-serif',
               color: '#fff',
-              textShadow: '0 0 12px #a259ff, 0 0 24px #0ff, 0 0 2px #fff',
               letterSpacing: '0.04em'
             }}
           >

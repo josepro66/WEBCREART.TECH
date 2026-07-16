@@ -221,7 +221,7 @@ body {
 .product-menu [class*="effect"]:hover {
   background: rgba(0, 255, 255, 0.2) !important;
   border: 1px solid rgba(0, 255, 255, 0.5) !important;
-  box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+  box-shadow: none;
 }
 
 /* PANTALLA DE ROTACIÓN PARA MÓVILES */
@@ -265,7 +265,6 @@ body {
   font-weight: bold;
   margin-bottom: 0.5rem;
   color: #00FFFF;
-  text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
 }
 
 .rotate-screen-content p {
@@ -279,7 +278,6 @@ body {
   font-size: 3rem;
   color: #00FFFF;
   animation: bounce 1.5s infinite;
-  text-shadow: 0 0 15px rgba(0, 255, 255, 0.7);
 }
 
 /* ANIMACIONES */

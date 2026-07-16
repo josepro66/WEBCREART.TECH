@@ -70,21 +70,9 @@ body {
   background: #00E5FF;
 }
 
-/* Neon glow utilities */
-.neon-glow {
-  box-shadow: 0 0 5px currentColor, 0 0 10px currentColor, 0 0 15px currentColor;
-}
-
-.neon-glow-lime {
-  box-shadow: 0 0 5px #D0FF00, 0 0 10px #D0FF00, 0 0 15px #D0FF00;
-}
-
-.neon-glow-magenta {
-  box-shadow: 0 0 5px #FF47E2, 0 0 10px #FF47E2, 0 0 15px #FF47E2;
-}
-
-.neon-glow-cyan {
-  box-shadow: 0 0 5px #00E5FF, 0 0 10px #00E5FF, 0 0 15px #00E5FF;
+/* Neon glow utilities — disabled globally, only used on CTA buttons */
+.neon-glow, .neon-glow-lime, .neon-glow-magenta, .neon-glow-cyan {
+  box-shadow: none;
 }
 
 /* Glassmorphism effect */
@@ -138,9 +126,7 @@ body {
 
 /* Borde resplandeciente reutilizable */
 .neon-ring {
-  box-shadow: 0 0 0 1px rgba(255,255,255,0.08) inset,
-              0 0 24px rgba(0,245,255,0.25),
-              0 0 48px rgba(255,0,229,0.12);
+  box-shadow: none;
 }
 
 /* CONFIGURATOR STYLES */
@@ -248,7 +234,6 @@ body {
   font-weight: bold;
   margin-bottom: 0.5rem;
   color: #00FFFF;
-  text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
 }
 
 .rotate-screen-content p {
@@ -262,7 +247,6 @@ body {
   font-size: 3rem;
   color: #00FFFF;
   animation: bounce 1.5s infinite;
-  text-shadow: 0 0 15px rgba(0, 255, 255, 0.7);
 }
 
 @keyframes fadeIn {
@@ -293,31 +277,19 @@ body {
 
 /* Tech buttons (Hero) */
 .tech-button-cyan {
-  box-shadow:
-    0 0 20px rgba(6, 182, 212, 0.4),
-    0 0 40px rgba(6, 182, 212, 0.2),
-    inset 0 0 20px rgba(255, 255, 255, 0.1);
+  box-shadow: none;
 }
 
 .tech-button-cyan:hover {
-  box-shadow:
-    0 0 30px rgba(6, 182, 212, 0.6),
-    0 0 60px rgba(6, 182, 212, 0.3),
-    inset 0 0 30px rgba(255, 255, 255, 0.2);
+  box-shadow: none;
 }
 
 .tech-button-gray {
-  box-shadow:
-    0 0 20px rgba(6, 182, 212, 0.3),
-    0 0 40px rgba(6, 182, 212, 0.1),
-    inset 0 0 20px rgba(255, 255, 255, 0.05);
+  box-shadow: none;
 }
 
 .tech-button-gray:hover {
-  box-shadow:
-    0 0 30px rgba(6, 182, 212, 0.5),
-    0 0 60px rgba(6, 182, 212, 0.2),
-    inset 0 0 30px rgba(255, 255, 255, 0.1);
+  box-shadow: none;
 }
 
 .tech-button-cyan::before,

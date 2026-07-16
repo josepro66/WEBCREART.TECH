@@ -356,13 +356,25 @@ Best regards.`;
 
   // Función para centrar y escalar el modelo
   const centerAndScaleModel = useCallback((obj: THREE.Object3D) => {
-    const box = new THREE.Box3().setFromObject(obj);
+    obj.updateWorldMatrix(true, true);
+    const box = new THREE.Box3();
+    obj.traverse((child: THREE.Object3D) => {
+      if ((child as THREE.Mesh).isMesh && (child as THREE.Mesh).geometry) {
+        const mesh = child as THREE.Mesh;
+        mesh.geometry.computeBoundingBox();
+        if (mesh.geometry.boundingBox) {
+          const meshBox = mesh.geometry.boundingBox.clone();
+          meshBox.applyMatrix4(mesh.matrixWorld);
+          box.union(meshBox);
+        }
+      }
+    });
+    if (box.isEmpty()) box.setFromObject(obj);
     const size = box.getSize(new THREE.Vector3());
     const center = box.getCenter(new THREE.Vector3());
     const maxSize = Math.max(size.x, size.y, size.z);
     const desiredSize = 1.8;
     const scale = desiredSize / maxSize;
-
     obj.scale.set(scale, scale, scale);
     obj.position.set(
       -center.x * scale,
@@ -514,6 +526,15 @@ Best regards.`;
       
       loader.load(`${import.meta.env.BASE_URL}models/MIXO.glb`, (gltf: any) => {
         const model = gltf.scene as THREE.Group;
+        // Remove junk objects that inflate the bounding box
+        const junkNames = ['snowball', 'skeleton', 'empty.001', 'empty.002', 'button:screw'];
+        const toRemove: THREE.Object3D[] = [];
+        model.traverse((child: THREE.Object3D) => {
+          const n = child.name.toLowerCase();
+          if (junkNames.some(j => n.includes(j))) toRemove.push(child);
+        });
+        toRemove.forEach(obj => obj.removeFromParent());
+
         if (modelRef.current && sceneRef.current) sceneRef.current.remove(modelRef.current);
         modelRef.current = model;
         prepareModelParts(model);

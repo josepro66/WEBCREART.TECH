@@ -318,7 +318,7 @@ function App() {
                 border: `1px solid ${isActive ? id.accent : 'rgba(255, 255, 255, 0.08)'}`,
                 color: isActive ? id.accent : '#F2F1ED',
                 boxShadow: isActive
-                  ? `0 0 0 1px ${id.accent}40, 0 8px 24px -8px ${id.glow}, inset 0 1px 0 ${id.accent}30`
+                  ? `0 0 0 1px ${id.accent}40, 0 4px 12px -4px rgba(0,0,0,0.5), inset 0 1px 0 ${id.accent}30`
                   : '0 4px 12px -4px rgba(0,0,0,0.5)',
               }}
               onMouseEnter={(e) => {
@@ -327,7 +327,7 @@ function App() {
                   e.currentTarget.style.borderColor = `${id.accent}80`;
                   e.currentTarget.style.background = `linear-gradient(135deg, ${id.accent}15 0%, rgba(14,14,16,0.7) 100%)`;
                   e.currentTarget.style.transform = 'translateX(4px)';
-                  e.currentTarget.style.boxShadow = `0 8px 20px -6px ${id.glow}, 0 0 0 1px ${id.accent}30`;
+                  e.currentTarget.style.boxShadow = `0 4px 12px -4px rgba(0,0,0,0.5), 0 0 0 1px ${id.accent}30`;
                 }
               }}
               onMouseLeave={(e) => {
@@ -351,7 +351,7 @@ function App() {
                     width: 3,
                     background: id.gradient,
                     borderRadius: '0 2px 2px 0',
-                    boxShadow: `0 0 8px ${id.glow}`,
+                    boxShadow: 'none',
                   }}
                 />
               )}
@@ -364,7 +364,7 @@ function App() {
                   height: 36,
                   objectFit: 'contain',
                   filter: isActive
-                    ? `drop-shadow(0 0 6px ${id.glow})`
+                    ? 'none'
                     : 'grayscale(0.25) opacity(0.85)',
                   transition: 'filter 0.25s ease',
                 }}
@@ -379,7 +379,7 @@ function App() {
                     letterSpacing: '0.12em',
                     fontFamily: "'Orbitron', 'Space Grotesk', sans-serif",
                     color: isActive ? id.accent : '#F2F1ED',
-                    textShadow: isActive ? `0 0 12px ${id.glow}` : 'none',
+                    textShadow: 'none',
                     whiteSpace: 'nowrap',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
@@ -417,7 +417,7 @@ function App() {
                     color: '#0E0E10',
                     padding: '2px 5px',
                     borderRadius: 3,
-                    boxShadow: `0 2px 6px -1px ${id.glow}`,
+                    boxShadow: '0 2px 6px -1px rgba(0,0,0,0.4)',
                   }}
                 >
                   {id.badge}

@@ -53,7 +53,7 @@ const GallerySection: React.FC = () => {
             href={INSTAGRAM_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full font-semibold text-white text-sm transition-all duration-300 hover:scale-105 hover:shadow-[0_0_25px_rgba(225,48,108,0.4)]"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full font-semibold text-white text-sm transition-all duration-300 hover:scale-105"
             style={{
               background: 'linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888)',
             }}

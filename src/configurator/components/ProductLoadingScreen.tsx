@@ -64,7 +64,6 @@ const ProductLoadingScreen: React.FC<ProductLoadingScreenProps> = ({
             style={{
               fontSize: '34px', fontWeight: 'bold', marginBottom: '20px',
               color: '#00FFFF', letterSpacing: '4px', position: 'relative', zIndex: 1,
-              textShadow: '0 0 20px #00FFFF, 0 0 40px #00FFFF, 0 0 60px #00FFFF',
             }}
           >
             {name}
@@ -78,7 +77,6 @@ const ProductLoadingScreen: React.FC<ProductLoadingScreenProps> = ({
             style={{
               fontSize: '18px', fontWeight: 'bold', marginBottom: '40px',
               color: '#FFFFFF', textAlign: 'center', maxWidth: '80%',
-              textShadow: '0 0 15px #FFFFFF, 0 0 30px #FFFFFF',
               position: 'relative', zIndex: 1,
             }}
           >
@@ -93,7 +91,6 @@ const ProductLoadingScreen: React.FC<ProductLoadingScreenProps> = ({
               width: '100px', height: '100px',
               border: '6px solid rgba(0,255,255,0.3)', borderTop: '6px solid #00FFFF',
               borderRadius: '50%', marginBottom: '40px', position: 'relative', zIndex: 1,
-              boxShadow: '0 0 30px rgba(0,255,255,0.8), 0 0 60px rgba(0,255,255,0.4)',
             }}
           />
 
@@ -105,7 +102,6 @@ const ProductLoadingScreen: React.FC<ProductLoadingScreenProps> = ({
             style={{
               fontSize: '20px', fontWeight: 'bold', textAlign: 'center',
               marginBottom: '20px', color: '#00FFFF', position: 'relative', zIndex: 1,
-              textShadow: '0 0 15px #00FFFF, 0 0 30px #00FFFF',
             }}
           >
             Cargando {name}... {Math.round(progress)}%
@@ -120,7 +116,6 @@ const ProductLoadingScreen: React.FC<ProductLoadingScreenProps> = ({
               style={{
                 fontSize: '18px', color: '#00FF80', fontWeight: 'bold',
                 marginBottom: '30px', position: 'relative', zIndex: 1,
-                textShadow: '0 0 15px #00FF80, 0 0 30px #00FF80',
               }}
             >
               ¡{name} listo para configurar!
@@ -146,7 +141,6 @@ const ProductLoadingScreen: React.FC<ProductLoadingScreenProps> = ({
                 background: 'linear-gradient(90deg, #00FFFF, #00CCFF, #00FFFF)',
                 borderRadius: '4px', backgroundSize: '200% 100%',
                 animation: 'shimmer 2s infinite',
-                boxShadow: '0 0 20px rgba(0,255,255,0.8), 0 0 40px rgba(0,255,255,0.4)',
               }}
             />
           </motion.div>
@@ -161,7 +155,6 @@ const ProductLoadingScreen: React.FC<ProductLoadingScreenProps> = ({
                 style={{
                   width: '12px', height: '12px', borderRadius: '50%',
                   backgroundColor: '#00FFFF',
-                  boxShadow: '0 0 15px rgba(0,255,255,0.8), 0 0 30px rgba(0,255,255,0.4)',
                 }}
               />
             ))}

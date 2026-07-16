@@ -32,7 +32,7 @@ export default function HeroParallax() {
         </motion.p>
         <motion.a
           href="#productos"
-          whileHover={{ scale: 1.04, textShadow: '0 0 16px #00f5ff' }}
+          whileHover={{ scale: 1.04 }}
           whileTap={{ scale: 0.98 }}
           className="neon-ring mt-8 inline-flex items-center rounded-full border border-cyan-400/60 bg-cyan-400/10 px-6 py-3 text-sm font-semibold text-white hover:bg-cyan-400/20"
         >

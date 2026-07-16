@@ -108,7 +108,7 @@ const MainLayout = () => {
       <div ref={containerRef}>
         {/* Orden del home igual a crearttech.com: Hero → Próximos → Productos → Galería → Contacto */}
         <section id="inicio" className="section-snap relative h-screen w-full overflow-hidden"><Hero /></section>
-        <section id="proximos" className="section-snap relative min-h-screen md:h-screen w-full overflow-hidden"><UpcomingProducts /></section>
+        <section id="proximos" className="section-snap relative min-h-screen w-full"><UpcomingProducts /></section>
         <section id="productos" className="section-snap relative h-screen w-full overflow-hidden"><ProductsPage /></section>
         <section id="club" className="section-snap relative min-h-screen md:h-screen w-full overflow-hidden"><CreartClub /></section>
         <section id="galeria" className="section-snap relative h-screen w-full overflow-hidden"><GallerySection /></section>

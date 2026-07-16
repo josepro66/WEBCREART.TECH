@@ -115,7 +115,7 @@ const CreartClub: React.FC = () => {
               </ul>
 
               <motion.button
-                className="px-8 py-3.5 bg-neon-cyan text-black font-plexmono font-semibold text-[13px] tracking-[0.06em] rounded-md hover:bg-cyan-300 transition-colors duration-200 mx-auto lg:mx-0 block lg:inline-block shadow-[0_0_28px_-8px_rgba(0,229,255,0.55)]"
+                className="px-8 py-3.5 bg-neon-cyan text-black font-plexmono font-semibold text-[13px] tracking-[0.06em] rounded-md hover:bg-cyan-300 transition-colors duration-200 mx-auto lg:mx-0 block lg:inline-block"
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
                 onClick={() => navigate('/configurator')}

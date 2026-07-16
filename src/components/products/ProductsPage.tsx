@@ -91,7 +91,7 @@ function ProductCard({ product, onDetails, onBuy }: { product: typeof products[0
 
   return (
     <motion.div
-      className="group relative flex flex-col w-80 max-w-sm rounded-2xl border border-white/[0.07] bg-white/[0.025] p-5 transition-all duration-300 hover:border-cyan-500/25 hover:shadow-[0_0_35px_-8px_rgba(0,229,255,0.15)] product-card overflow-hidden"
+      className="group relative flex flex-col w-80 max-w-sm rounded-2xl border border-white/[0.07] bg-white/[0.025] p-5 transition-all duration-300 hover:border-white/[0.18] product-card overflow-hidden"
       initial={{ opacity: 0, rotateX: 18, y: 30 }}
       whileInView={{ opacity: 1, rotateX: 0, y: 0 }}
       whileHover={{ y: -5, scale: 1.01 }}
@@ -216,8 +216,8 @@ function ProductsPage() {
 
   return (
     <section
-      className="section-snap relative w-full overflow-hidden flex flex-col items-center"
-      style={{ height: '100vh', justifyContent: isFullscreen ? 'center' : 'flex-start' }}
+      className="section-snap relative w-full flex flex-col items-center"
+      style={{ minHeight: '100vh', justifyContent: isFullscreen ? 'center' : 'flex-start' }}
     >
       {/* Sin fondo local — el fondo global de 21st.dev (App.tsx) se ve a través */}
 
@@ -228,7 +228,7 @@ function ProductsPage() {
           zIndex: 10,
           maxWidth: '100%',
           paddingTop: isFullscreen ? '0' : '6rem',
-          height: '100%',
+          paddingBottom: isFullscreen ? '0' : '4rem',
           justifyContent: isFullscreen ? 'center' : 'flex-start',
         }}
       >

@@ -221,7 +221,7 @@ const Hero: React.FC = () => {
             >
               <motion.button
                 onClick={() => navigate('/configurator')}
-                className="group px-8 py-3.5 bg-neon-cyan text-black font-plexmono font-semibold text-[13px] tracking-[0.06em] rounded-md hover:bg-cyan-300 transition-colors duration-200 shadow-[0_0_28px_-8px_rgba(0,229,255,0.55)]"
+                className="group px-8 py-3.5 bg-neon-cyan text-black font-plexmono font-semibold text-[13px] tracking-[0.06em] rounded-md hover:bg-cyan-300 transition-colors duration-200"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.97 }}
               >
@@ -247,16 +247,6 @@ const Hero: React.FC = () => {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 1.6, delay: 0.3, ease: 'easeOut' }}
           >
-            {/* Spotlight primario — glow cian detrás del modelo */}
-            <div
-              className="absolute inset-0 pointer-events-none"
-              style={{ background: 'radial-gradient(500px 380px at 50% 44%, rgba(0,229,255,0.09) 0%, rgba(0,229,255,0.02) 40%, transparent 70%)' }}
-            />
-            {/* Spotlight secundario — toque cálido arriba-derecha */}
-            <div
-              className="absolute inset-0 pointer-events-none"
-              style={{ background: 'radial-gradient(300px 250px at 75% 25%, rgba(255,159,67,0.04) 0%, transparent 60%)' }}
-            />
             {/* Sombra de plataforma bajo el modelo */}
             <div
               className="absolute left-1/2 -translate-x-1/2 pointer-events-none"
@@ -264,16 +254,16 @@ const Hero: React.FC = () => {
                 top: '74%',
                 width: '58%',
                 height: 50,
-                background: 'radial-gradient(ellipse at center, rgba(0,229,255,0.08) 0%, rgba(0,0,0,0.45) 30%, transparent 68%)',
+                background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.2) 30%, transparent 68%)',
                 filter: 'blur(10px)',
               }}
             />
             <HoloShowcase />
-            {/* Marco de inspección: esquinas con glow sutil */}
-            <div className="absolute top-[8%] left-[4%] w-6 h-6 border-t border-l border-white/[0.12] pointer-events-none" style={{ boxShadow: 'inset 3px 3px 8px rgba(0,229,255,0.06)' }} />
-            <div className="absolute top-[8%] right-[4%] w-6 h-6 border-t border-r border-white/[0.12] pointer-events-none" style={{ boxShadow: 'inset -3px 3px 8px rgba(0,229,255,0.06)' }} />
-            <div className="absolute bottom-[8%] left-[4%] w-6 h-6 border-b border-l border-white/[0.12] pointer-events-none" style={{ boxShadow: 'inset 3px -3px 8px rgba(0,229,255,0.06)' }} />
-            <div className="absolute bottom-[8%] right-[4%] w-6 h-6 border-b border-r border-white/[0.12] pointer-events-none" style={{ boxShadow: 'inset -3px -3px 8px rgba(0,229,255,0.06)' }} />
+            {/* Marco de inspección: esquinas */}
+            <div className="absolute top-[8%] left-[4%] w-6 h-6 border-t border-l border-white/[0.12] pointer-events-none" />
+            <div className="absolute top-[8%] right-[4%] w-6 h-6 border-t border-r border-white/[0.12] pointer-events-none" />
+            <div className="absolute bottom-[8%] left-[4%] w-6 h-6 border-b border-l border-white/[0.12] pointer-events-none" />
+            <div className="absolute bottom-[8%] right-[4%] w-6 h-6 border-b border-r border-white/[0.12] pointer-events-none" />
           </motion.div>
 
         </div>

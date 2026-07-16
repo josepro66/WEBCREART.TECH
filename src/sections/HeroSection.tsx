@@ -35,7 +35,7 @@ export default function HeroSection() {
 
           <motion.a
             href="#productos"
-            whileHover={{ boxShadow: '0 0 24px rgba(0,245,255,0.8)', scale: 1.02 }}
+            whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             className="mt-8 inline-flex items-center justify-center rounded-full border border-cyan-400/60 bg-cyan-400/10 px-6 py-3 text-sm font-semibold text-white backdrop-blur-md transition-colors hover:bg-cyan-400/20"
           >
@@ -53,7 +53,7 @@ export default function HeroSection() {
             className="absolute -top-8 left-4 z-10"
           >
             <div className="relative inline-flex items-center gap-2 rounded-full border border-cyan-400/40 bg-white/5 px-4 py-1.5 backdrop-blur-md">
-              <span className="h-2 w-2 rounded-full bg-fuchsia-400 shadow-[0_0_10px_2px_rgba(255,0,229,0.6)]" />
+              <span className="h-2 w-2 rounded-full bg-fuchsia-400" />
               <span className="bg-gradient-to-r from-cyan-300 via-fuchsia-300 to-purple-300 bg-clip-text text-xs font-bold uppercase tracking-[0.2em] text-transparent">New Beato16</span>
               <span className="absolute -inset-0.5 -z-10 rounded-full opacity-30 blur-md" style={{ background: 'linear-gradient(90deg, rgba(0,245,255,.5), rgba(255,0,229,.4))' }} />
             </div>

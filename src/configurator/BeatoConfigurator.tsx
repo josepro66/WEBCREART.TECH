@@ -1416,7 +1416,7 @@ Best regards.`;
 
         {/* Título y logo centrados */}
         <div className="absolute top-4 md:top-10 left-0 right-0 z-30 flex justify-center items-center">
-          <h1 className="text-xl md:text-3xl lg:text-4xl font-bold leading-none m-0 font-gotham text-white tracking-wide drop-shadow-[0_0_12px_#a259ff] drop-shadow-[0_0_24px_#0ff] drop-shadow-[0_0_2px_#FFFFFF]">
+          <h1 className="text-xl md:text-3xl lg:text-4xl font-bold leading-none m-0 font-gotham text-white tracking-wide">
             BEATO8
           </h1>
         </div>

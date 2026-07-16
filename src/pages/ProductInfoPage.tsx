@@ -53,7 +53,7 @@ const fadeUp = (delay: number) => ({
 
 const Eyebrow: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <div className="inline-flex items-center gap-2.5 mb-4">
-    <span className="w-2 h-2 rounded-[2px] bg-neon-cyan shadow-[0_0_8px_rgba(0,229,255,0.5)]" />
+    <span className="w-2 h-2 rounded-[2px] bg-neon-cyan" />
     <span className="text-[10px] font-plexmono tracking-[0.28em] text-gray-500 uppercase">
       {children}
     </span>
@@ -148,7 +148,7 @@ const ProductInfoPage: React.FC<ProductInfoPageProps> = ({
               <div className="mt-8 flex flex-wrap items-center gap-4">
                 <button
                   onClick={() => navigate(`/configurator?product=${productId}`)}
-                  className="group px-7 py-3.5 bg-neon-cyan text-black font-plexmono font-semibold text-[13px] tracking-[0.06em] rounded-md hover:bg-cyan-300 transition-colors duration-200 shadow-[0_0_28px_-8px_rgba(0,229,255,0.55)]"
+                  className="group px-7 py-3.5 bg-neon-cyan text-black font-plexmono font-semibold text-[13px] tracking-[0.06em] rounded-md hover:bg-cyan-300 transition-colors duration-200 "
                 >
                   PERSONALIZAR {name}
                   <span className="inline-block ml-2 transition-transform duration-200 group-hover:translate-x-1">→</span>
@@ -276,7 +276,7 @@ const ProductInfoPage: React.FC<ProductInfoPageProps> = ({
             <div className="flex flex-col sm:flex-row gap-3.5 justify-center mt-8">
               <button
                 onClick={() => navigate(`/configurator?product=${productId}`)}
-                className="group px-8 py-3.5 bg-neon-cyan text-black font-plexmono font-semibold text-[13px] tracking-[0.06em] rounded-md hover:bg-cyan-300 transition-colors duration-200 shadow-[0_0_28px_-8px_rgba(0,229,255,0.55)]"
+                className="group px-8 py-3.5 bg-neon-cyan text-black font-plexmono font-semibold text-[13px] tracking-[0.06em] rounded-md hover:bg-cyan-300 transition-colors duration-200 "
               >
                 PERSONALIZAR {name}
                 <span className="inline-block ml-2 transition-transform duration-200 group-hover:translate-x-1">→</span>

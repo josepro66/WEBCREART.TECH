@@ -66,7 +66,7 @@ const SLIDES: Slide[] = [
   },
 ]
 
-const TRANSITION_DURATION = 1.0
+const TRANSITION_DURATION = 0.35
 const FPS60 = 1 / 60
 
 const HoloShowcase: React.FC = () => {
@@ -103,31 +103,28 @@ const HoloShowcase: React.FC = () => {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
     renderer.setSize(mount.clientWidth, mount.clientHeight)
     renderer.outputColorSpace = THREE.SRGBColorSpace
+    renderer.toneMapping = THREE.ACESFilmicToneMapping
     renderer.shadowMap.enabled = true
     renderer.shadowMap.type = THREE.PCFSoftShadowMap
     mount.appendChild(renderer.domElement)
 
-    // ── Iluminación idéntica al configurador ──
+    // ── Iluminación estilo ProductModelViewer ──
 
-    const ambientLight = new THREE.AmbientLight(0xffffff, 1.4)
-    scene.add(ambientLight)
+    scene.add(new THREE.AmbientLight(0xffffff, 0.7))
 
-    const mainLight = new THREE.DirectionalLight(0xffffff, 3.5)
-    mainLight.position.set(5, 4, 1)
-    mainLight.castShadow = true
-    mainLight.shadow.mapSize.set(4096, 4096)
-    mainLight.shadow.camera.near = 0.5
-    mainLight.shadow.camera.far = 50
-    mainLight.shadow.normalBias = 0.02
-    scene.add(mainLight)
+    const keyLight = new THREE.DirectionalLight(0xffffff, 1.1)
+    keyLight.position.set(3, 5, 4)
+    keyLight.castShadow = true
+    keyLight.shadow.mapSize.set(2048, 2048)
+    scene.add(keyLight)
 
-    const fillLight = new THREE.DirectionalLight(0x99ccff, 0.5)
-    fillLight.position.set(-8, 5, -5)
+    const fillLight = new THREE.DirectionalLight(0x99ccff, 0.6)
+    fillLight.position.set(-4, 2, -3)
     scene.add(fillLight)
 
-    const pointLight = new THREE.PointLight(0xffffff, 0.7, 20)
-    pointLight.position.set(0, 5, 5)
-    scene.add(pointLight)
+    const rimLight = new THREE.PointLight(0x00e5ff, 0.6, 8)
+    rimLight.position.set(0, 1.5, -2)
+    scene.add(rimLight)
 
     // ── Cargar modelos ──
     let cancelled = false
@@ -143,7 +140,29 @@ const HoloShowcase: React.FC = () => {
           if (cancelled) return resolve()
           const model = gltf.scene
 
-          const box = new THREE.Box3().setFromObject(model)
+          // Remove junk objects that inflate the bounding box (MIXO GLB has SnowBall + skeleton nodes)
+          const junkNames = ['snowball', 'skeleton', 'empty.001', 'empty.002', 'button:screw']
+          const toRemove: THREE.Object3D[] = []
+          model.traverse((child) => {
+            const n = child.name.toLowerCase()
+            if (junkNames.some(j => n.includes(j))) toRemove.push(child)
+          })
+          toRemove.forEach(obj => obj.removeFromParent())
+
+          // Compute bounding box from mesh geometry only (avoids transform hierarchy issues)
+          model.updateWorldMatrix(true, true)
+          const box = new THREE.Box3()
+          model.traverse((child) => {
+            if (child instanceof THREE.Mesh && child.geometry) {
+              child.geometry.computeBoundingBox()
+              if (child.geometry.boundingBox) {
+                const meshBox = child.geometry.boundingBox.clone()
+                meshBox.applyMatrix4(child.matrixWorld)
+                box.union(meshBox)
+              }
+            }
+          })
+          if (box.isEmpty()) box.setFromObject(model)
           const center = box.getCenter(new THREE.Vector3())
           const size = box.getSize(new THREE.Vector3())
           const maxDim = Math.max(size.x, size.y, size.z)
@@ -160,6 +179,37 @@ const HoloShowcase: React.FC = () => {
             if (!(obj instanceof THREE.Mesh)) return
             obj.castShadow = true
             obj.receiveShadow = true
+
+            const meshName = (obj.name || '').toLowerCase()
+            const parentName = obj.parent ? (obj.parent.name || '').toLowerCase() : ''
+
+            if (meshName.includes('logo') || meshName.includes('beato') || meshName.includes('crearttech') || meshName.includes('custom midi') || meshName.includes('mesa de trabajo')) {
+              if (obj.material && 'map' in obj.material && obj.material.map) {
+                ;(obj.material as THREE.Material).transparent = true
+                ;(obj.material as THREE.Material).alphaTest = 0.9
+              }
+              return
+            }
+            if (meshName.includes('pantallawavo')) return
+            if (meshName.includes('bolt')) {
+              obj.material = new THREE.MeshStandardMaterial({ color: '#777777', metalness: 0.9, roughness: 0.15 })
+            } else if (meshName.includes('cubechasis')) {
+              obj.material = new THREE.MeshPhysicalMaterial({ color: '#cc0000', metalness: 0.3, roughness: 0.45, clearcoat: 0.5, clearcoatRoughness: 0.25 })
+            } else if (meshName.includes('chasis')) {
+              obj.material = new THREE.MeshPhysicalMaterial({ color: '#7CBA40', metalness: 0.8, roughness: 0.48, clearcoat: 0.3, clearcoatRoughness: 0.2 })
+            } else if (meshName.includes('boton') || meshName.includes('tapa')) {
+              const num = parseInt(meshName.replace(/\D/g, '') || '0')
+              const isPink = num <= 4
+              obj.material = new THREE.MeshPhysicalMaterial({ color: isPink ? '#B8005C' : '#17181c', metalness: 0.0, roughness: isPink ? 0.5 : 0.32, clearcoat: 1.0, clearcoatRoughness: 0.06 })
+            } else if (meshName.includes('tecla')) {
+              obj.material = new THREE.MeshPhysicalMaterial({ color: '#CC0000', metalness: 0.0, roughness: 0.08, transmission: 0.3, thickness: 1.5, ior: 1.52, clearcoat: 1.0, clearcoatRoughness: 0.01, transparent: true, opacity: 0.92, reflectivity: 0.9, attenuationColor: new THREE.Color('#FF0000'), attenuationDistance: 0.5 })
+            } else if (meshName.startsWith('knob') || meshName.includes('encoder') || parentName.includes('knob')) {
+              obj.material = new THREE.MeshStandardMaterial({ color: '#1C1C1C', metalness: 0.3, roughness: 0.7 })
+            } else if (meshName.includes('fader')) {
+              obj.material = new THREE.MeshPhysicalMaterial({ color: '#FF2D95', metalness: 0.0, roughness: 0.35, clearcoat: 0.9, clearcoatRoughness: 0.08 })
+            } else if (meshName.includes('aro') || meshName.includes('cylinder')) {
+              obj.material = new THREE.MeshPhysicalMaterial({ color: 0x000000, metalness: 0.0, roughness: 0.2, clearcoat: 0.8, clearcoatRoughness: 0.1, transparent: true, opacity: 0.7 })
+            }
           })
 
           // Cargar textura de pantalla para el Wavo
@@ -211,35 +261,31 @@ const HoloShowcase: React.FC = () => {
     let outgoingModel: THREE.Group | null = null
     let incomingModel: THREE.Group | null = null
 
-    const easeInOutCubic = (x: number) =>
-      x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2
-
-    const setModelOpacity = (model: THREE.Group, opacity: number) => {
-      const needsTransparency = opacity < 1
-      model.traverse((obj) => {
-        if (!(obj instanceof THREE.Mesh) || !obj.material) return
-        const mat = obj.material as THREE.MeshStandardMaterial
-        if (mat.transparent !== needsTransparency) {
-          mat.transparent = needsTransparency
-          mat.needsUpdate = true
-        }
-        mat.opacity = opacity
-      })
+    // Easing "back out" — overshoot que rebota como en juegos
+    const easeOutBack = (x: number) => {
+      const c1 = 1.70158
+      const c3 = c1 + 1
+      return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2)
     }
+
+    let transitionDir = 1 // 1 = next, -1 = prev
 
     const tick = () => {
       t += 0.007
 
       // ── Detectar cambio de modelo ──
       if (lastActive !== activeRef.current) {
-        outgoingModel = modelsRef.current[SLIDES[lastActive]?.id] || null
-        incomingModel = modelsRef.current[SLIDES[activeRef.current]?.id] || null
+        const newIdx = activeRef.current
+        const oldIdx = lastActive
+        transitionDir = ((newIdx - oldIdx + SLIDES.length) % SLIDES.length) <= SLIDES.length / 2 ? 1 : -1
+
+        outgoingModel = modelsRef.current[SLIDES[oldIdx]?.id] || null
+        incomingModel = modelsRef.current[SLIDES[newIdx]?.id] || null
 
         if (incomingModel) {
           incomingModel.visible = true
           const bs = incomingModel.userData.baseScale || 1
-          incomingModel.scale.setScalar(bs * 0.6)
-          setModelOpacity(incomingModel, 0)
+          incomingModel.scale.setScalar(bs)
         }
 
         transitionProgress = 0
@@ -247,34 +293,34 @@ const HoloShowcase: React.FC = () => {
         lastActive = activeRef.current
       }
 
-      // ── Transición crossfade + zoom ──
+      // ── Transición snap lateral con overshoot ──
       if (transitionProgress < 1) {
         transitionProgress = Math.min(1, transitionProgress + FPS60 / TRANSITION_DURATION)
-        const ease = easeInOutCubic(transitionProgress)
+        const ease = easeOutBack(transitionProgress)
 
         if (outgoingModel) {
-          const bs = outgoingModel.userData.baseScale || 1
-          outgoingModel.scale.setScalar(bs * (1 + ease * 0.15))
-          setModelOpacity(outgoingModel, 1 - ease)
+          const bp = outgoingModel.userData.basePosition as THREE.Vector3
+          outgoingModel.position.x = bp.x + ease * 3 * transitionDir
+          outgoingModel.rotation.y = -0.55 + ease * 1.2 * transitionDir
 
           if (transitionProgress >= 1) {
             outgoingModel.visible = false
-            outgoingModel.scale.setScalar(bs)
-            setModelOpacity(outgoingModel, 1)
+            outgoingModel.position.copy(bp)
+            outgoingModel.rotation.set(0.28, -0.55, 0)
             outgoingModel = null
           }
         }
 
         if (incomingModel) {
-          const bs = incomingModel.userData.baseScale || 1
-          incomingModel.scale.setScalar(bs * (0.6 + ease * 0.4))
-          setModelOpacity(incomingModel, ease)
-          const basePos = incomingModel.userData.basePosition as THREE.Vector3
-          incomingModel.position.y = basePos.y + (1 - ease) * 0.5
+          const bp = incomingModel.userData.basePosition as THREE.Vector3
+          const slideIn = (1 - ease) * -3 * transitionDir
+          incomingModel.position.x = bp.x + slideIn
+          incomingModel.rotation.y = -0.55 + (1 - ease) * -1.2 * transitionDir
+          incomingModel.rotation.x = 0.28
 
           if (transitionProgress >= 1) {
-            incomingModel.scale.setScalar(bs)
-            setModelOpacity(incomingModel, 1)
+            incomingModel.position.copy(bp)
+            incomingModel.rotation.set(0.28, -0.55, 0)
             incomingModel = null
             transitioningRef.current = false
           }
@@ -288,9 +334,6 @@ const HoloShowcase: React.FC = () => {
         activeModel.rotation.y = -0.55 + Math.sin(t * 0.35) * 0.22 + t * 0.12
         activeModel.position.y = bp.y + Math.sin(t * 0.7) * 0.05
         activeModel.rotation.x = 0.28 + Math.sin(t * 0.5) * 0.02
-      } else if (incomingModel && transitionProgress < 1) {
-        incomingModel.rotation.y = -0.55 + Math.sin(t * 0.35) * 0.22 + t * 0.12
-        incomingModel.rotation.x = 0.28 * easeInOutCubic(transitionProgress) + Math.sin(t * 0.5) * 0.02
       }
 
 
@@ -389,32 +432,6 @@ const HoloShowcase: React.FC = () => {
       {/* Canvas 3D */}
       <div ref={mountRef} className="absolute inset-0 z-10" />
 
-      {/* Líneas de escaneo horizontales */}
-      <div className="absolute inset-0 z-20 pointer-events-none overflow-hidden">
-        <div
-          style={{
-            position: 'absolute',
-            left: 0,
-            right: 0,
-            height: 1,
-            background: `linear-gradient(90deg, transparent 0%, ${active.tint}40 30%, ${active.tint}60 50%, ${active.tint}40 70%, transparent 100%)`,
-            animation: 'holo-scan 5s linear infinite',
-            transition: 'background 0.6s',
-            opacity: 0.5,
-          }}
-        />
-        <div
-          style={{
-            position: 'absolute',
-            left: 0,
-            right: 0,
-            height: 1,
-            background: `linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.15) 50%, transparent 100%)`,
-            animation: 'holo-scan 7s linear 2s infinite',
-            opacity: 0.3,
-          }}
-        />
-      </div>
 
 
       {/* ── Flechas de navegación ── */}
@@ -463,7 +480,7 @@ const HoloShowcase: React.FC = () => {
               height: 3,
               borderRadius: 2,
               background: i === activeIdx ? s.tint : 'rgba(255,255,255,0.14)',
-              boxShadow: i === activeIdx ? `0 0 8px ${s.tint}60` : 'none',
+              boxShadow: 'none',
               transition: 'all 0.45s cubic-bezier(0.16, 1, 0.3, 1)',
             }}
           />
@@ -478,12 +495,6 @@ const HoloShowcase: React.FC = () => {
         @keyframes holo-spin-rev {
           from { transform: rotate(360deg); }
           to   { transform: rotate(0deg); }
-        }
-        @keyframes holo-scan {
-          0%   { top: -2%; opacity: 0; }
-          8%   { opacity: 1; }
-          92%  { opacity: 1; }
-          100% { top: 102%; opacity: 0; }
         }
         @keyframes holo-slide-in {
           from { opacity: 0; transform: translateY(10px) scale(0.96); }
@@ -516,7 +527,7 @@ const HoloShowcase: React.FC = () => {
           border-color: ${SLIDES[0].tint}60;
           color: #fff;
           background: rgba(0, 229, 255, 0.08);
-          box-shadow: 0 0 16px rgba(0, 229, 255, 0.15);
+          box-shadow: none;
         }
         .holo-arrow:active {
           transform: translateY(-50%) scale(0.92);

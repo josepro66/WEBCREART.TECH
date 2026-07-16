@@ -49,16 +49,6 @@ const TechBackdrop: React.FC = () => (
           'radial-gradient(1300px 900px at 50% 30%, rgba(0,0,0,0.85), transparent 85%)',
       }}
     />
-    {/* Línea de escaneo vertical muy tenue */}
-    <div
-      className="absolute left-0 right-0 h-px"
-      style={{
-        background:
-          'linear-gradient(90deg, transparent, rgba(0,229,255,0.35) 50%, transparent)',
-        opacity: 0.35,
-        animation: 'tb-scan 14s linear infinite',
-      }}
-    />
     {/* Viñeta que asienta el borde inferior */}
     <div
       className="absolute inset-0"
@@ -73,12 +63,6 @@ const TechBackdrop: React.FC = () => (
       @keyframes tb-aurora-2 {
         0%   { transform: translate(3%, 4%); }
         100% { transform: translate(-5%, -3%); }
-      }
-      @keyframes tb-scan {
-        0%   { top: -2%; opacity: 0; }
-        6%   { opacity: 0.6; }
-        94%  { opacity: 0.6; }
-        100% { top: 102%; opacity: 0; }
       }
     `}</style>
   </div>

@@ -311,10 +311,20 @@ const WavoConfigurator: React.FC<WavoConfiguratorProps> = ({ currentUser, onLogo
       else if (meshName.includes('tecla')) {
         const savedName = initialChosen.keys[child.name];
         const defaultColor = savedName && PALETTES.keys[savedName] ? savedName : 'Blanco';
-        child.material = new THREE.MeshPhysicalMaterial({ 
-          color: PALETTES.keys[defaultColor].hex, 
-          metalness: 0.05,
-          roughness: 0.45
+        child.material = new THREE.MeshPhysicalMaterial({
+          color: PALETTES.keys[defaultColor].hex,
+          metalness: 0.0,
+          roughness: 0.08,
+          transmission: 0.3,
+          thickness: 1.5,
+          ior: 1.52,
+          clearcoat: 1.0,
+          clearcoatRoughness: 0.01,
+          transparent: true,
+          opacity: 0.92,
+          reflectivity: 0.9,
+          attenuationColor: new THREE.Color(PALETTES.keys[defaultColor].hex),
+          attenuationDistance: 0.5,
         });
         newSelectable.keys.push(child);
         initialChosen.keys[child.name] = defaultColor;
@@ -704,8 +714,9 @@ const WavoConfigurator: React.FC<WavoConfiguratorProps> = ({ currentUser, onLogo
       const targets = selectedKeys.length > 0 ? selectedKeys : cur.keys;
       const nextKeys: Record<string, string> = {};
       targets.forEach(mesh => {
-        const mat = mesh.material as THREE.MeshStandardMaterial;
+        const mat = mesh.material as THREE.MeshPhysicalMaterial;
         mat.color.setHex(hexVal);
+        if (mat.attenuationColor) mat.attenuationColor.setHex(hexVal);
         mat.needsUpdate = true;
         nextKeys[mesh.name] = name;
       });
@@ -909,7 +920,6 @@ Saludos cordiales.`;
           style={{ 
             fontFamily: 'Arial, sans-serif',
             color: '#fff',
-            textShadow: '0 0 10px #00FFFF, 0 0 20px #0080FF',
             letterSpacing: '3px'
           }}
         >
@@ -960,7 +970,7 @@ Saludos cordiales.`;
                 background: currentView === id 
                   ? 'linear-gradient(to bottom right, #00FFFF, #0080FF)' 
                   : 'rgba(0,0,0,0.85)',
-                boxShadow: currentView === id ? '0 0 10px #00FFFF' : 'none'
+                boxShadow: 'none'
               }}
               title={title}
             >

@@ -20,7 +20,7 @@ export default function ProductCard({ product }: { product: Product }) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-100px' }}
       transition={{ duration: 0.6, ease: 'easeOut' }}
-      className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-md shadow-[0_0_40px_rgba(255,0,229,0.12)]"
+      className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-md"
     >
       <div className="aspect-video w-full overflow-hidden rounded-xl">
         {id === 'beato' && model ? (
