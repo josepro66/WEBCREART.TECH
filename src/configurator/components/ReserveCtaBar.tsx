@@ -26,7 +26,7 @@ const ReserveCtaBar: React.FC<Props> = ({ product, onSendConfig, onReserve, pric
       style={{
         position: 'fixed',
         left: '50%',
-        bottom: 18,
+        top: 18,
         transform: 'translateX(-50%)',
         zIndex: 50,
         display: 'flex',
@@ -158,7 +158,7 @@ const ReserveCtaBar: React.FC<Props> = ({ product, onSendConfig, onReserve, pric
           100% { left: 110%; }
         }
         @media (max-width: 640px) {
-          .creart-cta-bar { gap: 6px !important; padding: 6px 8px 6px 12px !important; bottom: 10px !important; }
+          .creart-cta-bar { gap: 6px !important; padding: 6px 8px 6px 12px !important; top: 10px !important; }
           .creart-cta-primary { font-size: 11px !important; padding: 10px 14px !important; }
         }
       `}</style>

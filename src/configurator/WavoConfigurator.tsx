@@ -961,18 +961,13 @@ Saludos cordiales.`;
         </button>
       </div>
 
-      {/* Título */}
-      <div className="absolute top-6 left-1/2 transform -translate-x-1/2 z-10 text-center">
-        <h1 
-          className="text-2xl font-bold m-0" 
-          style={{ 
-            fontFamily: 'Arial, sans-serif',
-            color: '#fff',
-            letterSpacing: '3px'
-          }}
-        >
-          WAVO
-        </h1>
+      {/* Logo del producto — abajo, centrado */}
+      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-10 flex items-center pointer-events-none">
+        <img
+          src={`${import.meta.env.BASE_URL}textures/Logo-wavo_Mesa de trabajo 1.png`}
+          alt="WAVO"
+          style={{ height: 44, width: 'auto', filter: 'brightness(1.1)' }}
+        />
       </div>
 
       {/* Canvas y Contenedor Principal */}

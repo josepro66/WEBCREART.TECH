@@ -188,28 +188,28 @@ const Hero: React.FC = () => {
 
             {/* Headline: grotesca técnica, tracking cerrado */}
             <motion.h1
-              className="font-grotesk font-bold leading-[0.98] tracking-[-0.03em] text-white mb-6"
+              className="font-grotesk font-bold leading-[0.98] tracking-[-0.04em] text-white mb-6 lowercase"
               style={{ fontSize: 'clamp(2.6rem, 5.8vw, 5.2rem)' }}
               initial={{ opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.2, ease: 'easeOut' }}
             >
-              Controladores
+              hardware
               <br />
-              MIDI{' '}
-              <span className="text-neon-cyan">personalizados</span>
+              musical{' '}
+              <span className="text-neon-cyan">a medida</span>
               <span className="text-gray-600">.</span>
             </motion.h1>
 
             {/* Subtítulo */}
             <motion.p
-              className="text-gray-400 text-base md:text-lg font-inter leading-relaxed mb-10 max-w-md mx-auto lg:mx-0"
+              className="text-gray-400 text-[15px] md:text-[17px] font-inter leading-[1.6] mb-10 max-w-md mx-auto lg:mx-0 lowercase"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.35, ease: 'easeOut' }}
             >
-              Diseña, construye y usa tu controlador MIDI o sintetizador a tu manera.
-              Chasis de metal, botones arcade, iluminación RGB — lo fabricamos para ti.
+              creart diseña y fabrica hardware de alta calidad para los que aman el sonido. 
+              desde controladores midi hasta grooveboxes autónomas — elige tus componentes y nosotros lo construimos.
             </motion.p>
 
             {/* CTA */}

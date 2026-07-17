@@ -1206,8 +1206,12 @@ const Beato16Configurator: React.FC<Beato16ConfiguratorProps> = ({ currentUser, 
           </div>
         </div>
 
-        <div className="absolute top-6 left-1/2 transform -translate-x-1/2 z-10 flex items-center gap-3">
-          <h1 className="text-2xl font-bold leading-none m-0" style={{ fontFamily: 'Gotham Black, Arial, sans-serif', color: '#fff', letterSpacing: '0.04em' }}>BEATO16</h1>
+        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-10 flex items-center pointer-events-none">
+          <img
+            src={`${import.meta.env.BASE_URL}textures/Logo-beato16_Mesa de trabajo 1.png`}
+            alt="BEATO 16"
+            style={{ height: 44, width: 'auto', filter: 'brightness(1.1)' }}
+          />
         </div>
 
         <main className="flex w-full h-full" style={{ minHeight: "100vh", height: "100vh", position: "relative", zIndex: 1, overflow: "hidden", background: "transparent" }}>

@@ -956,18 +956,13 @@ const FadoConfigurator: React.FC<{ onProductChange?: (product: 'beato' | 'knobo'
           </button>
         </div>
 
-        {/* Título centrado */}
-        <div className="absolute top-6 left-1/2 transform -translate-x-1/2 z-10 flex items-center gap-3">
-          <h1 
-            className="text-2xl font-bold leading-none m-0" 
-            style={{ 
-              fontFamily: 'Gotham Black, Arial, sans-serif',
-              color: '#fff',
-              letterSpacing: '0.04em'
-            }}
-          >
-            FADO
-          </h1>
+        {/* Logo del producto — abajo, centrado */}
+        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-10 flex items-center pointer-events-none">
+          <img
+            src={`${import.meta.env.BASE_URL}textures/Logo-fado_Mesa de trabajo 1.png`}
+            alt="FADO"
+            style={{ height: 44, width: 'auto', filter: 'brightness(1.1)' }}
+          />
         </div>
 
         {/* Container principal */}

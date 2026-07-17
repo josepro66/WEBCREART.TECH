@@ -1415,11 +1415,13 @@ Best regards.`;
           </div>
         </div>
 
-        {/* Título y logo centrados */}
-        <div className="absolute top-4 md:top-10 left-0 right-0 z-30 flex justify-center items-center">
-          <h1 className="text-xl md:text-3xl lg:text-4xl font-bold leading-none m-0 font-gotham text-white tracking-wide">
-            BEATO8
-          </h1>
+        {/* Logo del producto — abajo, centrado */}
+        <div className="absolute bottom-4 left-0 right-0 z-30 flex justify-center items-center pointer-events-none">
+          <img
+            src={`${import.meta.env.BASE_URL}textures/Logo-beato8_Mesa de trabajo 1.png`}
+            alt="BEATO 8"
+            style={{ height: 44, width: 'auto', filter: 'brightness(1.1)' }}
+          />
         </div>
 
         {/* Container principal - estructura optimizada para configurador */}
