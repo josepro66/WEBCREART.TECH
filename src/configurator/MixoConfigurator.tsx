@@ -410,17 +410,36 @@ Best regards.`;
       child.castShadow = true;
       child.receiveShadow = true;
       const meshName = typeof child.name === 'string' ? child.name.toLowerCase() : '';
+      const parentName = child.parent ? (child.parent.name || '').toLowerCase() : '';
 
-      if (meshName.includes('logo') || meshName.includes('mixo') || meshName.includes('knobo02') || meshName.includes('knobo-02') || meshName.includes('crearttech') || meshName.includes('custom midi')) {
+      if (meshName.includes('logo') || meshName.includes('mixo_mesa') || meshName.includes('knobo02') || meshName.includes('knobo-02') || meshName.includes('crearttech') || meshName.includes('custom midi')) {
         if (child.material && 'map' in child.material && child.material.map) {
-          child.material.transparent = true;
-          child.material.alphaTest = 0.9;
+          (child.material as THREE.Material).transparent = true;
+          (child.material as any).alphaTest = 0.9;
         }
+        return;
       }
 
-      if (meshName.includes('cubechasis')) {
+      // Chassis: MIXO glb uses "Cube006" (parent Scene) for the body. Older beato-family glbs use "cubechasis".
+      const isChasis = meshName.includes('cubechasis') ||
+        (meshName === 'cube006' && parentName === 'scene');
+      // Button dome/LED ring: children of boton1..4 groups (Cylinder006, Cylinder006_1, ...).
+      const isBotonDome = parentName.startsWith('boton') && !meshName.endsWith('_1');
+      const isBotonRing = parentName.startsWith('boton') && meshName.endsWith('_1');
+      // Fader handle body: children of fader1..4 groups (Cube006_1/2, Cube014_1, ...).
+      const isFaderBody = parentName.startsWith('fader');
+      // Fader top caps: Cylinder001/002/029/tapa1 grouped under Cube008.
+      const isFaderCap = parentName === 'cube008' && (meshName.startsWith('cylinder') || meshName.startsWith('tapa'));
+      // Rotary knob colored disc: knob{N}_1 meshes (parent knob{N}001).
+      const isKnobDisc = /^knob[1-4]_1$/.test(meshName);
+      // Rotary knob black body: knob{N} meshes.
+      const isKnobBody = /^knob[1-4]$/.test(meshName);
+      // Legacy bolt: keep default metallic look.
+      const isBolt = meshName.startsWith('bolt');
+
+      if (isChasis) {
         const chasisName = initialChosen.chasis && PALETTES.chasis[initialChosen.chasis] ? initialChosen.chasis : 'Gris';
-        child.material = new THREE.MeshPhysicalMaterial({ 
+        child.material = new THREE.MeshPhysicalMaterial({
           color: PALETTES.chasis[chasisName].hex,
           metalness: 0.8,
           roughness: 0.35,
@@ -430,7 +449,8 @@ Best regards.`;
         newSelectable.chasis.push(child);
         initialChosen.chasis = chasisName;
       }
-      else if (meshName.includes('boton')) {
+      else if (isBotonDome) {
+        // Frosted plastic dome that transmits the LED color underneath.
         const savedName = initialChosen.buttons[child.name];
         const defaultColor = savedName && PALETTES.buttons[savedName] ? savedName : 'Amarillo';
         const ledColor = new THREE.Color(PALETTES.buttons[defaultColor].hex);
@@ -453,48 +473,32 @@ Best regards.`;
         newSelectable.buttons.push(child);
         initialChosen.buttons[child.name] = defaultColor;
       }
-      else if (meshName.includes('aro')) {
-        child.material = new THREE.MeshPhysicalMaterial({ color: 0x000000, metalness: 0.0, roughness: 0.2, clearcoat: 0.8, clearcoatRoughness: 0.1, reflectivity: 0.5, transmission: 0.3, thickness: 0.5, ior: 1.4, attenuationDistance: 1.0, attenuationColor: 0xffffff, transparent: true, opacity: 0.7 });
-        newSelectable.buttons.push(child);
-        initialChosen.buttons[child.name] = 'Negro';
+      else if (isBotonRing) {
+        child.material = new THREE.MeshStandardMaterial({ color: 0x111111, metalness: 0.4, roughness: 0.6 });
       }
-      else if (meshName.startsWith('knob1_') || meshName.startsWith('knob2_') || meshName.startsWith('knob3_') || meshName.startsWith('knob4_')) {
-        if ((child.material as THREE.MeshStandardMaterial)?.color) {
-          const mat = child.material as THREE.MeshStandardMaterial;
-          const lightness = (mat.color.r + mat.color.g + mat.color.b) / 3;
-          if (lightness < 0.5) {
-            const savedName = initialChosen.knobs[child.name];
-            const defaultColor = savedName && PALETTES.knobs[savedName] ? savedName : 'Negro';
-            child.material = new THREE.MeshStandardMaterial({ color: PALETTES.knobs[defaultColor].hex, metalness: 0, roughness: 1 });
-            newSelectable.knobs.push(child);
-            initialChosen.knobs[child.name] = defaultColor;
-          } else {
-            child.material = new THREE.MeshStandardMaterial({ color: 0xffffff });
-          }
-        }
+      else if (isFaderCap) {
+        const savedName = initialChosen.faders[child.name];
+        const defaultColor = savedName && PALETTES.faders[savedName] ? savedName : 'Negro';
+        child.material = new THREE.MeshStandardMaterial({ color: PALETTES.faders[defaultColor].hex, metalness: 0.2, roughness: 0.7 });
+        newSelectable.faders.push(child);
+        initialChosen.faders[child.name] = defaultColor;
       }
-      else if (meshName.includes('fader')) {
-        if (meshName === 'fader1_1' || meshName === 'fader2_1' || meshName === 'fader3_1' || meshName === 'fader4_1') {
-          const savedName = initialChosen.faders[child.name];
-          const defaultColor = savedName && PALETTES.knobs[savedName] ? savedName : 'Negro';
-          child.material = new THREE.MeshStandardMaterial({ color: PALETTES.knobs[defaultColor].hex, metalness: 0, roughness: 1 });
-          newSelectable.faders.push(child);
-          initialChosen.faders[child.name] = defaultColor;
-        } else {
-          if (child.material) {
-            const mat = child.material as THREE.MeshStandardMaterial;
-            if (mat.color) {
-              const lightness = (mat.color.r + mat.color.g + mat.color.b) / 3;
-              if (lightness < 0.8) {
-                const savedName = initialChosen.faders[child.name];
-                const defaultColor = savedName && PALETTES.knobs[savedName] ? savedName : 'Negro';
-                mat.color.setHex(parseInt(PALETTES.knobs[defaultColor].hex.replace('#', ''), 16));
-                newSelectable.faders.push(child);
-                initialChosen.faders[child.name] = defaultColor;
-              }
-            }
-          }
-        }
+      else if (isFaderBody) {
+        // Black rectangular slider body — keep dark, non-configurable.
+        child.material = new THREE.MeshStandardMaterial({ color: 0x1C1C1C, metalness: 0.3, roughness: 0.65 });
+      }
+      else if (isKnobDisc) {
+        const savedName = initialChosen.knobs[child.name];
+        const defaultColor = savedName && PALETTES.knobs[savedName] ? savedName : 'Negro';
+        child.material = new THREE.MeshStandardMaterial({ color: PALETTES.knobs[defaultColor].hex, metalness: 0.2, roughness: 0.75 });
+        newSelectable.knobs.push(child);
+        initialChosen.knobs[child.name] = defaultColor;
+      }
+      else if (isKnobBody) {
+        child.material = new THREE.MeshStandardMaterial({ color: 0x111111, metalness: 0.4, roughness: 0.6 });
+      }
+      else if (isBolt) {
+        child.material = new THREE.MeshStandardMaterial({ color: 0x8f8f8f, metalness: 0.9, roughness: 0.2 });
       }
     });
     setSelectable(newSelectable);
@@ -566,32 +570,20 @@ Best regards.`;
   const setEmissive = useCallback((object: THREE.Mesh | null, color: number = 0x000000) => {
     if (object && (object.material as THREE.MeshPhysicalMaterial)?.emissive) {
       const material = object.material as THREE.MeshPhysicalMaterial;
-      
-      if (object.name.toLowerCase().includes('boton') && color === 0x000000) {
+      const isBotonDome = (object.parent?.name || '').toLowerCase().startsWith('boton');
+
+      if (isBotonDome && color === 0x000000) {
         restoreButtonLED(object);
         return;
       }
-      
-      if (object.name.toLowerCase().includes('boton')) {
+      if (isBotonDome) {
         // Frosted dome: keep stored LED color, just boost intensity when selected
         material.emissiveIntensity = 3.5;
         return;
       }
       material.emissive.setHex(color);
-      if (object.name.toLowerCase().includes('aro')) {
-        material.emissiveIntensity = 0.3;
-        material.opacity = 0.8;
-      }
     }
   }, [restoreButtonLED]);
-
-  // Helper: encontrar botón asociado a un aro
-  const findAssociatedButtonFromRing = useCallback((ringName: string): THREE.Mesh | null => {
-    const number = ringName.match(/\d+/)?.[0];
-    if (!number) return null;
-    const expected = `Boton${number}`;
-    return selectable.buttons.find(b => b.name === expected) || null;
-  }, [selectable.buttons]);
 
   // Función para manejar clics en el canvas
   const handleCanvasClick = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
@@ -634,30 +626,23 @@ Best regards.`;
 
     if (intersects.length > 0) {
       const clickedMesh = intersects[0].object as THREE.Mesh;
-      const name = clickedMesh.name.toLowerCase();
 
       if (currentView === 'normal') return;
 
-      if (name.includes('boton') || name.includes('aro')) {
+      // objectsToIntersect was already filtered by currentView, so the hit is
+      // guaranteed to be the right kind of part — no need to gate by mesh name.
+      if (currentView === 'buttons') {
         setSelectedKnobs([]);
         setSelectedFaders([]);
-
-        // Si es aro, mapear a su botón correspondiente
-        let target = clickedMesh;
-        if (name.includes('aro')) {
-          const btn = findAssociatedButtonFromRing(clickedMesh.name);
-          if (btn) target = btn; else return;
-        }
-
         setSelectedForColoring(null);
         setSelectedButtons(prev => {
-          const already = prev.includes(target);
-          const next = already ? prev.filter(b => b !== target) : [...prev, target];
+          const already = prev.includes(clickedMesh);
+          const next = already ? prev.filter(b => b !== clickedMesh) : [...prev, clickedMesh];
           selectable.buttons.forEach(b => setEmissive(b, 0x000000));
           next.forEach(b => setEmissive(b, 0x444444));
           return next;
         });
-      } else if (name.startsWith('knob1_') || name.startsWith('knob2_') || name.startsWith('knob3_') || name.startsWith('knob4_')) {
+      } else if (currentView === 'knobs') {
         setSelectedButtons([]);
         setSelectedFaders([]);
         setSelectedForColoring(null);
@@ -668,7 +653,7 @@ Best regards.`;
           next.forEach(k => setEmissive(k, 0x444444));
           return next;
         });
-      } else if (name.startsWith('fader1') || name.startsWith('fader2') || name.startsWith('fader3') || name.startsWith('fader4')) {
+      } else if (currentView === 'faders') {
         setSelectedButtons([]);
         setSelectedKnobs([]);
         setSelectedForColoring(null);
@@ -679,14 +664,9 @@ Best regards.`;
           next.forEach(f => setEmissive(f, 0x444444));
           return next;
         });
-      } else if (name.includes('cubechasis')) {
-        setSelectedButtons([]);
-        setSelectedKnobs([]);
-        setSelectedFaders([]);
-        setSelectedForColoring(clickedMesh);
       }
     }
-  }, [currentView, selectable, selectedForColoring, setEmissive, selectedButtons, selectedKnobs, selectedFaders, findAssociatedButtonFromRing]);
+  }, [currentView, selectable, selectedForColoring, setEmissive, selectedButtons, selectedKnobs, selectedFaders]);
 
   // Función para aplicar color
   const applyColor = useCallback((colorName: string, colorData: PaletteColor) => {
@@ -706,14 +686,6 @@ Best regards.`;
         material.attenuationColor.copy(newLedColor);
         material.emissiveIntensity = 0.0; // LED off after applying color
         newChosenColors.buttons[btn.name] = colorName;
-        const aroName = btn.name.replace('boton', 'aro');
-        const aroMesh = selectable.buttons.find(m => m.name === aroName);
-        if (aroMesh && aroMesh.material instanceof THREE.MeshPhysicalMaterial) {
-          const aroMaterial = aroMesh.material;
-          aroMaterial.color.setHex(parseInt(colorData.hex.replace('#', ''), 16));
-          aroMaterial.attenuationColor.setHex(parseInt(colorData.hex.replace('#', ''), 16));
-          newChosenColors.buttons[aroName] = colorName;
-        }
       });
       setChosenColors(newChosenColors);
       setSelectedButtons([]);
@@ -747,43 +719,12 @@ Best regards.`;
       return;
     }
 
-    const name = selectedForColoring.name.toLowerCase();
-    const color = new THREE.Color(colorData.hex);
-
-    if (name.includes('cubechasis')) {
-      setChosenColors(prev => ({ ...prev, chasis: colorName }));
-      if (selectedForColoring.material instanceof THREE.MeshStandardMaterial) {
-        selectedForColoring.material.color = color;
-      }
-    } else if (name.includes('boton')) {
-      setChosenColors(prev => ({ ...prev, buttons: { ...prev.buttons, [selectedForColoring.name]: colorName } }));
-      if (selectedForColoring.material instanceof THREE.MeshPhysicalMaterial) {
-        const material = selectedForColoring.material;
-        // Keep dome white/frosted — only update LED (emissive) color
-        const singleLedColor = new THREE.Color(colorData.hex);
-        material.emissive.copy(singleLedColor);
-        material.attenuationColor.copy(singleLedColor);
-        material.emissiveIntensity = 0.0;
-        const aroName = selectedForColoring.name.replace('boton', 'aro');
-        const aroMesh = selectable.buttons.find(m => m.name === aroName);
-        if (aroMesh && aroMesh.material instanceof THREE.MeshPhysicalMaterial) {
-          const aroMaterial = aroMesh.material;
-          aroMaterial.color.setHex(parseInt(colorData.hex.replace('#', ''), 16));
-          aroMaterial.attenuationColor.setHex(parseInt(colorData.hex.replace('#', ''), 16));
-          setChosenColors(prev => ({ ...prev, buttons: { ...prev.buttons, [aroName]: colorName } }));
-        }
-      }
-    } else if (name.startsWith('knob1_') || name.startsWith('knob2_') || name.startsWith('knob3_') || name.startsWith('knob4_')) {
-      setChosenColors(prev => ({ ...prev, knobs: { ...prev.knobs, [selectedForColoring.name]: colorName } }));
-      if (selectedForColoring.material && 'color' in selectedForColoring.material) {
-        (selectedForColoring.material as any).color = color;
-        (selectedForColoring.material as any).metalness = 0;
-        (selectedForColoring.material as any).roughness = 1;
-      }
-    } else if (name.startsWith('fader1') || name.startsWith('fader2') || name.startsWith('fader3') || name.startsWith('fader4')) {
-      setChosenColors(prev => ({ ...prev, faders: { ...prev.faders, [selectedForColoring.name]: colorName } }));
-      selectedForColoring.material = new THREE.MeshStandardMaterial({ color: colorData.hex, metalness: 0, roughness: 1 });
+    // selectedForColoring is only set when the chassis view is active (see changeView).
+    if (selectedForColoring.material instanceof THREE.MeshStandardMaterial ||
+        selectedForColoring.material instanceof THREE.MeshPhysicalMaterial) {
+      selectedForColoring.material.color = new THREE.Color(colorData.hex);
     }
+    setChosenColors(prev => ({ ...prev, chasis: colorName }));
   }, [selectedForColoring, selectedButtons, selectedKnobs, selectedFaders, chosenColors, selectable, currentView, setEmissive]);
 
   // Función para obtener el título
@@ -910,21 +851,11 @@ Best regards.`;
       }
       Object.entries(chosenColors.buttons).forEach(([buttonName, colorName]) => {
         const mesh = selectable.buttons.find(m => m.name === buttonName);
-        if (mesh && PALETTES.buttons[colorName]) {
-          if (mesh.material instanceof THREE.MeshPhysicalMaterial) {
-            const material = mesh.material;
-            if (mesh.name.toLowerCase().includes('boton')) {
-              // Frosted dome: update LED color but not intensity (keep current on/off state)
-              const syncLedColor = new THREE.Color(PALETTES.buttons[colorName].hex);
-              material.emissive.copy(syncLedColor);
-              material.attenuationColor.copy(syncLedColor);
-            } else {
-              material.color = new THREE.Color(PALETTES.buttons[colorName].hex);
-              if (mesh.name.toLowerCase().includes('aro')) {
-                material.attenuationColor.setHex(parseInt(PALETTES.buttons[colorName].hex.replace('#', ''), 16));
-              }
-            }
-          }
+        if (mesh && PALETTES.buttons[colorName] && mesh.material instanceof THREE.MeshPhysicalMaterial) {
+          // Frosted dome: keep dome white/frosted, only update LED (emissive) color.
+          const syncLedColor = new THREE.Color(PALETTES.buttons[colorName].hex);
+          mesh.material.emissive.copy(syncLedColor);
+          mesh.material.attenuationColor.copy(syncLedColor);
         }
       });
       Object.entries(chosenColors.faders).forEach(([faderName, colorName]) => {
