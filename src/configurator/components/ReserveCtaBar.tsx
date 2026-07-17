@@ -32,13 +32,6 @@ const ReserveCtaBar: React.FC<Props> = ({ product, onSendConfig, onReserve, pric
         display: 'flex',
         alignItems: 'center',
         gap: 10,
-        padding: '8px 10px 8px 16px',
-        background: 'rgba(9, 9, 11, 0.78)',
-        backdropFilter: 'blur(18px)',
-        WebkitBackdropFilter: 'blur(18px)',
-        border: `1px solid ${id.accent}40`,
-        borderRadius: 999,
-        boxShadow: '0 20px 50px -20px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04) inset',
         fontFamily: "'Inter', sans-serif",
       }}
     >

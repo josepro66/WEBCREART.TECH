@@ -112,8 +112,8 @@ const Beato16Configurator: React.FC<Beato16ConfiguratorProps> = ({ currentUser, 
   };
 
   const CAMERA_VIEWS = {
-    normal: { pos: new THREE.Vector3(2, -0.5, 1.5), target: new THREE.Vector3(0, -0.5, -0.1) },
-    top: { pos: new THREE.Vector3(1, 1.95, -0.3), target: new THREE.Vector3(-0.35, -1.2, -0.3) },
+    normal: { pos: new THREE.Vector3(3, 1.5, -0.1), target: new THREE.Vector3(0, -0.5, -0.1) },
+    top: { pos: new THREE.Vector3(2.2, 3, -0.2), target: new THREE.Vector3(-0.2, -1.8, -0.2) },
   };
 
   // Guardar posición y target iniciales de la cámara
@@ -507,9 +507,9 @@ const Beato16Configurator: React.FC<Beato16ConfiguratorProps> = ({ currentUser, 
     const size = box.getSize(new THREE.Vector3());
     const center = box.getCenter(new THREE.Vector3());
     const maxSize = Math.max(size.x, size.y, size.z);
-    const desiredSize = 1.8;
+    const desiredSize = 2.5;
     const scale = desiredSize / maxSize;
-    
+
     obj.scale.set(scale, scale, scale);
     obj.position.copy(center).multiplyScalar(-scale);
     obj.position.y -= (size.y / 2) * scale;
@@ -529,9 +529,6 @@ const Beato16Configurator: React.FC<Beato16ConfiguratorProps> = ({ currentUser, 
         modelRef.current = model;
         prepareModelParts(model);
         centerAndScaleModel(model);
-        // Aplicar rotaciones al modelo
-        model.rotation.y = Math.PI / 6; // 30 grados en Y
-        model.rotation.x = -Math.PI / 4; // -45 grados en X (inclinación hacia atrás)
         sceneRef.current?.add(model);
         if (!modelOriginalPositionRef.current) {
           modelOriginalPositionRef.current = model.position.clone();

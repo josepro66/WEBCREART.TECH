@@ -172,7 +172,7 @@ function App() {
 
   const menuItems = [
     { id: 'beato8' as ProductId, icon: 'textures/beato.png', logo: 'textures/Logo-beato8_Mesa de trabajo 1.png' },
-    { id: 'beato16' as ProductId, icon: 'textures/beato16.png', logo: 'textures/Logo-beato8_Mesa de trabajo 1.png' },
+    { id: 'beato16' as ProductId, icon: 'textures/beato16.png', logo: 'textures/Logo-beato16_Mesa de trabajo 1.png' },
     { id: 'knobo' as ProductId, icon: 'textures/knobo.png', logo: 'textures/Logo-Knobo_Mesa de trabajo 1.png' },
     { id: 'mixo' as ProductId, icon: 'textures/mixo.png', logo: 'textures/Logo-mixo_Mesa de trabajo 1.png' },
     { id: 'loopo' as ProductId, icon: 'textures/loopo.png', logo: 'textures/Logo-loopo_Mesa de trabajo 1.png' },
