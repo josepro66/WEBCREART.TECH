@@ -154,6 +154,7 @@ body {
 
 .product-menu-item {
   width: 100%;
+  min-width: 0;
   padding: 10px 12px 10px 14px;
   box-sizing: border-box;
   display: flex;
@@ -165,7 +166,7 @@ body {
   border-radius: 10px;
   cursor: pointer;
   transition: transform 0.22s ease, background 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
-  overflow: visible;
+  overflow: hidden;
   position: relative;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
@@ -179,11 +180,11 @@ body {
 .product-menu-item img.product-logo {
   height: 28px;
   max-height: 28px;
-  width: auto;
+  min-width: 0;
   max-width: 100%;
+  flex: 1 1 0;
   object-fit: contain;
   object-position: left center;
-  flex: 0 0 auto;
 }
 
 /* En pantallas pequeñas: compactar a icono + nombre corto */
