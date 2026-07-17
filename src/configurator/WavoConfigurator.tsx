@@ -85,6 +85,12 @@ const WavoConfigurator: React.FC<WavoConfiguratorProps> = ({ currentUser, onLogo
     };
   }, []);
 
+  // Migration: reset saved colors for new position-based button defaults
+  if (!localStorage.getItem('wavo_colors_v2')) {
+    localStorage.removeItem('wavo_chosenColors');
+    localStorage.setItem('wavo_colors_v2', '1');
+  }
+
   // Inicialización de colores elegidos (con persistencia en localStorage)
   const [showReservaModal, setShowReservaModal] = useState(false);
   const [chosenColors, setChosenColors] = useState<ChosenColors>(() => {
@@ -225,6 +231,18 @@ const WavoConfigurator: React.FC<WavoConfiguratorProps> = ({ currentUser, onLogo
       console.log(`  [${child.type}] name="${child.name}"`);
     });
 
+    let maxBotonNum = 0;
+    model.traverse((c: THREE.Object3D) => {
+      if (c instanceof THREE.Mesh) {
+        const n = (c.name || '').toLowerCase();
+        if (n.includes('boton')) {
+          const num = parseInt((n.match(/\d+/) || ['0'])[0]);
+          if (num > maxBotonNum) maxBotonNum = num;
+        }
+      }
+    });
+    const botonMid = Math.floor(maxBotonNum / 2);
+
     model.traverse((child: THREE.Object3D) => {
       if (!(child instanceof THREE.Mesh)) return;
       child.castShadow = true;
@@ -292,10 +310,12 @@ const WavoConfigurator: React.FC<WavoConfiguratorProps> = ({ currentUser, onLogo
       }
       // Botones circulares pequeños
       else if (meshName.includes('boton')) {
+        const num = parseInt((meshName.match(/\d+/) || ['0'])[0]);
+        const isTop = num > botonMid;
         const savedName = initialChosen.buttons[child.name];
-        const defaultColor = savedName && PALETTES.buttons[savedName] ? savedName : 'Blanco';
-        child.material = new THREE.MeshPhysicalMaterial({ 
-          color: PALETTES.buttons[defaultColor].hex, 
+        const defaultColor = savedName && PALETTES.buttons[savedName] ? savedName : (isTop ? 'Blanco' : 'Negro');
+        child.material = new THREE.MeshPhysicalMaterial({
+          color: PALETTES.buttons[defaultColor].hex,
           metalness: 0.4,
           roughness: 0.68,
           clearcoat: 0.85,
@@ -307,24 +327,51 @@ const WavoConfigurator: React.FC<WavoConfiguratorProps> = ({ currentUser, onLogo
         newSelectable.buttons.push(child);
         initialChosen.buttons[child.name] = defaultColor;
       }
+      // Tapas (anillos alrededor de botones)
+      else if (meshName.includes('tapa')) {
+        const num = parseInt((meshName.match(/\d+/) || ['0'])[0]);
+        const isTop = num > botonMid;
+        child.material = new THREE.MeshPhysicalMaterial({
+          color: isTop ? 0xffffff : 0x111111,
+          metalness: 0.0,
+          roughness: 0.32,
+          clearcoat: 1.0,
+          clearcoatRoughness: 0.06,
+        });
+      }
+      // Aros (anillos en otros modelos)
+      else if (meshName.includes('aro') || meshName.includes('ring')) {
+        const num = parseInt((meshName.match(/\d+/) || ['0'])[0]);
+        const isTop = num > botonMid;
+        child.material = new THREE.MeshPhysicalMaterial({
+          color: isTop ? 0xffffff : 0x111111,
+          metalness: 0.0,
+          roughness: 0.2,
+          clearcoat: 0.8,
+          clearcoatRoughness: 0.1,
+        });
+      }
       // Teclas / Keybed
       else if (meshName.includes('tecla')) {
         const savedName = initialChosen.keys[child.name];
         const defaultColor = savedName && PALETTES.keys[savedName] ? savedName : 'Blanco';
         child.material = new THREE.MeshPhysicalMaterial({
           color: PALETTES.keys[defaultColor].hex,
-          metalness: 0.0,
-          roughness: 0.08,
-          transmission: 0.3,
-          thickness: 1.5,
-          ior: 1.52,
+          metalness: 0.05,
+          roughness: 0.02,
+          transmission: 0.45,
+          thickness: 2.0,
+          ior: 1.55,
           clearcoat: 1.0,
-          clearcoatRoughness: 0.01,
+          clearcoatRoughness: 0.005,
           transparent: true,
-          opacity: 0.92,
-          reflectivity: 0.9,
+          opacity: 0.88,
+          reflectivity: 1.0,
+          envMapIntensity: 1.5,
           attenuationColor: new THREE.Color(PALETTES.keys[defaultColor].hex),
-          attenuationDistance: 0.5,
+          attenuationDistance: 0.4,
+          specularIntensity: 1.0,
+          specularColor: new THREE.Color(0xffffff),
         });
         newSelectable.keys.push(child);
         initialChosen.keys[child.name] = defaultColor;
@@ -429,6 +476,7 @@ const WavoConfigurator: React.FC<WavoConfiguratorProps> = ({ currentUser, onLogo
     renderer.setSize(mountRef.current.clientWidth, mountRef.current.clientHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.shadowMap.enabled = true;
     rendererRef.current = renderer;
     mountRef.current.appendChild(renderer.domElement);

@@ -13,7 +13,7 @@ const TechBackdrop: React.FC = () => (
     className="fixed inset-0 z-0 pointer-events-none overflow-hidden"
     style={{
       background:
-        'radial-gradient(1400px 900px at 50% 12%, #12151A 0%, #0A0B0D 55%, #060708 100%)',
+        'radial-gradient(1400px 900px at 50% 12%, #232b4d 0%, #141a36 55%, #0c1026 100%)',
     }}
   >
     {/* Aurora 1: mancha cián derivando lento */}
@@ -21,7 +21,7 @@ const TechBackdrop: React.FC = () => (
       className="absolute -inset-[10%]"
       style={{
         background:
-          'radial-gradient(600px 400px at 30% 40%, rgba(0,229,255,0.08) 0%, transparent 60%)',
+          'radial-gradient(750px 500px at 30% 40%, rgba(0,229,255,0.17) 0%, transparent 60%)',
         filter: 'blur(60px)',
         animation: 'tb-aurora-1 26s ease-in-out infinite alternate',
       }}
@@ -31,9 +31,29 @@ const TechBackdrop: React.FC = () => (
       className="absolute -inset-[10%]"
       style={{
         background:
-          'radial-gradient(500px 350px at 75% 65%, rgba(255,61,119,0.06) 0%, transparent 60%)',
+          'radial-gradient(650px 450px at 75% 65%, rgba(255,61,119,0.13) 0%, transparent 60%)',
         filter: 'blur(70px)',
         animation: 'tb-aurora-2 32s ease-in-out infinite alternate',
+      }}
+    />
+    {/* Aurora 3: violeta superior derecha */}
+    <div
+      className="absolute -inset-[10%]"
+      style={{
+        background:
+          'radial-gradient(700px 480px at 82% 18%, rgba(139,92,246,0.16) 0%, transparent 60%)',
+        filter: 'blur(70px)',
+        animation: 'tb-aurora-2 38s ease-in-out infinite alternate',
+      }}
+    />
+    {/* Aurora 4: toque lima inferior izquierda */}
+    <div
+      className="absolute -inset-[10%]"
+      style={{
+        background:
+          'radial-gradient(550px 380px at 15% 85%, rgba(200,255,77,0.08) 0%, transparent 60%)',
+        filter: 'blur(80px)',
+        animation: 'tb-aurora-1 34s ease-in-out infinite alternate',
       }}
     />
     {/* Micro-rejilla de plano técnico */}

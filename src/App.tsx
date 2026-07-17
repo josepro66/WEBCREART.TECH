@@ -107,12 +107,12 @@ const MainLayout = () => {
       <FullscreenToggle />
       <div ref={containerRef}>
         {/* Orden del home igual a crearttech.com: Hero → Próximos → Productos → Galería → Contacto */}
-        <section id="inicio" className="section-snap relative h-screen w-full overflow-hidden"><Hero /></section>
-        <section id="proximos" className="section-snap relative min-h-screen w-full"><UpcomingProducts /></section>
-        <section id="productos" className="section-snap relative h-screen w-full overflow-hidden"><ProductsPage /></section>
-        <section id="club" className="section-snap relative min-h-screen md:h-screen w-full overflow-hidden"><CreartClub /></section>
-        <section id="galeria" className="section-snap relative h-screen w-full overflow-hidden"><GallerySection /></section>
-        <section id="contacto" className="section-snap relative h-screen w-full overflow-hidden"><Footer /></section>
+        <section id="inicio" className="section-snap relative h-[100dvh] w-full overflow-hidden"><Hero /></section>
+        <section id="proximos" className="section-snap relative min-h-[100dvh] w-full"><UpcomingProducts /></section>
+        <section id="productos" className="section-snap relative min-h-[100dvh] w-full"><ProductsPage /></section>
+        <section id="club" className="section-snap relative min-h-[100dvh] md:h-[100dvh] w-full overflow-hidden"><CreartClub /></section>
+        <section id="galeria" className="section-snap relative min-h-[100dvh] w-full"><GallerySection /></section>
+        <section id="contacto" className="section-snap relative h-[100dvh] w-full overflow-hidden"><Footer /></section>
       </div>
     </div>
   );

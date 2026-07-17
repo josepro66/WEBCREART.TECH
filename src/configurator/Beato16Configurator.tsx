@@ -356,12 +356,24 @@ const Beato16Configurator: React.FC<Beato16ConfiguratorProps> = ({ currentUser, 
     //   console.warn('Could not parse saved beato16_chosenColors', e);
     // }
 
+    let maxBotonNum = 0;
+    model.traverse((c: THREE.Object3D) => {
+      if (c instanceof THREE.Mesh) {
+        const n = (c.name || '').toLowerCase();
+        if (n.includes('boton')) {
+          const num = parseInt((n.match(/\d+/) || ['0'])[0]);
+          if (num > maxBotonNum) maxBotonNum = num;
+        }
+      }
+    });
+    const botonMid = Math.floor(maxBotonNum / 2);
+
     model.traverse((child: THREE.Object3D) => {
       if (!(child instanceof THREE.Mesh)) return;
       child.castShadow = true;
       child.receiveShadow = true;
       const meshName = typeof child.name === 'string' ? child.name.toLowerCase() : '';
-      
+
       if (meshName.includes('logo') || meshName.includes('beato') || meshName.includes('crearttech') || meshName.includes('custom midi')) {
         if (child.material && 'map' in child.material && child.material.map) {
           child.material.transparent = true;
@@ -382,28 +394,40 @@ const Beato16Configurator: React.FC<Beato16ConfiguratorProps> = ({ currentUser, 
         initialChosen.chasis = chasisName;
       }
       else if (meshName.includes('boton')) {
+        const num = parseInt((meshName.match(/\d+/) || ['0'])[0]);
+        const isTop = num > botonMid;
         const savedName = initialChosen.buttons[child.name];
-        const defaultColor = savedName && PALETTES.buttons[savedName] ? savedName : 'Negro';
+        const defaultColor = savedName && PALETTES.buttons[savedName] ? savedName : (isTop ? 'Blanco' : 'Negro');
         child.material = new THREE.MeshPhysicalMaterial({ color: PALETTES.buttons[defaultColor].hex, metalness: 0.4, roughness: 0.68, clearcoat: 0.85, clearcoatRoughness: 0.08, reflectivity: 0.3, sheen: 0.5, sheenColor: 0x1C1C1C });
         newSelectable.buttons.push(child);
         initialChosen.buttons[child.name] = defaultColor;
       }
+      else if (meshName.includes('tapa')) {
+        const num = parseInt((meshName.match(/\d+/) || ['0'])[0]);
+        const isTop = num > botonMid;
+        child.material = new THREE.MeshPhysicalMaterial({
+          color: isTop ? 0xffffff : 0x111111,
+          metalness: 0.0,
+          roughness: 0.32,
+          clearcoat: 1.0,
+          clearcoatRoughness: 0.06,
+        });
+      }
       else if (meshName.includes('aro') || (meshName.includes('fader') && (meshName.includes('ring') || meshName.includes('circle')))) {
-        console.log('Aro de fader configurado en prepareModelParts Beato16:', child.name);
-        child.material = new THREE.MeshPhysicalMaterial({ 
-          color: 0x000000, 
-          metalness: 0.0, 
-          roughness: 0.2, 
-          clearcoat: 0.8, 
-          clearcoatRoughness: 0.1, 
-          reflectivity: 0.5, 
-          transmission: 0.3, 
-          thickness: 0.5, 
-          ior: 1.4, 
-          attenuationDistance: 1.0, 
-          attenuationColor: 0xffffff, 
-          transparent: true, 
-          opacity: 0.7 
+        child.material = new THREE.MeshPhysicalMaterial({
+          color: 0x000000,
+          metalness: 0.0,
+          roughness: 0.2,
+          clearcoat: 0.8,
+          clearcoatRoughness: 0.1,
+          reflectivity: 0.5,
+          transmission: 0.3,
+          thickness: 0.5,
+          ior: 1.4,
+          attenuationDistance: 1.0,
+          attenuationColor: 0xffffff,
+          transparent: true,
+          opacity: 0.7
         });
         newSelectable.buttons.push(child);
         initialChosen.buttons[child.name] = 'Negro';
@@ -428,18 +452,21 @@ const Beato16Configurator: React.FC<Beato16ConfiguratorProps> = ({ currentUser, 
         const defaultColor = savedName && PALETTES.teclas[savedName] ? savedName : 'Negro';
         child.material = new THREE.MeshPhysicalMaterial({
           color: PALETTES.teclas[defaultColor].hex,
-          metalness: 0.0,
-          roughness: 0.08,
-          transmission: 0.3,
-          thickness: 1.5,
-          ior: 1.52,
+          metalness: 0.05,
+          roughness: 0.02,
+          transmission: 0.45,
+          thickness: 2.0,
+          ior: 1.55,
           clearcoat: 1.0,
-          clearcoatRoughness: 0.01,
+          clearcoatRoughness: 0.005,
           transparent: true,
-          opacity: 0.92,
-          reflectivity: 0.9,
+          opacity: 0.88,
+          reflectivity: 1.0,
+          envMapIntensity: 1.5,
           attenuationColor: new THREE.Color(PALETTES.teclas[defaultColor].hex),
-          attenuationDistance: 0.5,
+          attenuationDistance: 0.4,
+          specularIntensity: 1.0,
+          specularColor: new THREE.Color(0xffffff),
         });
         newSelectable.teclas.push(child);
         initialChosen.teclas[child.name] = defaultColor;
@@ -546,6 +573,7 @@ const Beato16Configurator: React.FC<Beato16ConfiguratorProps> = ({ currentUser, 
     renderer.setSize(mountRef.current.clientWidth, mountRef.current.clientHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     rendererRef.current = renderer;

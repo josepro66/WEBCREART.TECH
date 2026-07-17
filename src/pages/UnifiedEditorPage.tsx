@@ -177,8 +177,9 @@ const UnifiedEditorPage: React.FC = () => {
           display: 'flex',
           alignItems: 'center',
           gap: 18,
-          padding: '0 18px',
-          height: 56,
+          padding: '12px 18px',
+          minHeight: 56,
+          flexWrap: 'wrap',
           borderBottom: `1px solid ${ECO.line}`,
           background: 'rgba(9,9,11,0.82)',
           backdropFilter: 'blur(14px)',
@@ -356,22 +357,15 @@ const UnifiedEditorPage: React.FC = () => {
         ) : (
           <>
             {/* ── Rack modular: escenas 3D en fila + panel lateral ── */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 370px', minHeight: 0 }}>
+            <div className="flex flex-col md:grid md:grid-cols-[1fr_370px] h-full min-h-0 overflow-hidden">
               {/* Área 3D: módulos en fila horizontal como un rack */}
-              <div style={{ position: 'relative', minHeight: 0, minWidth: 0, overflow: 'hidden' }}>
+              <div className="relative flex-1 md:flex-auto min-h-[45vh] md:min-h-0 min-w-0 overflow-hidden">
                 {/* Fondo del rack */}
                 <div aria-hidden style={{
                   position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none',
                   background: `radial-gradient(ellipse 120% 80% at 50% 60%, #111418 0%, ${ECO.void} 70%)`,
                 }} />
-                {/* Rejilla técnica sutil */}
-                <div aria-hidden style={{
-                  position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none',
-                  backgroundImage: `linear-gradient(${ECO.grid} 1px, transparent 1px), linear-gradient(90deg, ${ECO.grid} 1px, transparent 1px)`,
-                  backgroundSize: '32px 32px',
-                  maskImage: 'radial-gradient(ellipse 90% 70% at 50% 50%, rgba(0,0,0,0.7), transparent 80%)',
-                  WebkitMaskImage: 'radial-gradient(ellipse 90% 70% at 50% 50%, rgba(0,0,0,0.7), transparent 80%)',
-                }} />
+
 
                 {/* Módulos 3D: grid adaptativo según dispositivos conectados */}
                 <div
@@ -445,9 +439,10 @@ const UnifiedEditorPage: React.FC = () => {
               </div>
 
               {/* Panel lateral: menú del módulo activo */}
-              <div style={{
-                minHeight: 0, minWidth: 0,
-                borderLeft: `1px solid ${ECO.line}`,
+              <div
+                className="flex-1 md:flex-auto min-h-0 min-w-0 border-t md:border-t-0 md:border-l"
+                style={{
+                  borderColor: ECO.line,
                 background: ECO.panel,
                 display: 'flex', flexDirection: 'column',
               }}>

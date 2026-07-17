@@ -16,7 +16,7 @@ const spa404 = () => ({
 
 // https://vitejs.dev/config/
 // base por defecto '/' (dominio raíz: crearttech.com).
-// Para GitHub Pages bajo /WEB/ usar: npm run build:gh (vite build --base=/WEB/)
+// Para GitHub Pages usar: npm run build:gh (vite build --base=/WEBCREART.TECH/)
 export default defineConfig(() => {
   return {
     plugins: [react(), spa404()],

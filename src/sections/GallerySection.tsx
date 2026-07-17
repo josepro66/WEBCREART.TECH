@@ -26,7 +26,7 @@ const GallerySection: React.FC = () => {
   const base = import.meta.env.BASE_URL
 
   return (
-    <section className="relative min-h-screen w-full overflow-hidden flex items-center py-20">
+    <section className="relative min-h-[100dvh] w-full flex flex-col items-center justify-center py-16 md:py-20">
       {/* Sin fondo local — fondo global de 21st.dev */}
 
       <div className="relative z-10 w-full container mx-auto max-w-7xl px-4">
@@ -95,8 +95,8 @@ const GallerySection: React.FC = () => {
                   href={`https://www.instagram.com/p/${post.id}/`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group block rounded-xl overflow-hidden border border-white/[0.08] hover:border-white/[0.22] transition-all duration-300 bg-[#0E1013] relative"
-                  style={{ aspectRatio: '1 / 1' }}
+                  className="group block rounded-xl overflow-hidden border border-white/[0.08] hover:border-white/[0.22] transition-all duration-300 bg-[#0E1013] relative mx-auto"
+                  style={{ aspectRatio: '1 / 1', width: 'min(100%, 45dvh, 400px)' }}
                 >
                   <img
                     src={`${base}${post.img}`}

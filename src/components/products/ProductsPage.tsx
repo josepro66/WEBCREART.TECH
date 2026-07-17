@@ -91,7 +91,7 @@ function ProductCard({ product, onDetails, onBuy }: { product: typeof products[0
 
   return (
     <motion.div
-      className="group relative flex flex-col w-80 max-w-sm rounded-2xl border border-white/[0.07] bg-white/[0.025] p-5 transition-all duration-300 hover:border-white/[0.18] product-card overflow-hidden"
+      className="group relative flex flex-col w-80 max-w-sm rounded-2xl border border-white/[0.07] bg-white/[0.025] p-4 transition-all duration-300 hover:border-white/[0.18] product-card overflow-hidden"
       initial={{ opacity: 0, rotateX: 18, y: 30 }}
       whileInView={{ opacity: 1, rotateX: 0, y: 0 }}
       whileHover={{ y: -5, scale: 1.01 }}
@@ -110,7 +110,7 @@ function ProductCard({ product, onDetails, onBuy }: { product: typeof products[0
       </div>
 
       {/* Imagen del producto */}
-      <div className="relative h-44 mb-4 rounded-xl overflow-hidden bg-black/40 flex items-center justify-center">
+      <div className="relative h-40 mb-3 rounded-xl overflow-hidden bg-black/40 flex items-center justify-center">
         <img
           src={product.image}
           alt={product.name}
@@ -129,10 +129,10 @@ function ProductCard({ product, onDetails, onBuy }: { product: typeof products[0
             <div className="text-[10px] text-gray-600 font-mono mt-0.5">{product.priceUsd} USD</div>
           </div>
         </div>
-        <p className="text-gray-500 text-xs leading-relaxed mb-4 font-inter">{product.description}</p>
+        <p className="text-gray-500 text-xs leading-relaxed mb-3 font-inter">{product.description}</p>
 
         {/* Características — chips mono estilo 21st.dev */}
-        <div className="flex flex-wrap gap-1.5 mb-5">
+        <div className="flex flex-wrap gap-1.5 mb-4">
           {product.features.map((feature, index) => (
             <span
               key={index}
@@ -227,7 +227,7 @@ function ProductsPage() {
         style={{
           zIndex: 10,
           maxWidth: '100%',
-          paddingTop: isFullscreen ? '0' : '6rem',
+          paddingTop: isFullscreen ? '0' : '4rem',
           paddingBottom: isFullscreen ? '0' : '4rem',
           justifyContent: isFullscreen ? 'center' : 'flex-start',
         }}

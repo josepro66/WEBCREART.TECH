@@ -131,7 +131,7 @@ const Hero: React.FC = () => {
   const navigate = useNavigate()
 
   return (
-    <section className="relative h-screen w-full overflow-hidden bg-[#0A0B0D]">
+    <section className="relative h-screen w-full overflow-hidden bg-[#0c1026]">
 
       {/* ── Atmósfera industrial: luz de estudio + plano técnico ── */}
       <div className="absolute inset-0 z-0 pointer-events-none">
@@ -140,20 +140,20 @@ const Hero: React.FC = () => {
           className="absolute inset-0"
           style={{
             background:
-              'radial-gradient(1000px 700px at 72% 42%, #15181D 0%, #0A0B0D 58%, #060708 100%)',
+              'radial-gradient(1000px 700px at 72% 42%, #2a3358 0%, #161c3c 58%, #0c1026 100%)',
           }}
         />
-        {/* Rejilla de plano de ingeniería */}
+        {/* Brillos de color: cyan sobre el render, violeta y magenta en los bordes */}
         <div
           className="absolute inset-0"
           style={{
-            backgroundImage:
-              'linear-gradient(rgba(140,160,185,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(140,160,185,0.05) 1px, transparent 1px)',
-            backgroundSize: '32px 32px',
-            maskImage: 'radial-gradient(1100px 750px at 60% 42%, rgba(0,0,0,0.9), transparent 82%)',
-            WebkitMaskImage: 'radial-gradient(1100px 750px at 60% 42%, rgba(0,0,0,0.9), transparent 82%)',
+            background:
+              'radial-gradient(800px 550px at 78% 40%, rgba(0,229,255,0.10) 0%, transparent 65%), ' +
+              'radial-gradient(700px 500px at 10% 20%, rgba(139,92,246,0.13) 0%, transparent 65%), ' +
+              'radial-gradient(600px 420px at 30% 88%, rgba(255,61,119,0.09) 0%, transparent 65%)',
           }}
         />
+
         {/* Línea de banco de trabajo */}
         <div
           className="absolute left-[6%] right-[6%] h-px"
@@ -163,7 +163,7 @@ const Hero: React.FC = () => {
           }}
         />
         {/* Viñeta inferior */}
-        <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, transparent 62%, rgba(0,0,0,0.5) 100%)' }} />
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, transparent 62%, rgba(4,6,20,0.4) 100%)' }} />
       </div>
 
       {/* ── Mobile: 3D canvas como fondo ── */}

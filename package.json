@@ -9,7 +9,7 @@
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "deploy": "npm run build:gh && gh-pages -d dist --dotfiles",
-    "build:gh": "vite build --base=/WEB/"
+    "build:gh": "vite build --base=/WEBCREART.TECH/"
   },
   "overrides": {
     "shell-quote": "^1.8.4"

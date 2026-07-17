@@ -90,16 +90,7 @@ const ProductInfoPage: React.FC<ProductInfoPageProps> = ({
               'radial-gradient(1000px 700px at 50% 10%, #15181D 0%, #0A0B0D 58%, #060708 100%)',
           }}
         />
-        <div
-          className="absolute inset-0"
-          style={{
-            backgroundImage:
-              'linear-gradient(rgba(140,160,185,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(140,160,185,0.05) 1px, transparent 1px)',
-            backgroundSize: '32px 32px',
-            maskImage: 'radial-gradient(1100px 750px at 50% 20%, rgba(0,0,0,0.9), transparent 82%)',
-            WebkitMaskImage: 'radial-gradient(1100px 750px at 50% 20%, rgba(0,0,0,0.9), transparent 82%)',
-          }}
-        />
+
       </div>
 
       <section className="relative z-10 pt-28 pb-20 px-4">

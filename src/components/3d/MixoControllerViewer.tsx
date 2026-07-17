@@ -13,6 +13,15 @@ function Loader() {
 }
 
 function prepareModel(scene: THREE.Object3D, targetSize = 1.9, ringColor = 0x1c1c1c) {
+  // Remove junk nodes that inflate the bounding box in MIXO GLB
+  const junkNames = ['snowball', 'skeleton', 'empty001', 'empty002', 'buttonscrew', 'phillips_ultra_thin_flat_head_screw']
+  const toRemove: THREE.Object3D[] = []
+  scene.traverse((child) => {
+    const n = (child.name || '').toLowerCase()
+    if (junkNames.some(j => n.includes(j))) toRemove.push(child)
+  })
+  toRemove.forEach(obj => obj.removeFromParent())
+
   scene.traverse((child) => {
     const obj = child as THREE.Mesh
     if (obj.isMesh) {
@@ -30,7 +39,20 @@ function prepareModel(scene: THREE.Object3D, targetSize = 1.9, ringColor = 0x1c1
     }
   })
 
-  const box = new THREE.Box3().setFromObject(scene)
+  scene.updateWorldMatrix(true, true)
+  const box = new THREE.Box3()
+  scene.traverse((child) => {
+    if ((child as THREE.Mesh).isMesh && (child as THREE.Mesh).geometry) {
+      const mesh = child as THREE.Mesh
+      mesh.geometry.computeBoundingBox()
+      if (mesh.geometry.boundingBox) {
+        const meshBox = mesh.geometry.boundingBox.clone()
+        meshBox.applyMatrix4(mesh.matrixWorld)
+        box.union(meshBox)
+      }
+    }
+  })
+  if (box.isEmpty()) box.setFromObject(scene)
   const size = new THREE.Vector3()
   const center = new THREE.Vector3()
   box.getSize(size)

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 const PagoFinalizado: React.FC = () => {
   return (
@@ -8,12 +9,12 @@ const PagoFinalizado: React.FC = () => {
         <p className="text-gray-300 mb-6">
           Gracias por tu compra. Hemos recibido tu pedido y te enviaremos un correo con los detalles.
         </p>
-        <a
-          href="/"
+        <Link
+          to="/"
           className="inline-block px-6 py-3 rounded-lg font-bold bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-[0_0_12px_2px_#3b82f6] hover:scale-105 transition-transform"
         >
           Volver al inicio
-        </a>
+        </Link>
       </div>
     </div>
   );

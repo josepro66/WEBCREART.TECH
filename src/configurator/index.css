@@ -114,13 +114,22 @@ body {
 }
 
 /* ICONOS Y ELEMENTOS INTERNOS CON TAMAÑO FLUIDO */
-.product-menu-item img,
-.product-menu button img,
-.product-menu [class*="button"] img,
-.product-menu [role="button"] img {
+.product-menu-item img.product-thumb,
+.product-menu button img.product-thumb,
+.product-menu [class*="button"] img.product-thumb,
+.product-menu [role="button"] img.product-thumb {
   width: clamp(18px, 5vw, 60px);
   height: clamp(8px, 2.5vw, 25px);
   object-fit: contain;
+}
+.product-menu-item img.product-logo {
+  height: 28px;
+  max-height: 28px;
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
+  object-position: left center;
+  flex: 0 0 auto;
 }
 
 .product-menu-item svg,

@@ -527,7 +527,7 @@ Best regards.`;
       loader.load(`${import.meta.env.BASE_URL}models/MIXO.glb`, (gltf: any) => {
         const model = gltf.scene as THREE.Group;
         // Remove junk objects that inflate the bounding box
-        const junkNames = ['snowball', 'skeleton', 'empty.001', 'empty.002', 'button:screw'];
+        const junkNames = ['snowball', 'skeleton', 'empty001', 'empty002', 'buttonscrew', 'phillips_ultra_thin_flat_head_screw'];
         const toRemove: THREE.Object3D[] = [];
         model.traverse((child: THREE.Object3D) => {
           const n = child.name.toLowerCase();
@@ -867,6 +867,7 @@ Best regards.`;
     renderer.setSize(mountRef.current.clientWidth, mountRef.current.clientHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.shadowMap.enabled = true;
     rendererRef.current = renderer;
     mountRef.current.appendChild(renderer.domElement);

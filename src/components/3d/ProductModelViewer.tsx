@@ -102,6 +102,18 @@ export default function ProductModelViewer({
     loader.load(modelUrl, (gltf) => {
       const model = gltf.scene
 
+      // Remove junk objects that inflate the bounding box (MIXO GLB has SnowBall/skeleton/far-away ButtonScrew)
+      const junkNames = ['snowball', 'skeleton', 'empty001', 'empty002', 'buttonscrew', 'phillips_ultra_thin_flat_head_screw']
+      const toRemove: THREE.Object3D[] = []
+      model.traverse((child) => {
+        const n = (child.name || '').toLowerCase()
+        if (junkNames.some(j => n.includes(j))) toRemove.push(child)
+      })
+      toRemove.forEach(obj => obj.removeFromParent())
+
+      const pendingBotones: { mesh: THREE.Mesh; num: number }[] = []
+      const pendingAros: { mesh: THREE.Mesh; num: number }[] = []
+
       model.traverse((child) => {
         if (!(child instanceof THREE.Mesh)) return
         child.castShadow = true
@@ -164,24 +176,30 @@ export default function ProductModelViewer({
               envMapIntensity: 0.6,
             })
           }
-          else if (meshName.includes('boton')) {
-            const num = parseInt(meshName.replace(/\D/g, '') || '0')
-            const isPink = num <= 4
-            child.material = new THREE.MeshPhysicalMaterial({
-              color: isPink ? '#B8005C' : '#17181c',
-              metalness: 0.0,
-              roughness: isPink ? 0.5 : 0.32,
-              clearcoat: 1.0,
-              clearcoatRoughness: 0.06,
-              envMapIntensity: isPink ? 0.4 : 0.85,
-            })
+          else if (meshName.includes('boton') || meshName.includes('tapa')) {
+            pendingBotones.push({ mesh: child, num: parseInt((meshName.match(/\d+/) || ['0'])[0]) })
+          }
+          else if (meshName.includes('aro')) {
+            pendingAros.push({ mesh: child, num: parseInt((meshName.match(/\d+/) || ['0'])[0]) })
           }
           else if (meshName.includes('tecla')) {
             child.material = new THREE.MeshPhysicalMaterial({
-              color: '#F5F5F5',
+              color: '#CC0000',
               metalness: 0.05,
-              roughness: 0.45,
-              envMapIntensity: 0.4,
+              roughness: 0.02,
+              transmission: 0.45,
+              thickness: 2.0,
+              ior: 1.55,
+              clearcoat: 1.0,
+              clearcoatRoughness: 0.005,
+              transparent: true,
+              opacity: 0.88,
+              reflectivity: 1.0,
+              envMapIntensity: 1.5,
+              attenuationColor: new THREE.Color('#FF0000'),
+              attenuationDistance: 0.4,
+              specularIntensity: 1.0,
+              specularColor: new THREE.Color(0xffffff),
             })
           }
           else if (
@@ -212,7 +230,43 @@ export default function ProductModelViewer({
         }
       })
 
-      const box = new THREE.Box3().setFromObject(model)
+      const maxBotonNum = Math.max(...pendingBotones.map(b => b.num), 0)
+      const midpoint = Math.floor(maxBotonNum / 2)
+      pendingBotones.forEach(({ mesh, num }) => {
+        const isTop = num > midpoint
+        mesh.material = new THREE.MeshPhysicalMaterial({
+          color: isTop ? 0xffffff : 0x111111,
+          metalness: 0.0,
+          roughness: 0.32,
+          clearcoat: 1.0,
+          clearcoatRoughness: 0.06,
+          envMapIntensity: 0.85,
+        })
+      })
+      pendingAros.forEach(({ mesh, num }) => {
+        const isTop = num > midpoint
+        mesh.material = new THREE.MeshPhysicalMaterial({
+          color: isTop ? 0xffffff : 0x111111,
+          metalness: 0.0,
+          roughness: 0.2,
+          clearcoat: 0.8,
+          clearcoatRoughness: 0.1,
+        })
+      })
+
+      model.updateWorldMatrix(true, true)
+      const box = new THREE.Box3()
+      model.traverse((child) => {
+        if (child instanceof THREE.Mesh && child.geometry) {
+          child.geometry.computeBoundingBox()
+          if (child.geometry.boundingBox) {
+            const meshBox = child.geometry.boundingBox.clone()
+            meshBox.applyMatrix4(child.matrixWorld)
+            box.union(meshBox)
+          }
+        }
+      })
+      if (box.isEmpty()) box.setFromObject(model)
       const size = box.getSize(new THREE.Vector3())
       const center = box.getCenter(new THREE.Vector3())
       const maxSize = Math.max(size.x, size.y, size.z)

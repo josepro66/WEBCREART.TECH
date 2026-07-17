@@ -171,13 +171,13 @@ function App() {
   };
 
   const menuItems = [
-    { id: 'beato8' as ProductId, icon: 'textures/beato.png' },
-    { id: 'beato16' as ProductId, icon: 'textures/beato16.png' },
-    { id: 'knobo' as ProductId, icon: 'textures/knobo.png' },
-    { id: 'mixo' as ProductId, icon: 'textures/mixo.png' },
-    { id: 'loopo' as ProductId, icon: 'textures/loopo.png' },
-    { id: 'fado' as ProductId, icon: 'textures/fado.png' },
-    { id: 'wavo' as ProductId, icon: 'textures/wavo.png' },
+    { id: 'beato8' as ProductId, icon: 'textures/beato.png', logo: 'textures/Logo-beato8_Mesa de trabajo 1.png' },
+    { id: 'beato16' as ProductId, icon: 'textures/beato16.png', logo: 'textures/Logo-beato8_Mesa de trabajo 1.png' },
+    { id: 'knobo' as ProductId, icon: 'textures/knobo.png', logo: 'textures/Logo-Knobo_Mesa de trabajo 1.png' },
+    { id: 'mixo' as ProductId, icon: 'textures/mixo.png', logo: 'textures/Logo-mixo_Mesa de trabajo 1.png' },
+    { id: 'loopo' as ProductId, icon: 'textures/loopo.png', logo: 'textures/Logo-loopo_Mesa de trabajo 1.png' },
+    { id: 'fado' as ProductId, icon: 'textures/fado.png', logo: 'textures/Logo-fado_Mesa de trabajo 1.png' },
+    { id: 'wavo' as ProductId, icon: 'textures/wavo.png', logo: 'textures/Logo-wavo_Mesa de trabajo 1.png' },
   ];
 
   // Mostrar loading mientras se verifica el usuario
@@ -357,6 +357,7 @@ function App() {
               )}
 
               <img
+                className="product-thumb"
                 src={item.icon}
                 alt={id.name}
                 style={{
@@ -371,58 +372,16 @@ function App() {
                 onError={(e) => { e.currentTarget.style.display = 'none'; }}
               />
 
-              <div style={{ textAlign: 'left', flex: 1, minWidth: 0 }}>
-                <div
-                  style={{
-                    fontSize: 12,
-                    fontWeight: 800,
-                    letterSpacing: '0.12em',
-                    fontFamily: "'Orbitron', 'Space Grotesk', sans-serif",
-                    color: isActive ? id.accent : '#F2F1ED',
-                    textShadow: 'none',
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                  }}
-                >
-                  {id.name}
-                </div>
-                <div
-                  style={{
-                    fontSize: 9,
-                    fontFamily: "'JetBrains Mono', monospace",
-                    color: isActive ? '#F2F1ED' : 'rgba(242, 241, 237, 0.55)',
-                    letterSpacing: '0.02em',
-                    marginTop: 2,
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                  }}
-                >
-                  {id.tagline}
-                </div>
-              </div>
+              <img
+                className="product-logo"
+                src={item.logo}
+                alt={id.name}
+                style={{
+                  filter: 'invert(1) brightness(2)',
+                  transition: 'filter 0.25s ease',
+                }}
+              />
 
-              {id.badge && (
-                <span
-                  style={{
-                    position: 'absolute',
-                    top: 6,
-                    right: 6,
-                    fontSize: 7,
-                    fontFamily: "'JetBrains Mono', monospace",
-                    fontWeight: 800,
-                    letterSpacing: '0.1em',
-                    background: id.gradient,
-                    color: '#0E0E10',
-                    padding: '2px 5px',
-                    borderRadius: 3,
-                    boxShadow: '0 2px 6px -1px rgba(0,0,0,0.4)',
-                  }}
-                >
-                  {id.badge}
-                </span>
-              )}
             </button>
           );
         })}

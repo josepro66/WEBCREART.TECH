@@ -140,8 +140,8 @@ const HoloShowcase: React.FC = () => {
           if (cancelled) return resolve()
           const model = gltf.scene
 
-          // Remove junk objects that inflate the bounding box (MIXO GLB has SnowBall + skeleton nodes)
-          const junkNames = ['snowball', 'skeleton', 'empty.001', 'empty.002', 'button:screw']
+          // Remove junk objects that inflate the bounding box (MIXO GLB has SnowBall + skeleton + a far-away ButtonScrew nodes)
+          const junkNames = ['snowball', 'skeleton', 'empty001', 'empty002', 'buttonscrew', 'phillips_ultra_thin_flat_head_screw']
           const toRemove: THREE.Object3D[] = []
           model.traverse((child) => {
             const n = child.name.toLowerCase()
@@ -175,6 +175,18 @@ const HoloShowcase: React.FC = () => {
           )
           model.rotation.set(0.28, -0.45, 0)
 
+          let maxBotonNum = 0
+          model.traverse((c) => {
+            if (c instanceof THREE.Mesh) {
+              const n = (c.name || '').toLowerCase()
+              if (n.includes('boton')) {
+                const num = parseInt((n.match(/\d+/) || ['0'])[0])
+                if (num > maxBotonNum) maxBotonNum = num
+              }
+            }
+          })
+          const botonMid = Math.floor(maxBotonNum / 2)
+
           model.traverse((obj) => {
             if (!(obj instanceof THREE.Mesh)) return
             obj.castShadow = true
@@ -193,22 +205,28 @@ const HoloShowcase: React.FC = () => {
             if (meshName.includes('pantallawavo')) return
             if (meshName.includes('bolt')) {
               obj.material = new THREE.MeshStandardMaterial({ color: '#777777', metalness: 0.9, roughness: 0.15 })
-            } else if (meshName.includes('cubechasis')) {
-              obj.material = new THREE.MeshPhysicalMaterial({ color: '#cc0000', metalness: 0.3, roughness: 0.45, clearcoat: 0.5, clearcoatRoughness: 0.25 })
-            } else if (meshName.includes('chasis')) {
-              obj.material = new THREE.MeshPhysicalMaterial({ color: '#7CBA40', metalness: 0.8, roughness: 0.48, clearcoat: 0.3, clearcoatRoughness: 0.2 })
+            } else if (meshName.includes('cubechasis') || meshName.includes('chasis') || meshName.includes('cube.019') || meshName.includes('cuerpo') || meshName.includes('body')) {
+              obj.material = new THREE.MeshPhysicalMaterial({ 
+                color: s.tint, 
+                metalness: 0.6, 
+                roughness: 0.35, 
+                clearcoat: 0.6, 
+                clearcoatRoughness: 0.15 
+              })
             } else if (meshName.includes('boton') || meshName.includes('tapa')) {
-              const num = parseInt(meshName.replace(/\D/g, '') || '0')
-              const isPink = num <= 4
-              obj.material = new THREE.MeshPhysicalMaterial({ color: isPink ? '#B8005C' : '#17181c', metalness: 0.0, roughness: isPink ? 0.5 : 0.32, clearcoat: 1.0, clearcoatRoughness: 0.06 })
+              const num = parseInt((meshName.match(/\d+/) || ['0'])[0])
+              const isTop = num > botonMid
+              obj.material = new THREE.MeshPhysicalMaterial({ color: isTop ? 0xffffff : 0x111111, metalness: 0.0, roughness: 0.32, clearcoat: 1.0, clearcoatRoughness: 0.06 })
             } else if (meshName.includes('tecla')) {
-              obj.material = new THREE.MeshPhysicalMaterial({ color: '#CC0000', metalness: 0.0, roughness: 0.08, transmission: 0.3, thickness: 1.5, ior: 1.52, clearcoat: 1.0, clearcoatRoughness: 0.01, transparent: true, opacity: 0.92, reflectivity: 0.9, attenuationColor: new THREE.Color('#FF0000'), attenuationDistance: 0.5 })
+              obj.material = new THREE.MeshPhysicalMaterial({ color: '#CC0000', metalness: 0.05, roughness: 0.02, transmission: 0.45, thickness: 2.0, ior: 1.55, clearcoat: 1.0, clearcoatRoughness: 0.005, transparent: true, opacity: 0.88, reflectivity: 1.0, envMapIntensity: 1.5, attenuationColor: new THREE.Color('#FF0000'), attenuationDistance: 0.4, specularIntensity: 1.0, specularColor: new THREE.Color(0xffffff) })
             } else if (meshName.startsWith('knob') || meshName.includes('encoder') || parentName.includes('knob')) {
               obj.material = new THREE.MeshStandardMaterial({ color: '#1C1C1C', metalness: 0.3, roughness: 0.7 })
             } else if (meshName.includes('fader')) {
               obj.material = new THREE.MeshPhysicalMaterial({ color: '#FF2D95', metalness: 0.0, roughness: 0.35, clearcoat: 0.9, clearcoatRoughness: 0.08 })
             } else if (meshName.includes('aro') || meshName.includes('cylinder')) {
-              obj.material = new THREE.MeshPhysicalMaterial({ color: 0x000000, metalness: 0.0, roughness: 0.2, clearcoat: 0.8, clearcoatRoughness: 0.1, transparent: true, opacity: 0.7 })
+              const num = parseInt((meshName.match(/\d+/) || ['0'])[0])
+              const isTop = num > botonMid
+              obj.material = new THREE.MeshPhysicalMaterial({ color: isTop ? 0xffffff : 0x111111, metalness: 0.0, roughness: 0.2, clearcoat: 0.8, clearcoatRoughness: 0.1 })
             }
           })
 

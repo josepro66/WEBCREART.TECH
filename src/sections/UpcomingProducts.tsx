@@ -65,7 +65,7 @@ function EventCard({ event, index }: { event: ClubEvent; index: number }) {
       </div>
 
       {/* Visual del evento */}
-      <div className="relative z-10 h-48 sm:h-56 md:h-64 flex items-center justify-center px-6">
+      <div className="relative z-10 h-40 sm:h-44 md:h-48 flex items-center justify-center px-6">
         <div className="text-center">
           <div
             className="text-5xl sm:text-6xl md:text-7xl font-grotesk font-black tracking-[-0.03em] leading-none"
@@ -87,12 +87,12 @@ function EventCard({ event, index }: { event: ClubEvent; index: number }) {
       </div>
 
       {/* Info */}
-      <div className="relative z-10 px-6 pb-5 pt-1 text-center border-t border-white/[0.06]">
-        <p className="text-gray-400 text-sm font-inter mb-4 max-w-md mx-auto leading-relaxed mt-3">
+      <div className="relative z-10 px-6 pb-4 pt-1 text-center border-t border-white/[0.06]">
+        <p className="text-gray-400 text-sm font-inter mb-3 max-w-md mx-auto leading-relaxed mt-3">
           {event.description}
         </p>
 
-        <div className="flex flex-wrap gap-1.5 justify-center mb-4">
+        <div className="flex flex-wrap gap-1.5 justify-center mb-3">
           {event.features.map((f) => (
             <span
               key={f}
@@ -122,10 +122,10 @@ function EventCard({ event, index }: { event: ClubEvent; index: number }) {
 
 const UpcomingProducts: React.FC = () => {
   return (
-    <section className="relative w-full flex items-center py-24 md:py-20">
+    <section className="relative w-full flex items-center pt-20 pb-8 md:pt-20 md:pb-8">
       <div className="relative z-10 container mx-auto max-w-6xl px-4 md:px-8">
         <motion.div
-          className="text-center mb-5 md:mb-8"
+          className="text-center mb-5"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
